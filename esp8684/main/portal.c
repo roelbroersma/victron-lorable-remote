@@ -19,12 +19,13 @@
 #include "protocol.h"
 #include "uart_link.h"
 #include "portal_asset.h"
+#include "portal_limits.h"
 
 #if CONFIG_PARTITION_TABLE_MD5
 #error "Stock ESP-AT 3.3 partition tables have no MD5 entry: disable CONFIG_PARTITION_TABLE_MD5"
 #endif
 
-#define HTTP_BODY_MAX 5800
+#define HTTP_BODY_MAX LORABLE_HTTP_BODY_MAX
 static httpd_handle_t server;
 static esp_netif_t *access_point_netif;
 static portal_hooks_t portal_hooks;
@@ -34,7 +35,7 @@ static atomic_bool ota_in_progress;
 static SemaphoreHandle_t response_signal;
 static portMUX_TYPE response_lock = portMUX_INITIALIZER_UNLOCKED;
 static uint16_t http_request_id = 0x8000, awaiting_id;
-static char response[6144];
+static char response[LORABLE_HTTP_BUFFER_SIZE];
 static size_t response_used;
 static unsigned response_status;
 static bool response_bad;

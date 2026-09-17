@@ -58,3 +58,24 @@ service UUID, characteristic UUID and 1–20 hex bytes per function. Exact readb
 requires that same characteristic to expose the expected value. No arbitrary
 scripts, write-without-response or notification-based custom protocol engine is
 included. Do not guess commands for an unknown device.
+
+## 5. Eigen netwerk met TTN als reserve / Private network with TTN backup
+
+**NL.** Zet Eigen UG65 bovenaan en TTN tweede. Geef beide hun eigen JoinEUI en
+AppKey; kies voor TTN het type TTN Sandbox en laat RX2 op automatisch. Zet de
+preempt-tijd van TTN op 1440 minuten. Als de eerste aanmelding mislukt, blijft
+het board een dag bij TTN: verbonden of wachtend op een toegestane nieuwe poging.
+Daarna probeert het de eigen server opnieuw, zonder het board te herstarten.
+Wissel de volgorde met ↑/↓ als je TTN juist als voorkeur wilt. Registreer het
+end device op beide servers; alleen een aangesloten gateway is niet voldoende.
+
+**EN.** Put the private UG65 first and TTN second, with independent JoinEUI/AppKey
+tuples. Use TTN Sandbox type, automatic RX2 and 1440-minute backup preemption.
+After a failed preferred join the node stays on TTN for a day, joined or waiting
+for an allowed retry. It then tries the private network again without an MCU
+reboot. Reverse priority with ↑/↓ if TTN should be preferred. Register the end
+device on each server; gateway registration alone does not register the node.
+
+Send commands through the currently active network. Remove obsolete commands
+from server queues: the simple function-command payload contains no expiry time.
+Only one network session is active, and rejoining temporarily interrupts reception.

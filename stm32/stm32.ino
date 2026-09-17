@@ -20,6 +20,7 @@
 #include "settings.h"
 #include "config_store.h"
 #include "region_profile.h"
+#include "network_manager.h"
 #include "action_rules.h"
 #include "victron_result_codes.h"
 #include "esp_companion.h"
@@ -32,7 +33,7 @@
 #include <string.h>
 
 #define FW_MAJOR 4
-#define FW_MINOR 9
+#define FW_MINOR 10
 
 #if LEGACY_BLE_AT != 0 && LEGACY_BLE_AT != 1
 #error "LEGACY_BLE_AT must be 0 or 1"
@@ -71,6 +72,7 @@ static uint8_t lastEvent = 0, lastActions = 0;
 static volatile uint8_t remoteActionQueue[4],remoteFunctionQueue[4];
 static volatile uint8_t remoteWrite = 0, remoteRead = 0;
 static volatile bool statusTxInFlight = false;
+static volatile bool healthTxInFlight = false;
 static volatile bool lastKnownJoined = false;
 static volatile uint32_t statusRevision = 0;
 static volatile uint32_t statusRevisionInFlight = 0;
@@ -919,6 +921,8 @@ static bool equalsAsciiIgnoreCase(const uint8_t *data, uint8_t length, const cha
 
 static void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 {
+    if(data && networkJoined())networkDownlinkReceived();
+    if(!networkJoined())return;
     if (data == nullptr || data->Port != runtimeConfig.loraFport || data->BufferSize == 0)
     {
         return;
@@ -964,6 +968,7 @@ static void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 
 static void joinCallback(int32_t status)
 {
+    networkJoinResult(status);
     Serial.printf("LoRaWAN join-status: %ld\r\n", (long)status);
     if (status == RAK_LORAMAC_STATUS_OK)
     {
@@ -982,6 +987,8 @@ static void joinCallback(int32_t status)
 
 static void sendCallback(int32_t status)
 {
+    networkTxComplete(healthTxInFlight,status==RAK_LORAMAC_STATUS_OK&&api.lorawan.cfs.get());
+    healthTxInFlight=false;
     Serial.printf("LoRaWAN uplink-status: %ld\r\n", (long)status);
     statusTxInFlight = false;
     if (status == RAK_LORAMAC_STATUS_OK)
@@ -997,7 +1004,7 @@ static void sendCallback(int32_t status)
         statusRevisionAcked = statusRevisionInFlight;
         if (sentBusyStatus)
         {
-            // A queue-overflow status is latched until the network accepted it.
+            // A queue-overflow status is latched until local TX completion.
             // Follow it once with the latest state, which may have changed while
             // BUSY was waiting or in flight.
             requestStatusUplink();
@@ -1035,6 +1042,18 @@ static bool configureLorawan()
         }
     }
 
+    if(!runtimeConfig.networksInitialized) {
+        NetworkProfile &p=runtimeConfig.networks[0];
+        strcpy(p.name,"Private / UG65");memcpy(p.joinEui,nodeAppEui,8);memcpy(p.appKey,nodeAppKey,16);
+        p.enabled=!isAllZero(nodeAppKey,16);p.rx2Custom=runtimeConfig.rx2Custom;
+        p.rx2DataRate=runtimeConfig.rx2DataRate;p.rx2Frequency=runtimeConfig.rx2Frequency;
+        runtimeConfig.networksInitialized=1;
+        if(!runtimeConfigSave(runtimeConfig)){Serial.println("Netwerkprofiel-migratie niet opgeslagen.");return false;}
+    }
+    if(isAllZero(nodeAppKey,16))for(unsigned i=0;i<MAX_NETWORKS;++i) {
+        const NetworkProfile &p=runtimeConfig.networks[runtimeConfig.networkOrder[i]];
+        if(p.enabled&&networkHasKey(p)){memcpy(nodeAppEui,p.joinEui,8);memcpy(nodeAppKey,p.appKey,16);break;}
+    }
     if (isAllZero(nodeDevEui, sizeof(nodeDevEui)) ||
         isAllZero(nodeAppKey, sizeof(nodeAppKey)))
     {
@@ -1049,8 +1068,7 @@ static bool configureLorawan()
         api.system.reboot();
     }
 
-    bool settingsOk = runtimeConfig.lorawanCredentialsFromPortal ||
-        ensureLorawanCredentials(nodeDevEui, nodeAppEui, nodeAppKey);
+    bool settingsOk = ensureLorawanCredentials(nodeDevEui, nodeAppEui, nodeAppKey);
 
     // Read first and call RUI setters only when a value really differs. The
     // lower flash driver also compares before erasing, but this avoids needless
@@ -1309,7 +1327,7 @@ static void servicePortalApi()
 #else
     live.bleAvailable = companionIsReady();
 #endif
-    live.joined = api.lorawan.njs.get() != 0;
+    live.joined = networkJoined();
     live.bleResult = lastBleResult;
     live.loadValue = lastLoadValue;
     live.bleAttempts = lastBleAttempts;
@@ -1358,10 +1376,12 @@ static void servicePortalApi()
         if (saved || durableStateChanged)
         {
             legacyPortalUpdateSnapshot(runtimeConfig, nodeDevEui, nodeAppEui);
-            if(durableStateChanged) activityAdd(13,runtimeConfigRevision());
-            requestStatusUplink();
-            pendingRebootAt = millis() + 2500UL;
-            Serial.println("Portalinstellingen opgeslagen; herstart volgt.");
+            if(durableStateChanged) {
+                activityAdd(13,runtimeConfigRevision());
+                requestStatusUplink();
+                pendingRebootAt = millis() + 2500UL;
+                Serial.println("Portalinstellingen opgeslagen; herstart volgt.");
+            }
         }
         wipeSensitive(&request, sizeof(request));
     }
@@ -1410,7 +1430,7 @@ static void serviceCompanion(uint32_t now)
 
 static void sendStatusUplink()
 {
-    if (!lorawanConfigured || api.lorawan.njs.get() == 0 || statusTxInFlight)
+    if (!lorawanConfigured || !networkJoined() || statusTxInFlight || pendingRebootAt)
     {
         return;
     }
@@ -1470,8 +1490,10 @@ static void sendStatusUplink()
     busyEventInFlight = busyRevisionForPayload;
     statusTxInFlight = true;
     lastStatusAttemptAt = now;
-    if (!api.lorawan.send(sizeof(payload), payload, runtimeConfig.loraFport, false))
+    healthTxInFlight=networkHealthDue();
+    if (!api.lorawan.send(sizeof(payload), payload, runtimeConfig.loraFport, healthTxInFlight, 0))
     {
+        healthTxInFlight=false;
         statusTxInFlight = false;
         busyStatusInFlight = false;
     }
@@ -1486,7 +1508,7 @@ void setup()
     // concurrently consume replies intended for the portal/companion parser.
     Serial1.begin(115200, RAK_CUSTOM_MODE);
     delay(1500);
-    Serial.println("Victron LoRaBLE Remote - firmware v4.9.0 development");
+    Serial.println("Victron LoRaBLE Remote - firmware v4.10.0");
     activityAdd(1);
 
     setEspPowerMode(POWER_OFF);
@@ -1592,8 +1614,7 @@ void setup()
     requestStatusUplink();
     if (lorawanConfigured)
     {
-        lastJoinAttemptAt = millis();
-        (void)api.lorawan.join();
+        networkBegin(runtimeConfig,nodeDevEui);
     }
 }
 
@@ -1624,6 +1645,7 @@ void loop()
     }
 
     activityTick();
+    if(lorawanConfigured&&!pendingRebootAt)networkTick(statusTxInFlight);
     const uint32_t now = millis();
     const bool currentWifiWanted = wifiWanted(now);
     if (currentWifiWanted != lastWifiWanted)
@@ -1636,7 +1658,7 @@ void loop()
 #if LEGACY_BLE_AT
     serviceLegacyWifi(now);
 #endif
-    const bool joined = lorawanConfigured && api.lorawan.njs.get() != 0;
+    const bool joined = lorawanConfigured && networkJoined();
     if (joined && !lastKnownJoined)
     {
         lastKnownJoined = true;
@@ -1648,9 +1670,9 @@ void loop()
     }
 
     const uint32_t statusIntervalMs =
-        runtimeConfig.statusIntervalMinutes * 60UL * 1000UL;
+        networkStatusIntervalMinutes() * 60UL * 1000UL;
     if (joined && !statusUplinkNeeded() && !statusTxInFlight &&
-        (uint32_t)(now - lastStatusAt) >= statusIntervalMs)
+        ((uint32_t)(now - lastStatusAt) >= statusIntervalMs || networkHealthDue()))
     {
         requestStatusUplink();
     }
@@ -1689,14 +1711,7 @@ void loop()
     serviceCompanion(now);
 #endif
 
-    if (lorawanConfigured && api.lorawan.njs.get() == 0 &&
-        (uint32_t)(now - lastJoinAttemptAt) >= 60000UL)
-    {
-        lastJoinAttemptAt = now;
-        (void)api.lorawan.join();
-    }
-
-    if (lorawanConfigured && api.lorawan.njs.get() != 0 && statusUplinkNeeded())
+    if (lorawanConfigured && networkJoined() && statusUplinkNeeded())
     {
         sendStatusUplink();
     }

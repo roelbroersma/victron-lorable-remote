@@ -13,7 +13,7 @@ nav{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:22px}
 @media(max-width:620px){nav{grid-template-columns:repeat(3,1fr)}}
 .panel-title{margin:0 0 20px;padding:0;font-size:18px;line-height:1.4;color:var(--navy)}.firmware-line{border-radius:8px;background:#eef6fb;padding:12px;font-size:14px}.table-wrap{overflow-x:auto}#power_table{width:100%;border-collapse:collapse;font-size:13px}#power_table th,#power_table td{text-align:left;padding:9px 5px;border-bottom:1px solid #e1eaf0}#power_table th{font-weight:600}#power_table input{width:100%;min-width:62px;padding:8px;font-size:13px}#power_table td:nth-child(2),#power_table td:nth-child(3){width:20%}.power-total{font-weight:650;font-size:14px}#power_reference{font-size:13px}#running_firmware{overflow-wrap:anywhere}@media(max-width:620px){#power_table th,#power_table td{padding:8px 3px;font-size:11px}#power_table input{min-width:53px}.panel-title{font-size:17px}}
 .power-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.power-heading h2{margin:0}.unit-switch{display:flex;background:#edf4f8;border-radius:9px;padding:3px;flex-shrink:0}.unit-switch button{padding:7px 12px;width:auto;font-size:12px;background:transparent;color:#45667c;font-weight:500}.unit-switch button[aria-pressed=true]{background:white;color:#087bb8;box-shadow:0 1px 5px #153f5820}.power-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.power-summary article{background:#eef6fb;border-radius:10px;padding:13px}.power-summary small{display:block;color:#527084;font-size:12px;line-height:1.5}.power-summary strong{display:block;color:#087bb8;font-size:20px;margin-top:5px;font-weight:650}.power-total{font-weight:400}#power_table tbody th{font-weight:400;color:#456174}#power_table td:last-child{text-align:right;font-variant-numeric:tabular-nums}#power_excluded{font-size:12px}#power_class{font-size:12px;color:#657f90}#power_reference{font-weight:400}#power_reference_title{font-size:13px}@media(max-width:620px){.power-summary{grid-template-columns:1fr}.power-summary article{display:flex;align-items:center;justify-content:space-between;gap:10px}.power-summary strong{margin:0;font-size:18px}.power-heading h2{font-size:16px}}
-</style></head><body><header><div class="topline"><small class="brand">LoRaBLE Remote · v4.9.0</small><div id="language_slot"><input type="hidden" id="language" name="language" value="0" form="form"><div class="flags" role="group" aria-label="Language"><button type="button" class="flag" id="lang_nl" aria-label="Nederlands" aria-pressed="true" title="Nederlands"><svg viewBox="0 0 30 20" aria-hidden="true"><path fill="#ae1c28" d="M0 0h30v7H0z"/><path fill="#fff" d="M0 7h30v6H0z"/><path fill="#21468b" d="M0 13h30v7H0z"/></svg></button><button type="button" class="flag" id="lang_en" aria-label="English" aria-pressed="false" title="English"><svg viewBox="0 0 60 40" aria-hidden="true"><path fill="#012169" d="M0 0h60v40H0z"/><path stroke="#fff" stroke-width="8" d="m0 0 60 40m0-40L0 40"/><path stroke="#c8102e" stroke-width="3" d="m0 0 60 40m0-40L0 40"/><path stroke="#fff" stroke-width="13" d="M30 0v40M0 20h60"/><path stroke="#c8102e" stroke-width="8" d="M30 0v40M0 20h60"/></svg></button></div></div></div><h1 id="title">Victron LoRaBLE Remote</h1><p id="subtitle"></p></header><main><nav id="menu" aria-label="Navigation"></nav>
+</style></head><body><header><div class="topline"><small class="brand">LoRaBLE Remote · v4.10.0</small><div id="language_slot"><input type="hidden" id="language" name="language" value="0" form="form"><div class="flags" role="group" aria-label="Language"><button type="button" class="flag" id="lang_nl" aria-label="Nederlands" aria-pressed="true" title="Nederlands"><svg viewBox="0 0 30 20" aria-hidden="true"><path fill="#ae1c28" d="M0 0h30v7H0z"/><path fill="#fff" d="M0 7h30v6H0z"/><path fill="#21468b" d="M0 13h30v7H0z"/></svg></button><button type="button" class="flag" id="lang_en" aria-label="English" aria-pressed="false" title="English"><svg viewBox="0 0 60 40" aria-hidden="true"><path fill="#012169" d="M0 0h60v40H0z"/><path stroke="#fff" stroke-width="8" d="m0 0 60 40m0-40L0 40"/><path stroke="#c8102e" stroke-width="3" d="m0 0 60 40m0-40L0 40"/><path stroke="#fff" stroke-width="13" d="M30 0v40M0 20h60"/><path stroke="#c8102e" stroke-width="8" d="M30 0v40M0 20h60"/></svg></button></div></div></div><h1 id="title">Victron LoRaBLE Remote</h1><p id="subtitle"></p></header><main><nav id="menu" aria-label="Navigation"></nav>
 <section id="status" aria-labelledby="status_title"><h2 id="status_title">Status</h2><div id="status_cards" class="status-grid"></div><p id="connection_note" role="status">Instellingen laden / Loading settings…</p></section>
 <form id="form"><div id="sections"></div><button id="save" disabled></button><p id="result" role="status" aria-live="polite"></p></form><footer id="footer"></footer></main>
 <script>
@@ -84,6 +84,21 @@ const F=[
 ["dl_on","Ontvangen: Relais AAN","Receive: Relay ON","checkbox",[],"Sta de opdracht hex 11 toe op de gekozen FPort. Dit is een byte, geen tekst \"11\". De bijbehorende Bluetooth Functie of relaisuitgang moet ook aanstaan. Een downlink hex 20 vraagt altijd status op. Class A: eerst een uplink nodig.","Allow command hex 11 on the chosen FPort. This is one byte, not text \"11\". The corresponding Bluetooth function or relay must also be enabled. Hex 20 always requests status. Class A needs an uplink first."],
 ["dl_pulse","Ontvangen: Relaispuls","Receive: Relay pulse","checkbox",[],"Sta de opdracht hex 12 toe op de gekozen FPort. Dit is een byte, geen tekst \"12\". De bijbehorende Bluetooth Functie of relaisuitgang moet ook aanstaan. Een downlink hex 20 vraagt altijd status op. Class A: eerst een uplink nodig.","Allow command hex 12 on the chosen FPort. This is one byte, not text \"12\". The corresponding Bluetooth function or relay must also be enabled. Hex 20 always requests status. Class A needs an uplink first."]
 ];
+// Stable network slots: moving priority moves the slot ID, never a hidden key.
+const networkFields=[
+ ['name','Netwerknaam','Network name','text',[1,24],'Een herkenbare naam, bijvoorbeeld Eigen UG65 of TTN. Dit is geen gateway-IP.','A recognizable name, e.g. Private UG65 or TTN. This is not a gateway IP.'],
+ ['enabled','Dit netwerk gebruiken','Use this network','checkbox',[],'Uitgeschakelde profielen worden overgeslagen; de gegevens blijven bewaard. Er is maar één actieve LoRaWAN-sessie.','Disabled profiles are skipped; their settings are retained. Only one LoRaWAN session is active.'],
+ ['kind','Netwerktype','Network type','select',[[0,'Eigen / ander netwerk','Private / other network'],[1,'TTN Sandbox']],'TTN: maximaal 6 joinpogingen per budgetperiode van 24 uur en minstens 1 uur tussen herhaalde pogingen. Statusberichten en bereikbaarheidscontroles gebruiken minimaal 4 uur. Gebeurtenissen en joins tellen óók mee voor het airtimebudget; dit is geen volledige fair-usebegrenzer. De budgetteller begint opnieuw na een herstart.','TTN: up to 6 join attempts per 24-hour budget period and at least 1 hour between retries. Status and health intervals use a minimum of 4 hours. Events and joins also consume airtime; this is not a complete fair-use limiter. The budget counter restarts after a reboot.'],
+ ['join_eui','JoinEUI / AppEUI','JoinEUI / AppEUI','text',[16,16],'16 hextekens, gelijk aan het end device op deze netwerkserver. Gebruik verschillende JoinEUIs voor de ingeschakelde profielen. TTN mag 0000000000000000 zijn. DevEUI is voor alle profielen het board-ID bovenaan.','16 hexadecimal characters matching this server. Use distinct JoinEUIs for enabled profiles. TTN may use 0000000000000000. All profiles use the board DevEUI above.'],
+ ['app_key','Nieuwe AppKey','New AppKey','password',[32,32],'32 hextekens uit de OTAA-instellingen van dit end device, geen application-API-key. Leeg laten behoudt uitsluitend de sleutel van dit profiel, ook na verplaatsen. Sleutels worden nooit teruggestuurd of geëxporteerd.','32 hexadecimal characters from this end device’s OTAA settings, not an application API key. Blank retains only this profile’s key, also after reordering. Keys are never returned or exported.'],
+ ['preempt_min','Preempt-tijd (minuten)','Preemption time (minutes)','number',[15,10080],'Voor een reserveprofiel: zo lang blijft het board op dit profiel, ook als aanmelden nog niet lukt. Daarna probeert het opnieuw vanaf de hoogste prioriteit. Standaard 1440 = 24 uur. Bij drie of vier profielen: na een onbereikbare reserve en mislukte hogere profielen krijgt de volgende reserve een beurt. Op de hoogste prioriteit loopt geen preempt-timer.','For a backup profile: remain here for this duration, even while joining fails. Then retry from highest priority. Default 1440 = 24 hours. With three/four profiles an unreachable backup yields to the next backup after higher priorities fail. No preemption timer runs on the highest priority.'],
+ ['rx2_custom','RX2-instelling','RX2 configuration','select',[[0,'Automatisch / regiostandaard','Automatic / regional default'],[1,'Handmatig','Custom']],'Voor TTN automatisch laten. De netwerkserver kan RX2 tijdens OTAA instellen. Handmatig alleen als jouw eigen netwerkserver dit vereist; dit is geen apart kanaalplan voor een tweede radio.','Leave automatic for TTN. The network server can configure RX2 during OTAA. Override only when required by your private server; this does not define a second radio channel plan.'],
+ ['rx2_freq','RX2-frequentie (Hz)','RX2 frequency (Hz)','number',[100000000,1000000000],'Alleen bij handmatig. EU868 gebruikt gewoonlijk 869525000 Hz.','Only for a manual override. EU868 normally uses 869525000 Hz.'],
+ ['rx2_dr','RX2-datasnelheid','RX2 data rate','number',[0,13],'Alleen bij handmatig. Laat TTN de datasnelheid bij aanmelden instellen.','Only for a manual override. Let TTN negotiate the data rate on join.']
+];
+const networkRows=[['network_health_min','Bereikbaarheid controleren (minuten)','Network health check (minutes)','number',[0,1440],'0 = uit; anders 15–1440 minuten. Een confirmed statusbericht vraagt een echte ACK. Na twee gemiste controles wordt opnieuw aangemeld of de reserve gebruikt. TTN gebruikt minimaal 240 minuten, maximaal 6 controles per dag. Gewone TX_DONE telt niet als bevestiging.','0 = disabled; otherwise 15–1440 minutes. A confirmed status uplink requests an actual ACK. Two missed checks trigger rejoining or fallback. TTN uses at least 240 minutes, at most 6 checks per day. Ordinary TX_DONE is not proof of connectivity.']];
+for(let i=0;i<4;i++)networkRows.push(['net'+i,'Netwerkprofiel','Network profile'],...networkFields.map(f=>['net'+i+'_'+f[0],...f.slice(1)]));
+F.splice(F.findIndex(f=>f[0]==='routes'),0,...networkRows);
 // Generate bounded, stable function slots. Removing the last slot never renumbers others.
 const functionTemplate=F.filter(f=>f[0]==='fn1'||f[0].startsWith('fn1_'));
 for(let i=3;i<=10;i++){
@@ -106,7 +121,7 @@ for(const f of F.filter(f=>/^fn\d+_kind$/.test(f[0]))) {
  f[6]+=' BatteryProtect reads identity and mode first; writes only when changed. Success requires mode AND actual output readback. BMS and low-voltage protections are not modified.';
 }
 const MAX_FUNCTIONS=10;
-let functionCount=2,powerUnit='mAh';
+let functionCount=2,powerUnit='mAh',networkOrder=[0,1,2,3];
 let lang=0,ready=false,saving=false,current=null,statusData=null,statusTimer,session=null,page='status',pendingImport=null;
 const pages={status:['Status','Status'],ble:['Bluetooth','Bluetooth'],io:['Ingangen & relais','Inputs & relay'],lora:['LoRaWAN','LoRaWAN'],wifi:['WiFi','WiFi'],manage:['Beheer','Manage']};
 const T=(nl,en)=>lang===0?nl:en;
@@ -115,7 +130,7 @@ for(const f of F){
  if(f.length===3){
   const fs=document.createElement('fieldset'),legend=document.createElement('h2');
   legend.id='legend_'+f[0];legend.className='panel-title';fs.append(legend);fs.setAttribute('aria-labelledby',legend.id);
-  fs.dataset.page=f[0]==='general'||f[0]==='wifi_events'?'wifi':['io','rising','falling'].includes(f[0])?'io':['lora','routes'].includes(f[0])?'lora':'ble';
+  fs.dataset.page=f[0]==='general'||f[0]==='wifi_events'?'wifi':['io','rising','falling'].includes(f[0])?'io':['lora','routes'].includes(f[0])||/^net\d$/.test(f[0])?'lora':'ble';
   grid=document.createElement('div');grid.className='grid'+(['rising','falling'].includes(f[0])?' edge-grid':'');
   fs.append(grid);$('sections').append(fs);continue;
  }
@@ -136,6 +151,41 @@ for(const f of F){
  details.append(summary,help);box.append(el,details);grid.append(box);
 }
 const identity=document.createElement('label');identity.className='identity-toggle';identity.innerHTML='<input id="edit_identity" type="checkbox"><span id="edit_identity_label"></span>';$('field_dev_eui').append(identity);
+// Health belongs with common LoRa settings, not the preceding Bluetooth panel.
+$('legend_lora').parentElement.querySelector('.grid').append($('field_network_health_min'));
+const networkPanels=document.createElement('div');networkPanels.id='network_panels';networkPanels.dataset.page='lora';
+$('legend_routes').parentElement.before(networkPanels);
+let draggedNetwork=null;
+for(let i=0;i<4;i++){
+ const fs=$('legend_net'+i).parentElement;networkPanels.append(fs);fs.dataset.network=String(i);
+ const body=fs.querySelector('.grid'),details=document.createElement('details'),summary=document.createElement('summary'),tools=document.createElement('div');
+ details.id='network_details_'+i;details.open=i===0;summary.id='network_summary_'+i;details.append(summary,body);fs.append(details);
+ tools.className='tools';tools.innerHTML='<button type="button" id="net_up_'+i+'" aria-label="Move network up">↑</button><button type="button" id="net_down_'+i+'" aria-label="Move network down">↓</button><span id="net_drag_'+i+'" draggable="true" tabindex="0" style="cursor:grab;padding:8px" aria-label="Drag network priority">↕</span><small id="net_key_'+i+'"></small>';
+ fs.insertBefore(tools,details);
+ $('net_up_'+i).onclick=()=>moveNetwork(i,-1);$('net_down_'+i).onclick=()=>moveNetwork(i,1);
+ $('net_drag_'+i).ondragstart=e=>{draggedNetwork=i;e.dataTransfer.setData('text/plain',String(i));e.dataTransfer.effectAllowed='move';};
+ fs.ondragover=e=>{if(draggedNetwork!==null)e.preventDefault();};
+ fs.ondrop=e=>{e.preventDefault();if(draggedNetwork===null)return;const from=networkOrder.indexOf(draggedNetwork),to=networkOrder.indexOf(i);networkOrder.splice(from,1);networkOrder.splice(to,0,draggedNetwork);draggedNetwork=null;renderNetworks();};
+ $('net_drag_'+i).ondragend=()=>draggedNetwork=null;
+ $('net'+i+'_name').pattern='[ -~]{1,24}';$('net'+i+'_join_eui').pattern='[0-9A-Fa-f]{16}';$('net'+i+'_app_key').pattern='[0-9A-Fa-f]{32}';
+ for(const f of networkFields)$('net'+i+'_'+f[0]).addEventListener('input',renderNetworks);
+}
+function moveNetwork(slot,delta){const at=networkOrder.indexOf(slot),to=at+delta;if(to<0||to>3)return;[networkOrder[at],networkOrder[to]]=[networkOrder[to],networkOrder[at]];renderNetworks();}
+function renderNetworks(){
+ let first=true;
+ for(const [rank,i]of networkOrder.entries()){
+  const fs=$('legend_net'+i).parentElement;if(networkPanels.children[rank]!==fs)networkPanels.insertBefore(fs,networkPanels.children[rank]||null);
+  $('legend_net'+i).textContent=(rank+1)+'. '+($('net'+i+'_name').value||T('Nieuw netwerk','New network'));
+  const enabled=$('net'+i+'_enabled').checked,custom=$('net'+i+'_rx2_custom').value==='1',key=!!current?.['net'+i+'_key_set'];
+  $('network_summary_'+i).textContent=T('Instellingen · ','Settings · ')+(enabled?T('ingeschakeld','enabled'):T('uitgeschakeld','disabled'));
+  $('net_up_'+i).disabled=rank===0;$('net_down_'+i).disabled=rank===3;
+  $('net_up_'+i).setAttribute('aria-label',T('Prioriteit verhogen','Increase priority'));$('net_down_'+i).setAttribute('aria-label',T('Prioriteit verlagen','Decrease priority'));
+  $('net_key_'+i).textContent=key?T('AppKey bewaard','AppKey stored'):T('Nog geen AppKey','No AppKey yet');
+  $('net'+i+'_app_key').required=enabled&&!key;
+  $('field_net'+i+'_preempt_min').hidden=enabled&&first;if(enabled)first=false;
+  for(const f of ['rx2_freq','rx2_dr']){$('field_net'+i+'_'+f).hidden=!custom;$('net'+i+'_'+f).required=custom;$('net'+i+'_'+f).disabled=!custom;}
+ }
+}
 for(const [field,id]of [['dev_eui','identity_warning'],['class','class_note'],['profile','profile_note'],['input_enabled','input_note']]){const p=document.createElement('p');p.id=id;p.className='panel-note';$('field_'+field).append(p);}
 const statusLabels={lora:['LoRa-status','LoRa status'],ble:['Bluetooth-status','Bluetooth status'],input:['Ingang · 12–24 V DC','Input · 12–24 V DC'],output:['Relaisuitgang','Relay output'],wifi:['WiFi-status','WiFi status'],uptime:['Uptime','Uptime']};
 const modeHelp={
@@ -172,7 +222,13 @@ function showStatus(c){
  for(let i=1;i<=MAX_FUNCTIONS;i++){
   const b=$('test_ble_fn'+i);b.hidden=i>(current?.function_count||2)||!current?.load_enabled||!current?.['fn'+i+'_kind'];b.disabled=!c.ble_available;
  }
- card('lora',c.joined?T('Aangemeld','Joined'):T('Niet aangemeld','Not joined'),T('Uplinks sinds start: ','Uplinks since boot: ')+(c.tx_count??'—'),c.joined?'ok':'attention');
+ const ns=c.network_slot,networkName=current?.['net'+ns+'_name']||T('Geen netwerk','No network');
+ const states=[T('Uitgeschakeld','Disabled'),T('Wachten op aanmelding','Waiting to join'),T('Aanmelden','Joining'),T('Aangemeld','Joined'),T('TTN-wachttijd / joinbudget','TTN cooldown / join budget'),T('Veilig gestopt: opslag/teller controleren','Stopped safely: check storage/counter')];
+ let networkDetail=networkName+' · '+T('Uplinks: ','Uplinks: ')+(c.tx_count??'—');
+ if(c.network_preempt_s)networkDetail+=T(' · Voorkeur opnieuw over ',' · Preferred network retry in ')+duration(c.network_preempt_s);
+ if(c.network_retry_s)networkDetail+=T(' · Volgende poging over ',' · Next attempt in ')+duration(c.network_retry_s);
+ if(c.network_missed)networkDetail+=T(' · Gemiste controles: ',' · Missed checks: ')+c.network_missed;
+ card('lora',states[c.network_state]||(c.joined?T('Aangemeld','Joined'):T('Niet aangemeld','Not joined')),networkDetail,c.joined?'ok':'attention');
  const resultText=[
   T('Nog geen opdracht uitgevoerd.','No command executed yet.'),(current?.profile===3?T('Geslaagd: BatteryProtect-modus én uitgangstoestand teruggelezen.','Success: BatteryProtect mode and output state read back.'):current?.profile===1?T('Geslaagd: MPPT-regelmodus teruggelezen; geen meting van de uitgang.','Success: MPPT control mode read back; not an output measurement.'):T('GATT-opdracht geslaagd. Alleen een functie met teruglezen controleert de waarde.','GATT command succeeded. Only a readback function verifies the value.')),
   T('Controleer MAC-adres en instellingen.','Check MAC address and settings.'),T('Bluetooth-firmware ontbreekt of Bluetooth start niet.','Bluetooth firmware is missing or failed to start.'),
@@ -228,6 +284,7 @@ function translate(){
 }
 const rxDefault={2:[869100000,0],3:[866550000,2],4:[869525000,0],5:[923300000,8],6:[923300000,8],7:[921900000,0],8:[923200000,2],9:[921400000,2],10:[916600000,2],11:[917300000,2]};
 function visibility(){
+ for(const id of ['join_eui','app_key','rx2_custom','rx2_freq','rx2_dr']){$('field_'+id).hidden=true;$(id).disabled=true;$(id).required=false;}
  updateClassNotice();
  const io=+$('io_board').value;
  if(io!==1)$('input_enabled').checked=false;if(io===0)$('relay_enabled').checked=false;
@@ -274,11 +331,11 @@ function visibility(){
  $('field_wifi_input_min').hidden=!input||!$('wifi_input').checked;
  $('field_wifi_lora_min').hidden=!$('wifi_lora').checked;
  $('identity_warning').hidden=!$('edit_identity').checked;
- $('class_note').textContent=$('class').value==='2'?T('Continu luisteren voor snelle bediening. Stel ook de UG65 op Class C in. Meer stroomverbruik.','Continuous listening for prompt control. Also set the UG65 to Class C. Higher power consumption.'):T('Ontvangt alleen kort na een eigen uplink. Opdrachten kunnen wachten tot de volgende statusuitzending (ingesteld: ','Receives only shortly after its own uplink. Commands may wait for the next status transmission (configured: ')+$('status_min').value+T(' minuten). Voor snelle bediening: Class C op board én UG65.',' minutes). For prompt control: Class C on both board and UG65.');
+ $('class_note').textContent=$('class').value==='2'?T('Continu luisteren voor snelle bediening. Stel ook de netwerkserver op Class C in. Meer stroomverbruik.','Continuous listening for prompt control. Also enable Class C on the network server. Higher power consumption.'):T('Ontvangt alleen kort na een eigen uplink. Opdrachten kunnen wachten tot de volgende statusuitzending (ingesteld: ','Receives only shortly after its own uplink. Commands may wait for the next status transmission (configured: ')+$('status_min').value+T(' minuten; op TTN minimaal 240). Voor snelle bediening: Class C op board én netwerkserver.',' minutes; at least 240 on TTN). For prompt control: Class C on both board and network server.');
 
  const r=+$('region').value,custom=$('rx2_custom').value==='1',sub=r===5||r===6;
  $('field_subband').hidden=!sub;if(!sub)$('subband').value='0';
- for(const id of ['rx2_freq','rx2_dr']){$('field_'+id).hidden=!custom;$(id).required=custom;}
+ for(const id of ['rx2_freq','rx2_dr']){$('field_'+id).hidden=true;$(id).required=false;}
  if(!custom&&rxDefault[r])[$('rx2_freq').value,$('rx2_dr').value]=rxDefault[r];
  for(const edge of ['rise','fall']){
   $(edge+'_lora').disabled=!$('input_enabled').checked;
@@ -293,6 +350,7 @@ function visibility(){
   const inactive=$('field_'+f[0]).hidden||(/^fn\d+_/.test(f[0])&&(!ble||+f[0].match(/\d+/)[0]>functionCount));
   $(f[0]).disabled=inactive;
  }
+ renderNetworks();
 }
 function edgeMask(edge){if(!$('input_enabled').checked)return 0;const fn=$(edge+'_ble').disabled?0:+$(edge+'_ble').value;return ($(edge+'_lora').checked?1:0)|(fn?(fn===2?8:4):0)|($(edge+'_relay').disabled?0:+$(edge+'_relay').value);}
 function fillEdge(edge,mask,fn){$(edge+'_lora').checked=!!(mask&1);$(edge+'_ble').value=fn??((mask&4)?1:(mask&8)?2:0);$(edge+'_relay').value=mask&112;}
@@ -345,6 +403,8 @@ $('wifi_ssid').pattern='[ -~]{1,32}';$('wifi_password').pattern='[!-~]{12,63}';
 
 function applyFields(c){
  functionCount=c.function_count||2;
+ networkOrder=Array.from({length:4},(_,i)=>c['net'+i+'_order']??i);
+ if(new Set(networkOrder).size!==4||networkOrder.some(n=>!Number.isInteger(n)||n<0||n>3))networkOrder=[0,1,2,3];
  $('edit_identity').checked=false;$('dev_eui').readOnly=true;
  for(const f of F){
   if(f.length===3||f[3]==='password'||/^(rise|fall|dl|wifi_input$|wifi_hold$|wifi_lora$)_?/.test(f[0])&&['wifi_input_min','wifi_lora_min'].indexOf(f[0])<0)continue;
@@ -384,7 +444,8 @@ $('form').addEventListener('submit',async e=>{
 });
 
 function serialize(){
- const body=new URLSearchParams(new FormData($('form')));body.set('schema','8');body.set('expected_revision',current.revision);
+ const body=new URLSearchParams(new FormData($('form')));body.set('schema','9');body.set('expected_revision',current.revision);
+ for(let i=0;i<4;i++){body.set('net'+i+'_order',networkOrder[i]);body.set('net'+i+'_enabled',$('net'+i+'_enabled').checked?'1':'0');}
  // The STM validates a complete record. Keep inactive settings, using saved values
  // if an unfinished numeric edit was hidden by turning its feature off.
  for(const f of F){
@@ -418,7 +479,7 @@ function showPage(id){
  visibility();
  if(id==='status'&&ready)refreshLog();
 }
-$('form').addEventListener('invalid',e=>{const panel=e.target.closest('[data-page]');if(panel)showPage(panel.dataset.page);},true);
+$('form').addEventListener('invalid',e=>{const panel=e.target.closest('[data-page]');if(panel)showPage(panel.dataset.page);const details=e.target.closest('details');if(details)details.open=true;},true);
 const manage=document.createElement('fieldset');manage.dataset.page='manage';
 manage.innerHTML='<h2 class="panel-title" id="manage_title"></h2><p id="running_firmware" class="firmware-line"></p><p id="backup_help" class="panel-note"></p><div class="tools"><button type="button" id="export"></button><label><span id="import_label"></span><input type="file" id="import" accept=".json,application/json"></label></div><pre id="import_preview"></pre><button type="button" id="apply_import" hidden></button><p id="import_result" role="status"></p><hr><h3 id="ota_title"></h3><p id="ota_help" class="panel-note"></p><input type="file" id="ota_file" accept=".packed"><button type="button" id="ota_upload"></button><progress id="ota_progress" value="0" max="100" hidden></progress><p id="ota_result" role="status"></p>';
 $('sections').append(manage);
@@ -493,7 +554,7 @@ function translateExtra(){
  for(const [id,labels]of Object.entries(pages))$('nav_'+id).textContent=labels[lang];
  const texts={
  manage_title:['Back-up & firmware','Backup & firmware'],
- backup_help:['Exporteer de OPGESLAGEN instellingen als JSON. PIN, AppKey, WiFi-wachtwoord en DevEUI/JoinEUI worden niet geëxporteerd of geïmporteerd. Die blijven op dit board behouden; op een nieuw board vul je ze apart in. Importeren toont eerst de wijzigingen, zet ze daarna alleen in het formulier en slaat pas op als je Opslaan kiest.','Export SAVED settings as JSON. PIN, AppKey, WiFi password and DevEUI/JoinEUI are not exported or imported. They remain on this board; enter them separately on a new board. Import first previews changes, then fills the form. Nothing is saved until you choose Save.'],
+ backup_help:['Exporteer de opgeslagen instellingen, netwerkvolgorde en JoinEUIs als JSON. PIN, AppKeys, WiFi-wachtwoord en DevEUI worden niet geëxporteerd. Sleutels blijven per profielslot op dit board bewaard; op een nieuw board vul je ze opnieuw in. Controleer na import of iedere JoinEUI bij de bewaarde AppKey hoort. Oude v4.9-backups behouden je huidige netwerkprofielen. Importeren vult alleen het formulier; kies daarna Opslaan.','Export saved settings, network priority and JoinEUIs as JSON. PIN, AppKeys, WiFi password and DevEUI are excluded. Keys remain in their profile slots on this board; enter them again on a new board. After importing, check that each JoinEUI matches its retained AppKey. Old v4.9 backups retain the current network profiles. Import fills the form only; then choose Save.'],
  export:['Instellingen exporteren','Export settings'],import_label:['JSON-bestand kiezen','Choose JSON file'],apply_import:['Overnemen in formulier','Apply to form'],
  ota_title:['WiFi/Bluetooth-firmware bijwerken','Update WiFi/Bluetooth firmware'],
  ota_help:['ESP8684-update: kies een passend LoRaBLE .packed-bestand en upload het. Tijdens Bluetooth kan WiFi tijdelijk wegvallen; begin pas als er geen opdracht bezig is. Houd de voeding aangesloten. Deze 2MB-updater heeft GEEN automatische terugval naar de oude firmware. Gebruik alleen een vertrouwde build voor dit board. De LoRa/I/O-firmware op de STM32 wordt hiermee niet bijgewerkt; daarvoor is voorlopig USB nodig.','ESP8684 update: select a matching LoRaBLE .packed file and upload it. Bluetooth temporarily pauses WiFi; start only when no command is active. Keep power connected. This 2MB updater has NO automatic rollback. Use only a trusted build for this board. This does not update the STM32 LoRa/I/O firmware; that still requires USB.'],
@@ -508,10 +569,10 @@ function translateExtra(){
  for(const [id,t]of Object.entries(texts))$(id).textContent=t[lang];
  updateFirmware();renderPower();
 }
-const backupKeys=F.filter(f=>f.length>3&&f[3]!=='password').map(f=>f[0]).filter(id=>!['dev_eui','join_eui'].includes(id)&&!/^(rise|fall|dl)_/.test(id)&&!['wifi_input','wifi_hold','wifi_lora'].includes(id)).concat(['language','rising_actions','falling_actions','wifi_triggers','downlink_allowed','function_count','rising_fn','falling_fn','downlink_functions']);
+const backupKeys=F.filter(f=>f.length>3&&f[3]!=='password').map(f=>f[0]).filter(id=>!['dev_eui','join_eui'].includes(id)&&!/^(rise|fall|dl)_/.test(id)&&!['wifi_input','wifi_hold','wifi_lora'].includes(id)).concat(['language','rising_actions','falling_actions','wifi_triggers','downlink_allowed','function_count','rising_fn','falling_fn','downlink_functions',...Array.from({length:4},(_,i)=>'net'+i+'_order')]);
 function portable(c){const out={};for(const k of backupKeys)if(k in c)out[k]=c[k];return out;}
 $('export').onclick=()=>{
- if(!ready)return;const file={format:'LoRaBLE Remote',schema:8,settings:portable(current)};
+ if(!ready)return;const file={format:'LoRaBLE Remote',schema:9,settings:portable(current)};
  const url=URL.createObjectURL(new Blob([JSON.stringify(file,null,2)],{type:'application/json'}));
  const a=document.createElement('a');a.href=url;a.download='LoRaBLE-settings.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
@@ -520,7 +581,8 @@ $('import').onchange=async()=>{
  try{
   const file=$('import').files[0];if(!file||file.size>16384)throw Error('file_size');
   const data=JSON.parse(await file.text());
-  if(data.format!=='LoRaBLE Remote'||data.schema!==8||!data.settings||Array.isArray(data.settings))throw Error('schema');
+  if(data.format!=='LoRaBLE Remote'||![8,9].includes(data.schema)||!data.settings||Array.isArray(data.settings))throw Error('schema');
+  if(data.schema===8)for(const key of backupKeys.filter(k=>k.startsWith('net')))data.settings[key]=current[key];
   const keys=Object.keys(data.settings);
   if(keys.some(k=>!backupKeys.includes(k))||backupKeys.some(k=>!(k in data.settings)))throw Error('unknown_or_missing_fields');
   for(const f of F.filter(f=>f.length>3&&keys.includes(f[0]))){
@@ -531,6 +593,8 @@ $('import').onchange=async()=>{
   }
   for(const [key,max]of [['rising_actions',127],['falling_actions',127],['wifi_triggers',7],['downlink_allowed',31],['function_count',10],['rising_fn',10],['falling_fn',10],['downlink_functions',1023]])
    if(!Number.isInteger(data.settings[key])||data.settings[key]<0||data.settings[key]>max)throw Error(key);
+  const order=Array.from({length:4},(_,i)=>data.settings['net'+i+'_order']);
+  if(new Set(order).size!==4||order.some(n=>!Number.isInteger(n)||n<0||n>3))throw Error('network_order');
   pendingImport=data.settings;
   const changes=keys.filter(k=>data.settings[k]!==current[k]);
   $('import_preview').textContent=T('Te wijzigen velden:\n','Fields to change:\n')+(changes.join('\n')||T('Geen verschillen.','No differences.'));
@@ -546,6 +610,7 @@ $('apply_import').onclick=()=>{
 const eventLabels=[
  ['Onbekend','Unknown'],['Opgestart','Boot'],['Ingang opgaand','Input rising'],['Ingang neergaand','Input falling'],['LoRa-opdracht','LoRa command'],['Test opgaand','Test rising'],['Test neergaand','Test falling'],['Handmatige actie','Manual action'],['Bluetooth-resultaat','Bluetooth result'],['LoRa aangemeld (1/0)','LoRa joined (1/0)'],['Uplink verstuurd','Uplink sent'],['Relais AAN','Relay ON'],['Relais UIT','Relay OFF'],['Instellingen opgeslagen','Settings saved']
 ];
+for(const [code,nl,en]of [[20,'Netwerk aanmelden','Network join attempt'],[21,'Netwerk aangemeld','Network joined'],[22,'Netwerk aanmelding mislukt','Network join failed'],[23,'Voorkeursnetwerk opnieuw proberen','Retry preferred network'],[24,'Netwerk veilig gestopt: opslag','Network stopped safely: storage'],[25,'Netwerkcontrole bevestigd','Network health acknowledged'],[26,'Netwerkcontrole gemist','Network health check missed']])eventLabels[code]=[nl,en];
 async function refreshLog(){
  try{const r=await fetch('/log',{cache:'no-store',signal:AbortSignal.timeout(9000)});if(!r.ok)throw Error();const data=await r.json();
  $('log_rows').replaceChildren();

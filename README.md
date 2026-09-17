@@ -2,7 +2,10 @@
 
 Een eerste schakelopdracht zonder een permanent draaiend modem.
 
-[English](README.en.md) · [Installeren](docs/INSTALL.md) · [UG65 / TTN](docs/NETWORKS.md) · [Voorbeelden](docs/EXAMPLES.md) · [Teststatus](VALIDATION-v49.md)
+[English](README.en.md) · [Installeren](docs/INSTALL.md) · [UG65 / TTN](docs/NETWORKS.md) · [Voorbeelden](docs/EXAMPLES.md) · [Teststatus](VALIDATION-v410.md)
+
+[Download release 4.10.0](https://github.com/roelbroersma/victron-lorable-remote/releases/tag/v4.10.0)
+— volledige ZIP, STM32 USB-firmware en ESP-browserupdate. Werk beide processors bij.
 
 ## Waarom?
 
@@ -18,7 +21,7 @@ firmware laat ook de STM32 wakker. De datasheetschatting zonder relais is circa
 Het voordeel is afhankelijk van het verbruik en de uit-tijd van je modem.
 [Berekening en bronnen](POWER-BUDGET.md).
 
-## Versie 4.9 — testrelease
+## Versie 4.10 — netwerkprofielen
 
 Op het testboard is de Smart BatteryProtect 100A via de RAK/ESP UIT en AAN gezet.
 Beide toestanden zijn onafhankelijk via pc-Bluetooth teruggelezen. WiFi-OTA van
@@ -38,16 +41,16 @@ de ESP werkt met de bestaande WiFi-naam inclusief spaties.
 | Stroomweergave | Vaste datasheetschatting met mAh/Wh-keuze, geen verplichte rekeninvoer |
 | Updates | STM32 via USB; ESP via browser met passend .packed-bestand |
 | TTN | Configuratie en codec aanwezig; live join/downlink nog te testen |
-| Automatische netwerkfallback | Ontwerp beschreven, **nog niet geïmplementeerd** |
+| Netwerkprioriteit / preempt | Vier OTAA-profielen, ↑/↓ of slepen, instelbare terugkeertijd en echte ACK-controles |
 | Nieuwe module zonder testpinnen | Experimentele interne USEROTA-route; nieuwe fabrieksmodule nog te valideren |
 
-De testrelease is geen veiligheidsvoorziening en niet bedoeld voor onbewaakte
+Deze firmware is geen veiligheidsvoorziening en niet bedoeld voor onbewaakte
 kritieke belastingen. Een LoRa-verzoek is geen aflevergarantie. Gebruik een zekering,
 passende bedrading en een lokale uitschakelmogelijkheid.
 
 ## Hardware
 
-![Statuspagina met voorbeeldgegevens](docs/images/portal-v49-status.png)
+![Statuspagina met voorbeeldgegevens](docs/images/portal-v410-status.png)
 
 *Interfacevoorbeeld met testgegevens; geen live gatewaymeting.*
 
@@ -85,7 +88,10 @@ de modulejumpers. Booten veroorzaakt op zichzelf geen ingangsflank.
    dit zijn maximaal tien opdrachten voor **één doelapparaat**, geen tien apparaten.
 5. Kies de I/O-module en stel, indien aanwezig, per flank een Bluetooth-functie,
    statusbericht en/of relaisactie in.
-6. Vul eigen LoRaWAN-gegevens in. DevEUI wordt uit het board gelezen.
+6. Stel maximaal vier LoRaWAN-netwerkprofielen in en zet ze met ↑/↓ of slepen op prioriteit.
+   Per profiel: naam, aan/uit, type, JoinEUI, AppKey, preempt-tijd en optioneel RX2.
+   DevEUI, regio, Class en FPort zijn gemeenschappelijk. De bestaande configuratie
+   wordt bij upgraden profiel 1. Zie [overstapgedrag](docs/NETWORKS.md).
    Schakel alleen de ontvangen opdrachten in die je wilt toestaan.
 7. Een nieuw aangevinkte ontvangstroute kiest Class C in het formulier en toont
    uitleg. Zet de netwerkserver óók op Class C. Je kunt bewust Class A kiezen:
@@ -95,6 +101,10 @@ de modulejumpers. Booten veroorzaakt op zichzelf geen ingangsflank.
 Opslaan bewaart de configuratie en herstart. De publieke first-boot-configuratie
 schakelt geen onbekende ingang, uitgang of Bluetooth-route in en bevat geen
 installatiesleutels. Bestaande opgeslagen instellingen worden bijwerken behouden.
+
+![Netwerkprofielen met prioriteit en preempt](docs/images/portal-v410-networks.png)
+
+*Voorbeeldinstellingen; vul je eigen sleutels in. Eén netwerk is tegelijk actief.*
 
 ## LoRa-opdrachten
 
@@ -149,7 +159,7 @@ Firmware is niet digitaal ondertekend; installeer uitsluitend vertrouwde bestand
 - Publieke USB-build: `tools/build.ps1 -Public`; sluit `settings.local.h` uit.
 - ESP: ESP-IDF **5.5.5**, ESP32-C2, **26MHz, 2MB**, `esp8684/build.ps1`.
 - Webbron: `web/index.html`; `node tools/build-web.mjs` genereert het kleine gzip-asset.
-- Tests, exacte grenzen en bestanden: [validatie](VALIDATION-v49.md).
+- Tests, exacte grenzen en bestanden: [validatie](VALIDATION-v410.md).
 - [Release-instructies](docs/RELEASING.md); publiceer nooit de hele werkmap.
 
 MIT voor de eigen projectcode: © 2026 Roel Broersma. Meegebouwde bibliotheken

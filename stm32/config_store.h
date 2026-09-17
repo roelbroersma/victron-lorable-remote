@@ -3,10 +3,11 @@
 #include <Arduino.h>
 #include "bluetooth_modes.h"
 #include "bluetooth_functions.h"
+#include "network_profiles.h"
 
-// Runtime settings changed by the ESP web interface. The active LoRaWAN keys
-// remain in RUI NVM; a full target tuple is stored here only while an atomic,
-// power-loss-recoverable credential update is pending.
+// Runtime settings changed by the ESP web interface, including four OTAA keys.
+// RUI keeps the legacy credential tuple for migration and global DevEUI edits.
+// Network selection itself uses RAM; security counters have separate persistence.
 
 struct RuntimeConfig
 {
@@ -44,9 +45,13 @@ struct RuntimeConfig
     BleFunction bleFunctions[MAX_BLE_FUNCTIONS];
     uint8_t functionCount,risingFunction,fallingFunction; // 1-based function IDs, 0=no edge function
     uint16_t downlinkFunctions; // Independent permissions for functions 1..10
+    NetworkProfile networks[MAX_NETWORKS];
+    uint8_t networkOrder[MAX_NETWORKS];
+    uint8_t networksInitialized; // Old firmware migrates the existing RUI tuple once.
+    uint16_t networkHealthMinutes; // 0 disabled; TTN is clamped to at least 240 min.
 };
 
-static const size_t RUNTIME_CONFIG_WIRE_SIZE = 961;
+static const size_t RUNTIME_CONFIG_WIRE_SIZE = 1212;
 
 struct PendingLorawanCredentials
 {

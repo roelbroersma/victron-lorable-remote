@@ -21,7 +21,7 @@ The hardware RX reference from RAK is 5.46 mA at module level. It is **not** add
 
 - WiFi's 65/370 mA figures are active-state/peak references, **not a measured AP average**. For the same model with 10% TX time, WiFi becomes 95.5 mA: +27.45 mAh for its one-hour window. This is a traffic sensitivity example, not guaranteed minimum/maximum consumption.
 - The firmware uses SoftAP, 120 MHz ESP CPU, and does not enable ESP dynamic power management. Station-only modem-sleep values must not be substituted for this access point. Do not add a second ESP CPU current to the full ESP operating-state figures.
-- Bluetooth's configured default TX power is +9 dBm, checked in `esp8684/build_native48/sdkconfig`. Discovery, connection, pairing and verification take time even for one logical command. A 10-second example is small (~0.18 mAh); retries and an absent device can make it longer. The SmartSolar is not present, so the actual transaction time is unmeasured.
+- Bluetooth's configured default TX power is +9 dBm, checked in `esp8684/build_native410/sdkconfig`. Discovery, connection, pairing and verification take time even for one logical command. A 10-second example is small (~0.18 mAh); retries and an absent device can make it longer. The SmartSolar is not present, so its transaction time is unmeasured.
 - ESP is disabled by STM when neither a WiFi window nor a Bluetooth job requires it. The one-hour budget is an assumption: an active input or later triggers can extend real WiFi uptime.
 
 ## Relay modules
@@ -45,11 +45,16 @@ Portal partial totals:
 
 ## LoRa transmissions and Class C
 
-The default table shows continuous RX without uplinks. For an illustrative 18-byte application payload plus 13-byte LoRaWAN overhead, SF12, BW125, CR4/5, explicit header, CRC, eight-symbol preamble and low-data-rate optimization:
+The default table shows continuous RX without uplinks. For the 20-byte application payload plus 13-byte LoRaWAN overhead (no extra MAC options), SF12, BW125, CR4/5, explicit header, CRC, eight-symbol preamble and low-data-rate optimization:
 
 `airtime = (8 + 4.25 + 43) × 2^12 / 125000 = 1.810432 s`
 
 Using RAK's +14 dBm TX reference of 92 mA gives ~0.0463 mAh per uplink. In Class C, TX replaces RX, so incremental charge over continuous RX is `(92−4.82) × 1.810432 / 3600 ≈ 0.0438 mAh`. For 96 uplinks/day (every 15 minutes), about **+4.21 mAh/day**, before retries/joins/extra overhead. ADR, SF, power, regional channels and extra MAC bytes change this. Do not use peak TX current for all 24 hours.
+
+The 15-minute example is not a TTN recommendation. Version 4.10 clamps TTN
+periodic status/health intervals to at least four hours. Preemption entails a new
+join; an unreachable network causes additional attempts. These operations are not
+included in the fixed portal subtotal. See [network policy](docs/NETWORKS.md).
 
 Class C receives except while transmitting and relevant receive-window changes. It is not a microamp sleep mode. RAK's 2.8 µA specifies Stop 1 with ESP disabled/RTC disabled. Current STM firmware disables deep low-power mode for reliable LoRa handling. The RUI BSP runs at 48 MHz. ST lists 5.65 mA instead of 3.45 mA for the corresponding non-SMPS run reference (+52.8 mAh/day); peripheral clocks and temperature are further variables.
 

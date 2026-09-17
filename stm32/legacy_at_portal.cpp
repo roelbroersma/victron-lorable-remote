@@ -1,5 +1,7 @@
 #include "legacy_at_portal.h"
+#include "network_manager.h"
 #include "activity_log.h"
+#include "portal_limits.h"
 
 
 
@@ -13,7 +15,8 @@
 
 namespace
 {
-static const size_t HTTP_CAPACITY = 6144;
+static const size_t HTTP_CAPACITY = LORABLE_HTTP_BUFFER_SIZE;
+static_assert(LORABLE_HTTP_BODY_MAX + 201 <= HTTP_CAPACITY,"HTTP header reserve exhausted");
 static const uint32_t AT_TIMEOUT_MS = 5000;
 
 enum IpdState : uint8_t
@@ -379,6 +382,19 @@ static void sendConfiguration(int8_t link)
     FIELD("function_count",snapshot.functionCount);
     FIELD("rising_fn",snapshot.risingFunction);FIELD("falling_fn",snapshot.fallingFunction);
     FIELD("downlink_functions",snapshot.downlinkFunctions);
+    FIELD("network_health_min",snapshot.networkHealthMinutes);
+    for(unsigned i=0;i<MAX_NETWORKS;++i) {
+        const NetworkProfile &p=snapshot.networks[i];char key[28];
+        #define NET_NUMBER(suffix,value) snprintf(key,sizeof(key),"net%u_%s",i,suffix);FIELD(key,value)
+        #define NET_TEXT(suffix,value) snprintf(key,sizeof(key),"net%u_%s",i,suffix);json+=",\"";json+=key;json+="\":";json+=jsonEscape(value)
+        NET_TEXT("name",p.name);NET_TEXT("join_eui",hexText(p.joinEui,8).c_str());
+        NET_NUMBER("enabled",p.enabled);NET_NUMBER("kind",p.kind);NET_NUMBER("key_set",networkHasKey(p));
+        NET_NUMBER("rx2_custom",p.rx2Custom);NET_NUMBER("rx2_dr",p.rx2DataRate);
+        NET_NUMBER("rx2_freq",p.rx2Frequency);NET_NUMBER("preempt_min",p.preemptMinutes);
+        NET_NUMBER("order",snapshot.networkOrder[i]);
+        #undef NET_NUMBER
+        #undef NET_TEXT
+    }
     for(unsigned i=0;i<MAX_BLE_FUNCTIONS;++i) {
         const BleFunction &f=snapshot.bleFunctions[i];char key[20],text[41];
         #define FUNCTION_TEXT(suffix,value) snprintf(key,sizeof(key),"fn%u_%s",i+1,suffix); json+=",\"";json+=key;json+="\":";json+=jsonEscape(value)
@@ -422,7 +438,7 @@ static void sendConfiguration(int8_t link)
 
 static void sendStatus(int8_t link)
 {
-    String json("{\"firmware\":\"4.9.0\"");
+    String json("{\"firmware\":\"4.10.0\"");
     #define STATE(name, value) appendJsonNumber(json, name, (uint32_t)(value), false)
     STATE("joined", live.joined);
     STATE("ble_available", live.bleAvailable);
@@ -444,6 +460,10 @@ static void sendStatus(int8_t link)
     STATE("relay_changed_ms", live.relayChangedAt);
     STATE("uptime_s", activitySeconds());
     STATE("revision", runtimeConfigRevision());
+    STATE("network_slot",networkActiveSlot());STATE("network_state",networkState());
+    STATE("network_missed",networkMissedChecks());STATE("network_preempt_s",networkPreemptRemaining());
+    STATE("network_retry_s",networkRetryRemaining());
+    STATE("effective_status_min",networkStatusIntervalMinutes());
     #undef STATE
     json += "}";
     sendJson(link, true, json);
@@ -568,9 +588,7 @@ static bool buildUpdate(const char *body, CompanionConfigRequest &request)
         !formValue(body, "ble_attempts", attemptsText, sizeof(attemptsText), true) ||
         !formValue(body, "wifi_ssid", ssid, sizeof(ssid), true) ||
         !formValue(body, "wifi_password", wifiPassword, sizeof(wifiPassword), false) ||
-        !formValue(body, "dev_eui", devEuiText, sizeof(devEuiText), true) ||
-        !formValue(body, "join_eui", joinEuiText, sizeof(joinEuiText), true) ||
-        !formValue(body, "app_key", appKeyText, sizeof(appKeyText), false))
+        !formValue(body, "dev_eui", devEuiText, sizeof(devEuiText), true))
         return false;
 
     int signedValue = 0;
@@ -603,22 +621,11 @@ static bool buildUpdate(const char *body, CompanionConfigRequest &request)
         memcpy(request.devEui, parsed, 8);
         request.credentialMask |= COMPANION_SET_DEVEUI;
     }
-    if (!parseHex(joinEuiText, parsed, 8)) return false;
-    if (memcmp(parsed, snapshotJoinEui, 8) != 0)
-    {
-        memcpy(request.joinEui, parsed, 8);
-        request.credentialMask |= COMPANION_SET_JOINEUI;
-    }
-    if (appKeyText[0] != '\0')
-    {
-        if (!parseHex(appKeyText, request.appKey, 16)) return false;
-        request.credentialMask |= COMPANION_SET_APPKEY;
-    }
     char number[16];
     #define READ_NUMBER(name, minValue, maxValue, target) \
         if (!readFormNumber(body, name, minValue, maxValue, unsignedValue)) return false; \
         target = unsignedValue
-    READ_NUMBER("schema", 8, 8, unsignedValue);
+    READ_NUMBER("schema", 9, 9, unsignedValue);
     READ_NUMBER("expected_revision",0,0xFFFFFFFFUL,unsignedValue);
     if(unsignedValue!=runtimeConfigRevision()) return false;
     READ_NUMBER("language", 0, 1, request.config.language);
@@ -643,6 +650,25 @@ static bool buildUpdate(const char *body, CompanionConfigRequest &request)
     READ_NUMBER("rising_fn",0,MAX_BLE_FUNCTIONS,request.config.risingFunction);
     READ_NUMBER("falling_fn",0,MAX_BLE_FUNCTIONS,request.config.fallingFunction);
     READ_NUMBER("downlink_functions",0,1023,request.config.downlinkFunctions);
+    READ_NUMBER("network_health_min",0,1440,request.config.networkHealthMinutes);
+    request.config.networksInitialized=1;
+    for(unsigned i=0;i<MAX_NETWORKS;++i) {
+        NetworkProfile &p=request.config.networks[i];char key[28],join[17],appKey[33],clear[2];
+        #define NET_READ_NUMBER(suffix,min,max,target) snprintf(key,sizeof(key),"net%u_%s",i,suffix);READ_NUMBER(key,min,max,target)
+        #define NET_READ_TEXT(suffix,target) snprintf(key,sizeof(key),"net%u_%s",i,suffix);if(!formValue(body,key,target,sizeof(target),true))return false
+        NET_READ_TEXT("name",p.name);NET_READ_TEXT("join_eui",join);
+        snprintf(key,sizeof(key),"net%u_app_key",i);if(!formValue(body,key,appKey,sizeof(appKey),false))return false;
+        if(!parseHex(join,p.joinEui,8))return false;
+        if(appKey[0]&&!parseHex(appKey,p.appKey,16))return false;
+        NET_READ_NUMBER("enabled",0,1,p.enabled);NET_READ_NUMBER("kind",0,1,p.kind);
+        NET_READ_NUMBER("rx2_custom",0,1,p.rx2Custom);NET_READ_NUMBER("rx2_dr",0,13,p.rx2DataRate);
+        NET_READ_NUMBER("rx2_freq",100000000,1000000000,p.rx2Frequency);
+        NET_READ_NUMBER("preempt_min",15,10080,p.preemptMinutes);
+        NET_READ_NUMBER("order",0,3,request.config.networkOrder[i]);
+        #undef NET_READ_NUMBER
+        #undef NET_READ_TEXT
+        memset(appKey,0,sizeof(appKey));
+    }
     for(unsigned i=0;i<MAX_BLE_FUNCTIONS;++i) {
         BleFunction &f=request.config.bleFunctions[i];char key[20],service[37],characteristic[37],value[41];
         #define READ_FUNCTION(suffix,value) snprintf(key,sizeof(key),"fn%u_%s",i+1,suffix); if(!formValue(body,key,value,sizeof(value),false))return false
@@ -705,7 +731,7 @@ static int contentLength(const char *request)
             {
                 if (!isdigit((unsigned char)*line)) return -1;
                 value = value * 10 + (*line++ - '0');
-                if (value > 2400) return -1;
+                if (value > LORABLE_HTTP_BODY_MAX) return -1;
             }
             result = (int)value;
         }
@@ -1067,13 +1093,13 @@ void portalNativeFrame(const char *type, uint16_t id, const char *payload)
         clearHttp();
         return;
     }
-    if (!id || id != nativeRequestId || millis() - started > 10000) return;
+    if (!id || id != nativeRequestId || millis() - started > LORABLE_HTTP_ASSEMBLY_MS) return;
     if (!strcmp(type, "HTTP_DATA")) {
         char *end;
         const unsigned long offset = strtoul(payload, &end, 10);
         const size_t n = strlen(end[0] == ':' ? end + 1 : "");
         if (end == payload || *end != ':' || offset != bodyUsed ||
-            bodyUsed + n > 2400) {nativeRequestId = 0; return;}
+            bodyUsed + n > LORABLE_HTTP_BODY_MAX) {nativeRequestId = 0; return;}
         memcpy(httpRequest + bodyUsed, end + 1, n);
         bodyUsed += n;
         httpRequest[bodyUsed] = 0;

@@ -1,18 +1,18 @@
 {
-  "version": "4.9.0-rc1",
-  "release_status": "prerelease",
+  "version": "4.10.0",
+  "release_status": "release",
   "images": [
     {
-      "path": "firmware/LoRaBLE-STM32-4.9.0.bin",
+      "path": "firmware/LoRaBLE-STM32-4.10.0.bin",
       "target": "stm32-usb",
-      "bytes": 185952,
-      "sha256": "9ba8d772518f1dc6f77acb3d17e94ecbb99da1fc234ef89dedb994c861177de4"
+      "bytes": 191496,
+      "sha256": "e9d410af72a9cd8be129a00b72d671e0db78143fe78f9dd94c57e80e3e776649"
     },
     {
-      "path": "firmware/LoRaBLE-ESP8684-4.9.0-rc1.packed",
+      "path": "firmware/LoRaBLE-ESP8684-4.10.0.packed",
       "target": "esp8684-browser",
-      "bytes": 513272,
-      "sha256": "a976e0007d6fcb314d10461e1f44c10eae97b8ece556e1e5773fb9f6afd7cf2c"
+      "bytes": 516792,
+      "sha256": "13dfdf9d4a8569a3f766d839e48f6b830c80800bc7115b2829a5edcd66f7e251"
     }
   ]
 }

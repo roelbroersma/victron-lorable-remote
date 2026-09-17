@@ -1,32 +1,29 @@
 # Release checklist
 
-This repository uses MIT for its original code. Binary SDK notices remain
-separate. The first publication is **4.9.0-rc1**, a prerelease, not a claim of
-universal factory-module compatibility.
+Original project code is MIT; linked SDK terms/notices are separate.
+4.10.0 is a regular release for the documented native RAK11162 installation.
+Factory bootstrap and untested hardware remain explicitly qualified.
 
-1. Run the C++ config/frame tests, JavaScript UI/codec tests and Python packet tests.
-2. Generate the portal asset and build `tools/build.ps1 -Public`. Confirm that
-   `LORABLE_PUBLIC_BUILD` is present in build options. Never publish a personal build.
-3. Build the matching ESP application using IDF 5.5.5. Pack it using
-   `pack-esp-ota.py --version LoRaBLE-C2-26M-v4.9.0-rc1`, then verify the package.
-4. Validate actual USB update, ESP OTA/reconnect, saved-setting migration and
-   Bluetooth control. Record limits and hashes in `VALIDATION-v49.md`.
-5. Run `node tools/prepare-release.mjs <new-empty-staging-directory>`. It copies an
-   explicit source allowlist, public binaries and SDK notices, verifies public-build
-   flags, checks known private installation values and creates hashes/manifest.
-   It never removes existing files. Review the staged files separately before publishing.
-6. Check that `settings.local.h`, raw flash dumps, ESP bootloader/partition binaries,
-   research APK/resources, private reports and owner-only bench helpers are absent.
-7. Commit the reviewed source plus `firmware/` artifacts. Keep native binaries in
-   the release only; `git add -f firmware/` is needed because the global ignore
-   intentionally excludes arbitrary build binaries.
-8. Publish tag `v4.9.0-rc1` as a **prerelease**. Attach the STM32 .bin, ESP .packed,
-   SHA256SUMS and complete ZIP. The ZIP retains installer/docs/dependency notices.
-   A GitHub source archive alone also works once firmware files are included.
+1. Run C++ config/frame, network-policy/nonce-store and manager-integration tests, JS UI/codec tests
+   and Python Bluetooth/OTA tests. Inspect desktop and mobile screenshots.
+2. Generate the portal asset. Build tools/build.ps1 -Public with RAK RUI 4.2.4.
+   Verify LORABLE_PUBLIC_BUILD, flash/RAM limits and runtime stability.
+3. Build the ESP32-C2/26MHz application with ESP-IDF 5.5.5; pack with the version
+   marker LoRaBLE-C2-26M-v4.10 and test corruption rejection.
+4. Test USB migration, ESP browser OTA, preserved settings, profile persistence,
+   a failed preferred join, fallback, preemption and return. Verify a received
+   network response; TX_DONE alone does not prove server reception.
+5. Record actual tested paths and limits in VALIDATION-v410.md. Restore temporary
+   test profiles and leave unloaded outputs in the intended state.
+6. Run node tools/prepare-release.mjs with a new empty staging directory. Its
+   allowlist copies public sources/images/SDK notices and scans private values.
+7. Review staged files. Exclude settings.local.h, private reports, bench helpers,
+   research files, ESP bootloader/partition tables and installation credentials.
+8. Copy reviewed files to the release checkout. The ZIP builder includes the
+   checksum-listed files and notices, not unrelated/historical repository artifacts.
+   Commit/push main and wait for CI before tagging v4.10.0.
+9. The tag workflow verifies hashes/tests, creates a draft, uploads both images,
+   manifest, SHA256SUMS and full ZIP, then publishes. Verify public asset digests.
 
-Do not remove the prerelease warning until factory bootstrap, TTN join/downlink,
-protection-active scenarios and longer stability tests have been completed.
-Automatic two-profile failover is a separate feature and is not present in 4.9.
-
-No secrets belong in GitHub Actions variables for building these public images.
-No public release should include a common private-network AppKey.
+Never put device secrets in CI. A regular release flag is not a claim that every
+region, factory bootstrap route, I/O module or Bluetooth product is tested.

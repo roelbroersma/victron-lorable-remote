@@ -4,9 +4,10 @@
 
 ### Eén netwerk tegelijk
 
-Versie 4.9 gebruikt één OTAA-configuratie. Dat kan de ingebouwde netwerkserver
-van een Milesight UG65 zijn, of The Things Network. TTN heeft geen andere
-applicatiepayload nodig. TTN is nog niet live getest met deze installatie.
+Versie 4.10 bewaart vier OTAA-netwerkprofielen en gebruikt één sessie tegelijk.
+Dat kan de ingebouwde netwerkserver van een Milesight UG65 zijn, TTN of een
+andere LoRaWAN-server. Dezelfde applicatiepayload/codec werkt op beide.
+TTN zelf is nog niet live getest met deze installatie.
 
 Een gateway is de radioverbinding; een netwerkserver beheert de sessie. Het
 board kiest dus niet een gateway-IP. Meerdere gateways van **hetzelfde** netwerk
@@ -67,29 +68,80 @@ bij SF12 (ongeveer 1,81 seconde elk) overschrijden 30 seconden. De publieke
 first-boot-configuratie gebruikt daarom vier uur tussen statusberichten; ook dan
 moet je gebeurtenissen, joins, retries en werkelijke datarate meetellen.
 
-### Twee netwerken met prioriteit — ontwerp, nog niet geïmplementeerd
+### Netwerkprofielen, prioriteit en preempt in 4.10
 
-De gewenste keuzen zijn mogelijk: alleen privé, alleen TTN, privé → TTN, of TTN →
-privé. Daarvoor zijn **twee onafhankelijke OTAA-profielen** nodig: elk een
-JoinEUI/AppKey en passende regio-/RX2-instellingen. Geen gedeelde AppKey gebruiken.
-Er is één actieve LoRaWAN-sessie: beide netwerken tegelijk ontvangen kan niet.
+Open **LoRaWAN**. De bestaande 4.9-aanmeldgegevens migreren automatisch naar
+het eerste profiel. Elk van de vier profielen heeft een naam, aan/uit, netwerktype,
+JoinEUI, AppKey, preempt-tijd en optionele RX2-instelling. DevEUI, radio-regio,
+subband, Class, FPort en opdrachttoestemmingen zijn gemeenschappelijk.
 
-Een veilige implementatie hoort:
+Verplaats de kaarten met **↑ / ↓** (ook op mobiel/toetsenbord) of sleep de **↕**.
+Bovenaan = hoogste prioriteit. Uitgeschakelde profielen worden overgeslagen.
+De sleutel blijft bij hetzelfde profielslot; verplaatsen verwisselt geen sleutels.
+Een leeg AppKey-veld behoudt de sleutel van dat slot. AppKeys zijn niet uitleesbaar
+of aanwezig in exports. Gebruik verschillende JoinEUIs voor ingeschakelde profielen
+en eigen sleutels per netwerk. Alle wijzigingen worden pas na Opslaan actief.
 
-- eerst de voorkeur te proberen, met begrensde joinpogingen en wachttijden;
-- alleen op ontbrekende bevestigingen/netwerkantwoorden falen, niet op het
-  ontbreken van een willekeurige downlink of een lokale `TX_DONE`;
-- na meerdere gemiste, gespreide controles naar profiel 2 te gaan en opnieuw OTAA
-  te joinen; de MCU hoeft daarvoor normaal niet opnieuw op te starten;
-- op de reserveverbinding hooguit dagelijks één begrensde poging naar de voorkeur
-  te doen en bij mislukken terug te keren; tijdens join is bediening onderbroken;
-- DevNonce-/framecounterbescherming te behouden, instellingen atomair te bewaren
-  en joinlussen of voortdurend flashschrijven te voorkomen;
-- een TTN-airtime/ACK-budget te hanteren dat ook de eigen schakelberichten meetelt.
+| Voorbeeld | Type | Aan | Preempt |
+|---|---|---|---|
+| 1. Eigen UG65 | Eigen / ander | Ja | Niet van toepassing zolang hoogste prioriteit |
+| 2. TTN | TTN Sandbox | Ja | 1440 minuten = 24 uur |
+| 3–4 | Naar behoefte | Nee | 1440 minuten standaard |
 
-Dit is **geen actieve functie in 4.9**. Er zijn nog geen tweede credentials of
-live failovertests. Voor nu wijzig je de ene netwerkconfiguratie via WiFi en
-join je opnieuw. De firmware slaat dit op en herstart na bewaren.
+**Twee netwerken:**
+
+1. Bij starten probeert het board het hoogste ingeschakelde profiel eenmaal.
+2. Bij een mislukte join gaat het naar profiel 2, met minstens 60 seconden tussen
+   die pogingen. Regionale duty-cyclebeperkingen kunnen extra wachttijd afdwingen.
+3. De preempt-timer begint bij selectie van het reserveprofiel, **niet pas bij
+   succesvolle aanmelding**. Tot het einde blijft het daar: verbonden, of opnieuw
+   proberend (eigen netwerk elke 5 minuten; TTN minimaal elk uur binnen zijn budget).
+4. Na afloop probeert het opnieuw vanaf de hoogste prioriteit. Een werkende
+   reserveverbinding wordt daarvoor verlaten: bediening is tijdens de nieuwe join
+   tijdelijk niet mogelijk. Het board zelf hoeft niet opnieuw te starten.
+5. Faalt de voorkeur opnieuw, dan gaat het terug naar de reserve met een nieuwe
+   preempt-periode. Bij succes blijft het op de voorkeur zonder preempt-timer.
+
+**Drie/vier netwerken:** bij preempt worden hogere profielen op volgorde één keer
+geprobeerd. Als die falen, keert het terug naar de voorheen werkende reserve.
+Was de reserve onbereikbaar, dan krijgt de volgende lagere reserve een beurt.
+Na de laatste begint de reserveronde opnieuw. Zo kan een onbereikbaar profiel 2
+profiel 3 niet voor altijd blokkeren. Preempt is instelbaar van 15 minuten tot 7 dagen.
+
+**Bereikbaarheidscontrole:** standaard elke 240 minuten één confirmed statusuplink,
+zonder automatische retransmissies. Alleen een echte ACK of ontvangen downlink
+bevestigt de verbinding; gewone TX_DONE doet dat niet. Na twee gemiste controles
+wordt opnieuw gejoined of de reserve gekozen. Op een reserve geldt nog steeds
+de lopende preempt-timer: een verbroken reserve wordt tot die tijd zelf herprobeerd.
+0 schakelt deze controle uit: joinfouten worden dan nog afgehandeld, maar een
+stil weggevallen netwerk wordt niet automatisch ontdekt. Instelbaar 15–1440 minuten;
+TTN gebruikt altijd minimaal 240 minuten.
+
+**TTN Sandbox:** kies expliciet het TTN-type. Periodieke statusberichten worden
+op dat netwerk op minimaal 240 minuten begrensd; privé mag een kortere ingestelde
+interval gebruiken. Maximaal zes joinpogingen per profiel per 24-uursbudget en
+minimaal één uur tussen herhaalde TTN-joinpogingen. Tellers staan in RAM en worden
+bij een herstart opnieuw gestart. Dit is **geen volledige airtimeboekhouding**:
+ingangsacties, handmatige tests, joinaccepts, MAC-antwoorden en downlinks tellen ook
+mee. Frequent herstarten is geen manier om het fair-usebeleid te omzeilen.
+Kies geen korte preempt-tijd op TTN voor normaal gebruik; 24 uur is de standaard.
+Na zes joins blijft het profiel op zijn budget wachten of wordt een ander profiel
+geprobeerd volgens de prioriteitslogica.
+
+**Bewaren en veiligheid:** instellingen gebruiken CRC-gecontroleerde A/B-opslag.
+Countdowns, retries en logs schrijven niet naar flash. Credentials worden bij
+wisselen alleen in het RAM van de LoRa-stack gewijzigd. De globale DevNonce wordt
+voor uitzending in blokken van 16 gereserveerd: na een reboot worden ongebruikte
+waarden overgeslagen, nooit hergebruikt. Per netwerk wordt de laatste JoinNonce
+apart A/B opgeslagen na een succesvolle join; een instellingenimport zet die niet
+terug. De ledger bewaart maximaal acht historische OTAA-identiteiten. Bij volle/
+beschadigde opslag, flashfouten of een uitgeputte DevNonce stopt aanmelden veilig.
+Wis geen NVM om beveiligingstellers te herstellen. Gebruik geen losse AT+JOIN- of
+credentialcommando's naast de profielmanager. Deze integratie is getest/bepaald
+voor RAK RUI BSP 4.2.4; een andere BSP moet opnieuw gecontroleerd worden.
+
+Status toont het actieve profiel, aanmelding, volgende poging, resterende
+preempt-tijd en gemiste controles. Recente gebeurtenissen zijn maximaal 24 RAM-regels.
 
 ## UG65 tegelijk lokaal en TTN / Simultaneous local and TTN forwarding
 
@@ -122,8 +174,8 @@ registreren registreert **niet** automatisch je RAK.
 
 Dezelfde uplink kan naar beide servers worden doorgestuurd, maar slechts de
 server van de actieve sessie kan hem ontsleutelen. Gebruik onafhankelijke
-JoinEUI/AppKey-profielen om concurrerende joins te vermijden. Deze gatewaymodus
-implementeert niet automatisch de nog ontbrekende node-fallback. Schakel niet
+JoinEUI/AppKey-profielen om concurrerende joins te vermijden. De gatewaymodus zelf verzorgt geen node-fallback; daarvoor gebruikt versie 4.10
+de bovenstaande profielmanager. Schakel niet
 tegelijk ook Basic Station in volgens een andere handleiding: Milesights
 Basic Station-procedure vraagt Embedded NS uit te zetten.
 
@@ -141,38 +193,57 @@ References: [Milesight Semtech/TTN integration](https://support.milesight-iot.co
 [UG65 user guide, Packet Forwarder](https://resource.milesight.com/milesight/iot/document/ug65-user-guide-en.pdf),
 [Basic Station procedure](https://support.milesight-iot.com/support/solutions/articles/73000514079-milesight-gateway-the-things-stack-ttn-integration-via-basic-station).
 
-## English — node registration and failover
+## English — profiles, registration and preemption
 
-Version 4.9 supports **one active OTAA configuration**, usable with a private
-UG65 network server or TTN. Live TTN testing is pending. The node selects a
-LoRaWAN network identity, not a gateway IP; gateways belonging to the same
-network do not require device-side failover.
+Version 4.10 stores four OTAA profiles, with **one active session**. Names,
+enable switches, network type, JoinEUI, AppKey, preemption minutes and optional
+RX2 overrides are per-profile; DevEUI, radio region, subband, Class, FPort and
+action permissions are shared. Existing 4.9 credentials migrate into slot 1.
+Order with ↑/↓ or drag ↕. Slots keep their own keys when moved. Blank AppKey
+retains that slot's key. Keys are never returned or exported. Enabled profiles
+must have distinct JoinEUIs; use independent keys.
 
-For the older tested private UG65 use compatibility profile 1.0.2, matched Class A/C, RX1
-delay 1 s/offset 0, RX2 869525000 Hz/DR0, matching DevEUI/JoinEUI/AppKey, FPort 10.
-Use your own unique credentials, never an example device's identity or key.
+On boot try the highest enabled priority once. After failure select the next
+backup, waiting at least 60 seconds before its attempt. A backup stays selected
+until its preemption period expires **even if it cannot join**. Private retries
+are every 5 minutes; TTN retries no more than once per hour within its join budget,
+including across priority switches.
+Default preemption is 1440 minutes (24 hours), allowed range 15–10080 minutes.
 
-On TTN create an application and manually register a device: matching regional
-frequency plan, LoRaWAN 1.0.4. This RUI build's LoRaMAC headers specify
-RP002-1.0.3; recheck when changing BSP versions. Configure its
-DevEUI, JoinEUI and a unique AppKey on the node. All-zero JoinEUI is accepted,
-but all-zero DevEUI/AppKey is not. Leave node RX2 overrides disabled. Enable
-Class C at both ends for prompt downlinks; send an uplink after joining first.
-Use the included `decodeUplink` JavaScript formatter. Queue unconfirmed hex
-downlinks on the configured application port, with matching node permissions.
+At expiry try higher priorities from the top. Leave the old session and perform
+OTAA again, without rebooting the MCU; there is a receive gap. If higher choices
+fail, return to a formerly working backup. If that backup was unreachable,
+advance to the next lower backup, wrapping after the last. This avoids starving
+profiles 3/4 behind an unreachable profile 2. A successful preferred network has
+no preemption timer. Disabled profiles are skipped; all disabled turns LoRa off.
 
-TTN Sandbox permits 30 s uplink airtime and 10 downlinks including ACKs per day.
-Neither 96 confirmed checks/day nor 96 SF12 status packets/day fit that budget.
-Public first-boot defaults use a four-hour status interval, not a promise that
-all possible event traffic fits. Account for actual airtime and extra events.
+Health checks default to one confirmed status uplink every 240 minutes, no
+automatic retransmissions. Only an ACK or received downlink proves connectivity,
+not TX_DONE. Two missed checks cause rejoining/fallback; a failed backup is still
+retried until its preemption expiry. 0 disables health checks (silent network loss
+then remains undetected). Allowed interval 15–1440 minutes; TTN minimum 240.
 
-**Priority/failover is planned, not implemented in 4.9.** It needs two distinct
-OTAA profiles, bounded retries, verified network health, protected persistent
-nonces and airtime-aware checks. Switching requires a fresh join, normally no
-MCU reboot; there is a receive gap. A daily preferred-network retry is feasible,
-but must return to the fallback on failure. An unconfirmed TX completion is not
-proof that the server received it. Current manual configuration changes reboot
-the node after saving.
+Select TTN Sandbox type to clamp periodic status and health to at least four
+hours, with up to six join attempts per profile per 24-hour RAM budget. Counters
+restart on reboot. This is not complete airtime accounting: events, manual tests,
+MAC replies, joins and downlinks still consume fair use. Never use rebooting to
+evade limits. Prefer 24-hour preemption. TTN Sandbox allows 30 seconds uplink
+airtime and ten downlinks including ACKs per day.
+
+On TTN register an application and end device: matching frequency plan, LoRaWAN
+1.0.4, RP002-1.0.3 for the included RUI 4.2.4 BSP, board DevEUI, separate JoinEUI/
+AppKey. Zero JoinEUI is accepted; zero DevEUI/AppKey is not. Leave RX2 automatic.
+Enable Class C at both ends for prompt downlinks and send the initial uplink after
+joining. Use the included decodeUplink formatter and unconfirmed hex commands on
+FPort 10 with the matching node permission. Live TTN validation is still pending.
+
+Credentials change in LoRa-stack RAM, not persistent settings on every switch.
+DevNonce reservations of 16 are persisted before RF; reboot skips unused values.
+Per-network JoinNonce uses separate A/B flash records, not imported settings.
+There is space for eight historical OTAA identities. Full/corrupt nonce storage,
+write failures or nonce exhaustion stop joins safely. Do not erase security
+counters or mix standalone AT+JOIN/credential commands with the manager.
+Retry/countdown/log state is RAM-only. BSP changes require a fresh audit.
 
 ## Sources
 

@@ -2,7 +2,10 @@
 
 The first wake-up command, without an always-on cellular modem.
 
-[Nederlands](README.md) · [Installation](docs/INSTALL.md) · [UG65 / TTN](docs/NETWORKS.md) · [Examples](docs/EXAMPLES.md) · [Validation](VALIDATION-v49.md)
+[Nederlands](README.md) · [Installation](docs/INSTALL.md) · [UG65 / TTN](docs/NETWORKS.md) · [Examples](docs/EXAMPLES.md) · [Validation](VALIDATION-v410.md)
+
+[Download release 4.10.0](https://github.com/roelbroersma/victron-lorable-remote/releases/tag/v4.10.0)
+— complete ZIP, STM32 USB firmware and ESP browser update. Update both processors.
 
 ## Why?
 
@@ -17,12 +20,13 @@ about 0.88 Wh/day with one hour of WiFi and no relay coil, excluding regulator
 losses, LEDs and transmission. Savings depend on the modem's power and off-time.
 See [power assumptions and sources](POWER-BUDGET.md).
 
-## 4.9 test release
+## 4.10 — network profiles
 
 Smart BatteryProtect 12/24V-100A (product A3B1) was switched OFF and back ON
 through the RAK/ESP. Independent PC Bluetooth reads confirmed both states.
 ESP browser OTA recovered WiFi with the original spaced SSID and preserved settings.
 
+- Four OTAA network profiles with ↑/↓ or drag priority, per-backup preemption time and ACK-based health checks.
 - Up to **10 named Bluetooth functions**, added with +, each with stable downlink ID.
 - Profiles: Smart MPPT LOAD, **Smart BatteryProtect second**, Generic Bluetooth GATT.
 - Per-edge function/uplink/relay actions; per-function and per-relay downlink permissions.
@@ -32,14 +36,14 @@ ESP browser OTA recovered WiFi with the original spaced SSID and preserved setti
 - STM32 USB update and ESP browser `.packed` update.
 
 **Limitations:** real MPPT and RAK13007 tests are pending; TTN live testing is
-pending; automatic two-network priority/failover is **not implemented**. The
+pending; network priority/preemption is implemented and independently tested. The
 internal stock-AT USEROTA bootstrap is experimental and has not been retested
 end-to-end on a fresh factory module. This is not a universally validated
 one-click installer or a safety-critical controller.
 
 ## Hardware
 
-![Status page with example data](docs/images/portal-v49-status.png)
+![Status page with example data](docs/images/portal-v410-status.png)
 
 *UI example with simulated data, not a live gateway measurement.*
 
@@ -69,7 +73,9 @@ LoRa and 2.4GHz antennas.
 4. Add named functions with +. All functions target **one configured device**,
    not ten separate devices. BatteryProtect uses instance 0.
 5. Choose the I/O board and per-edge actions, if fitted.
-6. Enter your own [LoRaWAN credentials](docs/NETWORKS.md). DevEUI is read from the RAK.
+6. Configure up to four [LoRaWAN profiles](docs/NETWORKS.md) and order them by priority.
+   Each has its own JoinEUI, AppKey and preemption time. DevEUI, region, Class and FPort
+   are shared. Existing credentials migrate into profile 1.
    Enable only desired downlink permissions. Set Class C on both node and server
    for prompt reception; Class A receives only after an uplink.
 7. Save to persist/reboot, then test without a connected load.
@@ -118,7 +124,7 @@ still require USB; this is not whole-device wireless OTA.
 Arduino source: [stm32/stm32.ino](stm32/stm32.ino), RUI BSP 4.2.4.
 `tools/build.ps1 -Public` excludes private local settings. ESP uses IDF 5.5.5,
 ESP32-C2, 26MHz/2MB. Web source is `web/index.html`; generate with
-`node tools/build-web.mjs`. See [validation](VALIDATION-v49.md) and
+`node tools/build-web.mjs`. See [validation](VALIDATION-v410.md) and
 [release steps](docs/RELEASING.md).
 
 Own project code: MIT, © 2026 Roel Broersma. Dependencies retain their

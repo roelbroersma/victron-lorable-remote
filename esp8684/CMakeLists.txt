@@ -17,5 +17,5 @@ if(WIN32 AND DEFINED ENV{IDF_TOOLS_PATH})
 endif()
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
-set(PROJECT_VER "4.9.0-rc1")
+set(PROJECT_VER "4.10.0")
 project(lorable_esp8684)

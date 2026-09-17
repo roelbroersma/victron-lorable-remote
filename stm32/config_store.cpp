@@ -17,7 +17,7 @@ static const uint32_t CONFIG_SLOT_B_OFFSET = 0x6000;
 static const uint32_t CONFIG_MAGIC = 0x34474643UL; // "CFG4" little endian
 static const uint16_t LEGACY_FORMAT_VERSION_V1 = 1;
 static const uint16_t LEGACY_FORMAT_VERSION_V2 = 2;
-static const uint16_t CONFIG_FORMAT_VERSION = 7;
+static const uint16_t CONFIG_FORMAT_VERSION = 8;
 static const uint16_t V4_RUNTIME_CONFIG_WIRE_SIZE = 147;
 static const uint16_t V3_RUNTIME_CONFIG_WIRE_SIZE = 133;
 static const uint16_t LEGACY_RUNTIME_CONFIG_WIRE_SIZE = 100;
@@ -74,7 +74,12 @@ struct __attribute__((packed)) StoredConfigV6 {
     uint8_t payload[532];
     uint32_t crc;
 };
-struct __attribute__((packed)) StoredConfigV7
+struct __attribute__((packed)) StoredConfigV7 {
+    StoredHeader header;
+    uint8_t payload[997];
+    uint32_t crc;
+};
+struct __attribute__((packed)) StoredConfigV8
 {
     StoredHeader header;
     uint8_t payload[RECORD_PAYLOAD_SIZE];
@@ -85,7 +90,7 @@ static_assert(LEGACY_PENDING_OFFSET + 33 <= LEGACY_RECORD_PAYLOAD_SIZE,
               "Legacy pending credentials exceed the v2 payload");
 static_assert(PENDING_OFFSET + 33 <= RECORD_PAYLOAD_SIZE,
               "Pending credentials exceed the v3 payload");
-static_assert(sizeof(StoredConfigV7) <= 0x800,
+static_assert(sizeof(StoredConfigV8) <= 0x800,
               "Configuration record exceeds one flash page");
 
 struct SlotData
@@ -315,13 +320,22 @@ static bool readSlot(uint32_t offset, SlotData &slot)
         if(valid)slot.generation=old.header.generation;
         secureZero(&old,sizeof(old));return valid;
     }
+    if (header.formatVersion == 7 && header.payloadLength == 997) {
+        StoredConfigV7 old;
+        if (!api.system.flash.get(offset,(uint8_t *)&old,sizeof(old))) return false;
+        const bool valid=old.crc==crc32((const uint8_t *)&old,sizeof(old)-4) &&
+            runtimeConfigDecode(old.payload,961,slot.config) &&
+            decodePending(old.payload,sizeof(old.payload),961,slot.pending);
+        if(valid)slot.generation=old.header.generation;
+        secureZero(&old,sizeof(old));return valid;
+    }
     if (header.formatVersion != CONFIG_FORMAT_VERSION ||
         header.payloadLength != RECORD_PAYLOAD_SIZE)
     {
         return false;
     }
 
-    StoredConfigV7 record;
+    StoredConfigV8 record;
     memset(&record, 0, sizeof(record));
     if (!api.system.flash.get(offset, reinterpret_cast<uint8_t *>(&record),
                               sizeof(record)))
@@ -368,7 +382,7 @@ static bool writeRecord(const RuntimeConfig &config,
     const uint32_t targetOffset=!(validA||validB)?CONFIG_SLOT_A_OFFSET:
         latestA?CONFIG_SLOT_B_OFFSET:CONFIG_SLOT_A_OFFSET;
     const uint32_t latestGeneration=latestA?genA:genB;
-    StoredConfigV7 record={};
+    StoredConfigV8 record={};
     record.header.magic=CONFIG_MAGIC;
     record.header.formatVersion=CONFIG_FORMAT_VERSION;
     record.header.payloadLength=RECORD_PAYLOAD_SIZE;
@@ -433,10 +447,32 @@ void runtimeConfigDefaults(RuntimeConfig &config)
     config.risingActions = ACTION_UPLINK | ACTION_LOAD_ON;
     config.fallingActions = ACTION_UPLINK;
     config.relayPulseMs = 1000;
+    config.networkHealthMinutes=240;
+    for(unsigned i=0;i<MAX_NETWORKS;++i) {
+        config.networkOrder[i]=i;
+        NetworkProfile &p=config.networks[i];
+        snprintf(p.name,sizeof(p.name),"Network %u",i+1);
+        p.preemptMinutes=1440;p.rx2Frequency=869525000;
+    }
 }
 
 bool runtimeConfigValid(const RuntimeConfig &config)
 {
+    if(config.networksInitialized>1 || (config.networkHealthMinutes &&
+       (config.networkHealthMinutes<15 || config.networkHealthMinutes>1440)))return false;
+    uint8_t seen=0;
+    for(unsigned i=0;i<MAX_NETWORKS;++i) {
+        const uint8_t slot=config.networkOrder[i];
+        if(slot>=MAX_NETWORKS || (seen&(1u<<slot)))return false;seen|=1u<<slot;
+        const NetworkProfile &p=config.networks[i];const size_t n=strnlen(p.name,25);
+        if(!n||n>24||p.enabled>1||p.kind>1||p.rx2Custom>1||p.preemptMinutes<15||p.preemptMinutes>10080)return false;
+        for(size_t j=0;j<n;++j)if((uint8_t)p.name[j]<32||(uint8_t)p.name[j]>126)return false;
+        if(p.rx2Custom&&!validRx2(config.loraRegion,p.rx2Frequency,p.rx2DataRate))return false;
+        if(p.enabled&&!networkHasKey(p))return false;
+        // Two active profiles must not be indistinguishable to a join server.
+        for(unsigned j=0;j<i;++j)if(p.enabled&&config.networks[j].enabled&&
+          !memcmp(p.joinEui,config.networks[j].joinEui,8))return false;
+    }
     if(config.ioBoard>2 || (config.inputEnabled && config.ioBoard!=1) ||
        (config.relayEnabled && config.ioBoard==0) || config.wifiTriggers>7 ||
        config.downlinkAllowed>31 || config.wifiAfterInputSeconds<60 ||
@@ -532,6 +568,14 @@ void runtimeConfigEncode(const RuntimeConfig &config,
     }
     output[956]=config.functionCount;output[957]=config.risingFunction;output[958]=config.fallingFunction;
     output[959]=(uint8_t)config.downlinkFunctions;output[960]=(uint8_t)(config.downlinkFunctions>>8);
+    for(unsigned i=0;i<MAX_NETWORKS;++i) {
+        const NetworkProfile &n=config.networks[i];uint8_t *p=output+961+i*NETWORK_WIRE_SIZE;
+        memcpy(p,n.name,24);p[25]=n.enabled;p[26]=n.kind;
+        memcpy(p+27,n.joinEui,8);memcpy(p+35,n.appKey,16);
+        p[51]=n.rx2Custom;p[52]=n.rx2DataRate;putU32Le(p+53,n.rx2Frequency);putU32Le(p+57,n.preemptMinutes);
+    }
+    memcpy(output+1205,config.networkOrder,4);output[1209]=config.networksInitialized;
+    output[1210]=(uint8_t)config.networkHealthMinutes;output[1211]=(uint8_t)(config.networkHealthMinutes>>8);
 }
 
 bool runtimeConfigDecode(const uint8_t *input, size_t length,
@@ -541,7 +585,7 @@ bool runtimeConfigDecode(const uint8_t *input, size_t length,
         (length != LEGACY_RUNTIME_CONFIG_WIRE_SIZE &&
          length != V3_RUNTIME_CONFIG_WIRE_SIZE &&
          length != V4_RUNTIME_CONFIG_WIRE_SIZE && length != 155 &&
-         length != 496 && length != RUNTIME_CONFIG_WIRE_SIZE)) return false;
+         length != 496 && length != 961 && length != RUNTIME_CONFIG_WIRE_SIZE)) return false;
     runtimeConfigDefaults(config);
     memcpy(config.victronMac, &input[0], 17);
     config.victronMac[17] = '\0';
@@ -605,7 +649,7 @@ bool runtimeConfigDecode(const uint8_t *input, size_t length,
             if(!functionSetText(f,(const char *)p+25,(const char *)p+62,(const char *)p+99)) return false;
         }
     }
-    if(length==RUNTIME_CONFIG_WIRE_SIZE) {
+    if(length>=961) {
         config.functionCount=input[956];config.risingFunction=input[957];config.fallingFunction=input[958];
         config.downlinkFunctions=input[959]|((uint16_t)input[960]<<8);
         for(unsigned i=0;i<MAX_BLE_FUNCTIONS;++i) {
@@ -617,6 +661,16 @@ bool runtimeConfigDecode(const uint8_t *input, size_t length,
         config.risingFunction=(config.risingActions&4)?1:(config.risingActions&8)?2:0;
         config.fallingFunction=(config.fallingActions&4)?1:(config.fallingActions&8)?2:0;
         config.downlinkFunctions=config.downlinkAllowed&3;
+    }
+    if(length==RUNTIME_CONFIG_WIRE_SIZE) {
+        for(unsigned i=0;i<MAX_NETWORKS;++i) {
+            NetworkProfile &n=config.networks[i];const uint8_t *p=input+961+i*NETWORK_WIRE_SIZE;
+            if(p[24])return false;memcpy(n.name,p,25);n.enabled=p[25];n.kind=p[26];
+            memcpy(n.joinEui,p+27,8);memcpy(n.appKey,p+35,16);
+            n.rx2Custom=p[51];n.rx2DataRate=p[52];n.rx2Frequency=getU32Le(p+53);n.preemptMinutes=getU32Le(p+57);
+        }
+        memcpy(config.networkOrder,input+1205,4);config.networksInitialized=input[1209];
+        config.networkHealthMinutes=input[1210]|((uint16_t)input[1211]<<8);
     }
     return runtimeConfigValid(config);
 }

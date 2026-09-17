@@ -9,7 +9,7 @@
 | Eerste defecte native 4.7-updater / Broken first native 4.7 updater | Niet geschikt voor deze OTA-route / not compatible with this OTA route |
 | Andere module, klok of flashindeling / Different module, clock or layout | Stop; niet flashen / do not flash |
 
-**4.9 is een testrelease, geen universele éénklikinstallatie.** De werking is op
+**4.10 is bedoeld voor de beschreven hardware en bestaande native installatie, niet als universele éénklikinstallatie.** De werking is op
 één bestaande RAK11162-opstelling getest. De installatie op een nieuwe
 fabrieksmodule is nog een afzonderlijke acceptatietest.
 
@@ -23,12 +23,12 @@ fabrieksmodule is nog een afzonderlijke acceptatietest.
    `installer/Start-USB-Flash.cmd` als de RAK RUI-uploader al geïnstalleerd is.
    De wrapper controleert SHA-256, vraagt de juiste COM-poort en vraagt bevestiging.
    Hij bundelt geen RAK-executable en installeert geen drivers.
-4. Kies uitsluitend `LoRaBLE-STM32-4.9.0.bin` voor deze USB-route. Wacht op
+4. Kies uitsluitend `LoRaBLE-STM32-4.10.0.bin` voor deze USB-route. Wacht op
    `Upgrade Complete`; voeding niet onderbreken. Geen erase-all gebruiken.
 5. Verbind opnieuw met de WiFi. Open **Beheer → Firmware bijwerken**.
-   Kies `LoRaBLE-ESP8684-4.9.0-rc1.packed` en upload terwijl Bluetooth niet bezig is.
+   Kies `LoRaBLE-ESP8684-4.10.0.packed` en upload terwijl Bluetooth niet bezig is.
 6. Laat de voeding staan; de ESP herstart. Verbind opnieuw en controleer onder
-   Beheer beide versies: STM32 4.9.0 en ESP 4.9.0-rc1. Controleer ook je instellingen.
+   Beheer beide versies: STM32 4.10.0 en ESP 4.10.0. Controleer ook je instellingen.
 
 De twee bestanden horen bij twee verschillende processoren. Een ESP .bin is
 **niet** geschikt voor de browserupload en een STM32 .bin is **geen** ESP-image.
@@ -49,7 +49,7 @@ onmogelijk is. De huidige native updater is hersteld en herhaaldelijk getest.
 ongebruikte module. De bootstrapcode inspecteert niet zelfstandig alle fysieke
 bootloader-/partition-table-bytes. Hij is daarom uitsluitend een ontwikkelhulpmiddel,
 geen firmwarebestand dat beginners blind moeten flashen. Er zit bewust geen
-algemene “installeer op ieder nieuw board”-knop in deze testrelease.
+algemene “installeer op ieder nieuw board”-knop in dit installatiepakket.
 
 Technische route voor de nog uit te voeren acceptatietest:
 

@@ -40,7 +40,7 @@ def unpack(data):
         raise ValueError('Expected an ESP32-C2 application, not another chip or a merged image')
     return raw
 
-def pack(raw, version='LoRaBLE-C2-26M-v4.9'):
+def pack(raw, version='LoRaBLE-C2-26M-v4.10'):
     if not version.startswith('LoRaBLE-C2-26M-') or len(version.encode()) > 31:
         raise ValueError('Explicit C2/26MHz application marker required')
     compressed = lzma.compress(raw, format=lzma.FORMAT_XZ, check=lzma.CHECK_CRC32,
@@ -56,7 +56,7 @@ if __name__ == '__main__':
     parser.add_argument('input', type=Path)
     parser.add_argument('--output', type=Path)
     parser.add_argument('--verify', action='store_true')
-    parser.add_argument('--version', default='LoRaBLE-C2-26M-v4.9')
+    parser.add_argument('--version', default='LoRaBLE-C2-26M-v4.10')
     args = parser.parse_args()
     data = args.input.read_bytes()
     if args.verify:

@@ -1,8 +1,8 @@
-name: Verify and publish prerelease
+name: Verify and publish release
 on:
   push:
     branches: [main]
-    tags: ['v*-rc*']
+    tags: ['v*']
   pull_request:
 permissions:
   contents: read
@@ -19,10 +19,14 @@ jobs:
         run: |
           g++ -std=c++11 -I tools/tests tools/tests/config-and-frames.cpp -o /tmp/lorable-tests
           /tmp/lorable-tests
+          g++ -std=c++11 -I tools/tests tools/tests/network-policy.cpp -o /tmp/network-tests
+          /tmp/network-tests
+          g++ -std=c++11 -I tools/tests/manager -I tools/tests tools/tests/network-manager.cpp -o /tmp/manager-tests
+          /tmp/manager-tests
       - name: Test UG65 and TTN codec
         run: node tools/test-codec.cjs
       - name: Test ESP package integrity and corruption rejection
-        run: python3 tools/test-ota-pack.py --image firmware/LoRaBLE-ESP8684-4.9.0-rc1.packed
+        run: python3 tools/test-ota-pack.py --image firmware/LoRaBLE-ESP8684-4.10.0.packed
       - name: Check generated UI asset
         run: node tools/check-web-asset.mjs
   release:
@@ -35,7 +39,7 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Publish verified prerelease assets
+      - name: Publish verified release assets
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -43,7 +47,7 @@ jobs:
           VERSION=$(node -p "'v'+require('./firmware/manifest.json').version")
           test "$GITHUB_REF_NAME" = "$VERSION"
           sha256sum --check SHA256SUMS
-          git archive --format=zip --prefix=LoRaBLE-Remote/ -o "LoRaBLE-Remote-$VERSION.zip" HEAD
-          gh release create "$VERSION" --verify-tag --draft --prerelease --title "LoRaBLE Remote $VERSION — test release" --notes-file docs/RELEASE-v49.md
-          gh release upload "$VERSION" firmware/LoRaBLE-STM32-4.9.0.bin firmware/LoRaBLE-ESP8684-4.9.0-rc1.packed firmware/manifest.json SHA256SUMS "LoRaBLE-Remote-$VERSION.zip"
+          python3 tools/make-release-zip.py --output "LoRaBLE-Remote-$VERSION.zip"
+          gh release create "$VERSION" --verify-tag --draft --title "LoRaBLE Remote $VERSION — network priority" --notes-file docs/RELEASE-v410.md
+          gh release upload "$VERSION" firmware/LoRaBLE-STM32-4.10.0.bin firmware/LoRaBLE-ESP8684-4.10.0.packed firmware/manifest.json SHA256SUMS "LoRaBLE-Remote-$VERSION.zip"
           gh release edit "$VERSION" --draft=false
