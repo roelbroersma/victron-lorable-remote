@@ -1,0 +1,25 @@
+idf_component_register(
+    SRCS
+        "app_main.c"
+        "app_model.c"
+        "ble_scan.c"
+        "ota_guard.c"
+        "portal.c"
+        "protocol.c"
+        "uart_link.c"
+        "victron_ble.c"
+    INCLUDE_DIRS "." "../../stm32"
+    PRIV_REQUIRES
+        app_update
+        bt
+        esp_app_format
+        spi_flash
+        esp_driver_uart
+        esp_event
+        esp_http_server
+        esp_netif
+        esp_timer
+        esp_wifi
+        mbedtls
+        nvs_flash
+)

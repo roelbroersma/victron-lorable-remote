@@ -1,0 +1,5 @@
+# Optional RUI STM32 BSP 4.2.4 overrides for Arduino IDE builds.
+# See docs/INSTALL.md: these affect all sketches built with this BSP.
+compiler.cpp.extra_flags=-DDEBUG -DLEGACY_BLE_AT=0 -DLORABLE_PUBLIC_BUILD -flto -fno-strict-aliasing
+compiler.c.elf.extra_flags=-flto -fno-strict-aliasing
+compiler.ar.cmd=arm-none-eabi-gcc-ar

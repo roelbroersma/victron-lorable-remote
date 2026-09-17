@@ -1,0 +1,10 @@
+import fs from 'node:fs';
+import {gunzipSync} from 'node:zlib';
+import vm from 'node:vm';
+import assert from 'node:assert/strict';
+const source=fs.readFileSync(new URL('../web/index.html',import.meta.url));
+const header=fs.readFileSync(new URL('../stm32/portal_asset.h',import.meta.url),'utf8');
+const bytes=Buffer.from([...header.matchAll(/0x([0-9a-f]{2})/g)].map(m=>parseInt(m[1],16)));
+assert.deepEqual(gunzipSync(bytes),source,'Regenerate portal_asset.h before building');
+new vm.Script(source.toString().match(/<script>([\s\S]*?)<\/script>/)[1]);
+console.log('PASS: shipped gzip asset exactly matches HTML source; browser script syntax valid.');

@@ -1,0 +1,2 @@
+# Preserve exact bytes of shipped sources, notices and checksum-listed files.
+* -text

@@ -1,0 +1,49 @@
+name: Verify and publish prerelease
+on:
+  push:
+    branches: [main]
+    tags: ['v*-rc*']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Check packaged file hashes
+        run: sha256sum --check SHA256SUMS
+      - name: Test config migration, flash safety and Bluetooth frame parser
+        run: |
+          g++ -std=c++11 -I tools/tests tools/tests/config-and-frames.cpp -o /tmp/lorable-tests
+          /tmp/lorable-tests
+      - name: Test UG65 and TTN codec
+        run: node tools/test-codec.cjs
+      - name: Test ESP package integrity and corruption rejection
+        run: python3 tools/test-ota-pack.py --image firmware/LoRaBLE-ESP8684-4.9.0-rc1.packed
+      - name: Check generated UI asset
+        run: node tools/check-web-asset.mjs
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: verify
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Publish verified prerelease assets
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "'v'+require('./firmware/manifest.json').version")
+          test "$GITHUB_REF_NAME" = "$VERSION"
+          sha256sum --check SHA256SUMS
+          git archive --format=zip --prefix=LoRaBLE-Remote/ -o "LoRaBLE-Remote-$VERSION.zip" HEAD
+          gh release create "$VERSION" --verify-tag --draft --prerelease --title "LoRaBLE Remote $VERSION — test release" --notes-file docs/RELEASE-v49.md
+          gh release upload "$VERSION" firmware/LoRaBLE-STM32-4.9.0.bin firmware/LoRaBLE-ESP8684-4.9.0-rc1.packed firmware/manifest.json SHA256SUMS "LoRaBLE-Remote-$VERSION.zip"
+          gh release edit "$VERSION" --draft=false

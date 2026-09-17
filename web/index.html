@@ -1,0 +1,577 @@
+<!doctype html>
+<html lang="nl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" href="data:,"><title>Victron LoRaBLE Remote</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#17354b;background:#edf3f7;color-scheme:light}*{box-sizing:border-box}body{margin:0}header{background:#087bb8;color:white;padding:28px max(20px,calc((100vw - 860px)/2))}h1{margin:5px 0 10px;font-size:clamp(22px,5vw,32px);overflow-wrap:anywhere}header p{margin:0;opacity:.9}main{max-width:900px;margin:24px auto;padding:0 20px}fieldset{background:white;border:1px solid #d0dfe8;border-radius:12px;padding:20px;margin:22px 0}legend{font-weight:700;padding:0 8px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}.field{min-width:0}.field>label{display:block;font-weight:600;margin-bottom:7px}input,select,button{font:inherit;padding:11px;border:1px solid #abc1cf;border-radius:7px;width:100%;background:white;color:inherit}input[type=checkbox]{width:22px;height:22px;margin:8px 0;accent-color:#087bb8}details{font-size:14px;margin-top:6px;color:#48657a}summary{cursor:pointer;color:#086b9e;width:fit-content;list-style:none}details p{line-height:1.6;margin:8px 0;background:#edf5fa;border-radius:6px;padding:12px}button{cursor:pointer;background:#087bb8;color:white;border:0;font-weight:700;padding:15px}button:disabled{opacity:.5;cursor:wait}.status{padding:16px;border-radius:10px;background:#e0eef7;line-height:1.6}.warn{background:#fff3d9;color:#654817}.muted,footer{font-size:14px;color:#567084;line-height:1.6}#result{white-space:pre-line}a{color:#086b9e}[hidden]{display:none!important}:focus-visible{outline:3px solid #e6ab30;outline-offset:2px}@media(max-width:620px){.grid{grid-template-columns:1fr}main{padding:0 12px}fieldset{padding:16px}}
+:root{--blue:#087bb8;--navy:#0a3552}body{background:radial-gradient(ellipse at top right,#deedf6,transparent 65%),#f3f7fa}header{background:linear-gradient(120deg,#063b5b,#087bb8 70%,#209bca);padding-top:22px;padding-bottom:34px;box-shadow:0 5px 24px #0a35521a}.topline{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}.brand{font-weight:650;letter-spacing:.08em;padding-top:12px}h1{letter-spacing:-.025em}fieldset{border:1px solid #dce7ee;box-shadow:0 4px 20px #0a355208;padding:24px;border-radius:16px}legend{font-size:17px;color:var(--navy)}input,select{transition:border-color .15s,box-shadow .15s}input:hover,select:hover{border-color:#438cae}input[readonly]{background:#eef4f8;color:#506e82;font-family:ui-monospace,monospace}.field>label{font-size:14px}details p{border-left:3px solid #9cc8e1}.status{border:1px solid #c8dfed}.warn{border-color:#eed6a1}#save{box-shadow:0 4px 12px #087bb825}footer{padding:16px 0 30px}button:hover:not(:disabled){filter:brightness(.95)}@media(max-width:620px){header{padding:18px 18px 28px}.topline{gap:8px}.brand{font-size:10px;max-width:140px;line-height:1.6}fieldset{padding:18px}.grid{gap:18px}}
+
+.flags{display:flex;gap:9px}.flag{padding:8px;width:58px;height:42px;border:2px solid transparent;background:#ffffff26;border-radius:8px;display:flex;align-items:center;justify-content:center}.flag[aria-pressed=true]{border-color:white;background:#ffffff40}.flag svg{display:block;width:34px;height:23px;border-radius:2px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}.status-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.status-card{background:#fff;border:1px solid #dce7ee;border-radius:12px;padding:17px;min-width:0}.status-card h3{font-size:12px;color:#597488;margin:0 0 8px;font-weight:650;letter-spacing:.04em}.status-card strong{font-size:17px;font-weight:650;display:block}.status-card small{display:block;color:#597488;line-height:1.5;margin-top:7px;font-size:12px}.status-card strong:before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#9cb0bd;margin-right:7px;vertical-align:middle}.status-card[data-state=ok] strong:before{background:#16846b}.status-card[data-state=attention] strong:before{background:#ce8032}.status-card[data-state=error] strong:before{background:#c64646}#status_title{font-size:20px;margin:0 0 14px}#connection_note{font-size:13px;color:#526b7c;margin:10px 0}#status.stale .status-grid{opacity:.55}.test-buttons{display:flex;gap:10px;flex-wrap:wrap}.test-buttons button{width:auto;background:#eaf4fa;color:#086b9e;padding:10px 14px;font-size:13px}.edge-grid{grid-template-columns:repeat(3,1fr)}input:disabled,select:disabled{opacity:.5;background:#f0f4f7}.edge-note{font-size:13px;color:#587287;margin:2px 0 16px;line-height:1.6}@media(max-width:620px){.status-grid{grid-template-columns:1fr 1fr;gap:8px}.status-card{padding:13px}.status-card strong{font-size:15px}.edge-grid{grid-template-columns:1fr}.test-buttons button{width:100%}}
+.flag{width:35px;height:28px;padding:5px;border-width:1px;background:transparent;border-radius:5px}.flag svg{width:23px;height:16px}.flags{gap:5px}.brand{padding-top:5px}
+nav{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:22px}nav button{font-size:13px;padding:11px 6px;background:#e2edf4;color:#315b74}nav button[aria-current=page]{background:#087bb8;color:white}
+.panel-note{font-size:14px;line-height:1.6;color:#48657a}.tools{display:flex;flex-wrap:wrap;gap:10px}.tools button{width:auto;padding:10px 14px;font-size:14px}
+#log_rows{list-style:none;padding:0;font-size:13px;line-height:1.7;font-family:ui-monospace,monospace}#log_rows li{padding:7px 0;border-bottom:1px solid #e6eef4}#import_preview{max-height:180px;overflow:auto;white-space:pre-wrap}progress{width:100%}
+.field>label.identity-toggle{display:flex;align-items:center;gap:8px;margin-top:8px;font-size:13px;font-weight:500}.identity-toggle input{flex:0 0 18px;height:18px;margin:0}
+@media(max-width:620px){nav{grid-template-columns:repeat(3,1fr)}}
+.panel-title{margin:0 0 20px;padding:0;font-size:18px;line-height:1.4;color:var(--navy)}.firmware-line{border-radius:8px;background:#eef6fb;padding:12px;font-size:14px}.table-wrap{overflow-x:auto}#power_table{width:100%;border-collapse:collapse;font-size:13px}#power_table th,#power_table td{text-align:left;padding:9px 5px;border-bottom:1px solid #e1eaf0}#power_table th{font-weight:600}#power_table input{width:100%;min-width:62px;padding:8px;font-size:13px}#power_table td:nth-child(2),#power_table td:nth-child(3){width:20%}.power-total{font-weight:650;font-size:14px}#power_reference{font-size:13px}#running_firmware{overflow-wrap:anywhere}@media(max-width:620px){#power_table th,#power_table td{padding:8px 3px;font-size:11px}#power_table input{min-width:53px}.panel-title{font-size:17px}}
+.power-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.power-heading h2{margin:0}.unit-switch{display:flex;background:#edf4f8;border-radius:9px;padding:3px;flex-shrink:0}.unit-switch button{padding:7px 12px;width:auto;font-size:12px;background:transparent;color:#45667c;font-weight:500}.unit-switch button[aria-pressed=true]{background:white;color:#087bb8;box-shadow:0 1px 5px #153f5820}.power-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.power-summary article{background:#eef6fb;border-radius:10px;padding:13px}.power-summary small{display:block;color:#527084;font-size:12px;line-height:1.5}.power-summary strong{display:block;color:#087bb8;font-size:20px;margin-top:5px;font-weight:650}.power-total{font-weight:400}#power_table tbody th{font-weight:400;color:#456174}#power_table td:last-child{text-align:right;font-variant-numeric:tabular-nums}#power_excluded{font-size:12px}#power_class{font-size:12px;color:#657f90}#power_reference{font-weight:400}#power_reference_title{font-size:13px}@media(max-width:620px){.power-summary{grid-template-columns:1fr}.power-summary article{display:flex;align-items:center;justify-content:space-between;gap:10px}.power-summary strong{margin:0;font-size:18px}.power-heading h2{font-size:16px}}
+</style></head><body><header><div class="topline"><small class="brand">LoRaBLE Remote · v4.9.0</small><div id="language_slot"><input type="hidden" id="language" name="language" value="0" form="form"><div class="flags" role="group" aria-label="Language"><button type="button" class="flag" id="lang_nl" aria-label="Nederlands" aria-pressed="true" title="Nederlands"><svg viewBox="0 0 30 20" aria-hidden="true"><path fill="#ae1c28" d="M0 0h30v7H0z"/><path fill="#fff" d="M0 7h30v6H0z"/><path fill="#21468b" d="M0 13h30v7H0z"/></svg></button><button type="button" class="flag" id="lang_en" aria-label="English" aria-pressed="false" title="English"><svg viewBox="0 0 60 40" aria-hidden="true"><path fill="#012169" d="M0 0h60v40H0z"/><path stroke="#fff" stroke-width="8" d="m0 0 60 40m0-40L0 40"/><path stroke="#c8102e" stroke-width="3" d="m0 0 60 40m0-40L0 40"/><path stroke="#fff" stroke-width="13" d="M30 0v40M0 20h60"/><path stroke="#c8102e" stroke-width="8" d="M30 0v40M0 20h60"/></svg></button></div></div></div><h1 id="title">Victron LoRaBLE Remote</h1><p id="subtitle"></p></header><main><nav id="menu" aria-label="Navigation"></nav>
+<section id="status" aria-labelledby="status_title"><h2 id="status_title">Status</h2><div id="status_cards" class="status-grid"></div><p id="connection_note" role="status">Instellingen laden / Loading settings…</p></section>
+<form id="form"><div id="sections"></div><button id="save" disabled></button><p id="result" role="status" aria-live="polite"></p></form><footer id="footer"></footer></main>
+<script>
+'use strict';
+// One definition per field, with a complete help text in both languages.
+const F=[
+["general","WiFi-netwerk","WiFi network"],
+["wifi_ssid","WiFi-naam","WiFi name","text",[1,32],"De naam van het lokale WiFi-netwerk én de titel boven deze pagina. Gebruik 1–32 gewone letters, cijfers of leestekens; spaties mogen. Na opslaan herstart het board en moet je opnieuw met deze naam verbinden.","Name of the local WiFi network and the heading of this page. Use 1–32 printable ASCII characters; spaces are allowed. Saving restarts the board; reconnect using this name."],
+["wifi_password","Nieuw WiFi-wachtwoord","New WiFi password","password",[12,63],"Leeg laten behoudt het bestaande wachtwoord. Een nieuw wachtwoord heeft 12–63 zichtbare ASCII-tekens, zonder spaties. Dit beveiligt het lokale instellingen-netwerk met WPA2; iedereen met dit wachtwoord kan instellingen wijzigen. Geen internetverbinding nodig.","Leave empty to keep the existing password. A new password needs 12–63 printable ASCII characters without spaces. WPA2 protects the local setup network; anyone with its password can change settings. No internet connection is needed."],
+["window_min","WiFi-tijd na opstarten (minuten)","WiFi time after boot (minutes)","number",[5,240],"Na elke opstart blijft het instellingen-WiFi deze tijd beschikbaar. Aanpassen van instellingen herstart het board. Flanken en toegestane LoRa-opdrachten hebben hieronder hun eigen tijden. De RAK moet daarvoor voeding houden.","After every boot, settings WiFi stays available for this time. Saving settings restarts the board. Input edges and allowed LoRa commands have independent timers below. The RAK must remain powered."],
+["device","Apparaatprofiel","Device profile"],
+["profile","Apparaat","Device","select",[[1,"Victron Smart MPPT · LOAD"],[3,"Victron Smart BatteryProtect"],[2,"Generic Bluetooth · GATT"]],"",""],
+["load_enabled","Bluetooth Functies inschakelen","Enable Bluetooth functions","checkbox",[],"Geeft uitvoering van de twee functies hieronder vrij. Maak eerst de functies, en kies daarna bij Ingangen of LoRaWAN wanneer ze mogen lopen. Uitgevinkt betekent: geen Bluetooth-bediening, ook niet door LoRa. WiFi wordt tijdens een Bluetooth-actie kort onderbroken en komt daarna terug als het tijdvenster nog open is.","Enables the two functions below. Define them first, then choose their input or LoRaWAN triggers. Unchecked means no Bluetooth control, including from LoRa. WiFi briefly pauses during Bluetooth and returns if its time window is still open."],
+["victron_mac","Bluetooth MAC-adres","Bluetooth MAC address","text",[17,17],"Het adres van precies jouw MPPT, bijvoorbeeld D4:CA:6E:12:34:56. Gebruik het Bluetooth-adres uit een scan of de productinformatie als dat daar wordt getoond, niet het WiFi-adres. 00:00:00:00:00:00 betekent nog niet ingesteld: er wordt dan niet geschakeld.","Address of your specific MPPT, for example D4:CA:6E:12:34:56. Use its Bluetooth address from a scan or product information if shown, not a WiFi address. 00:00:00:00:00:00 means unconfigured: no switching will take place."],
+["address_type","Bluetooth-adrestype","Bluetooth address type","select",[[-1,"Automatisch","Automatic"],[0,"Public"],[1,"Random"]],"Standaard Automatisch: de scan bepaalt het type. Public en Random beschrijven hoe het Bluetooth-adres is toegewezen; het zijn geen apparaatprofielen. Kies alleen handmatig als een scan dat type bevestigt. Random betekent niet dat je willekeurig een MAC-adres mag invullen.","Default Automatic: a scan determines the type. Public and Random describe how the Bluetooth address is assigned; they are not device profiles. Select manually only if a scan confirms the type. Random does not mean you can enter an arbitrary MAC address."],
+["instance","Device instance (geavanceerd)","Device instance (advanced)","number",[0,23],"Doelinstantie in de bestaande Victron-commandoroute; standaard 3. Niet hetzelfde als een Bluetooth-adres of serienummer. Wijzig dit alleen met bevestigde protocolinformatie voor jouw model. Een andere waarde maakt een onbekend apparaat niet automatisch compatibel.","Target instance used by the existing Victron command path; default 3. Not a Bluetooth address or serial number. Change only with confirmed protocol information for your model. A different value does not make an unknown device compatible."],
+["smp","Bluetooth-beveiliging","Bluetooth security","select",[[0,"Zonder PIN","Without PIN"],[1,"Pairing met PIN","Pair using PIN"]],"Voor Victron staat pairing met de zescijferige PIN verplicht aan; het apparaatprofiel regelt dit. Gebruik dezelfde PIN als in VictronConnect, van de sticker of jouw gewijzigde PIN. Alleen bij Generic kun je Zonder PIN kiezen als de documentatie van dat apparaat dit toestaat. Pairing wordt per verbinding uitgevoerd; bonds worden niet in flash bewaard.","The Victron profile requires pairing with the six-digit PIN. Use the same PIN as VictronConnect, from the sticker or your changed PIN. Only Generic allows Without PIN when documented by the target device. Pairing is performed per connection; bonds are not written to flash."],
+["victron_pin","Nieuwe Bluetooth-PIN","New Bluetooth PIN","password",[6,6],"Zes cijfers van het doelapparaat. Leeg laten behoudt de opgeslagen PIN. Nieuwere Victron-apparaten kunnen een unieke PIN op de sticker hebben: ga niet zomaar uit van 000000. Dit scherm verandert de PIN van de MPPT zelf niet.","Six digits for the target device. Empty keeps the saved PIN. Newer Victron devices may have a unique PIN on the sticker: do not assume 000000. This field does not change the PIN on the MPPT itself."],
+["ble_attempts","Maximaal aantal Bluetooth-pogingen","Maximum Bluetooth attempts","number",[1,3],"Inclusief de eerste poging. 1 = geen herhaling; 2 = maximaal één extra poging; 3 = maximaal twee extra pogingen. Na succes stopt de actie direct. Alleen bij een mislukte poging wordt opnieuw geprobeerd; ongeldige instellingen of ontbrekende Bluetooth-ondersteuning worden niet opgelost door extra pogingen.","Includes the first attempt. 1 = no retry; 2 = at most one retry; 3 = at most two retries. The action stops immediately after success. A retry is only made after failure; extra attempts cannot fix invalid settings or missing Bluetooth support."],
+["io","Ingang & relaisuitgang","Input & relay output"],
+["io_board","I/O-module","I/O module","select",[[0,"Geen","None"],[1,"RAK13001 · 1 input / 1 output/relais","RAK13001 · 1 input / 1 output/relay"],[2,"RAK13007 · 1 output/relais","RAK13007 · 1 output/relay"]],"Selecteer zelf de aangesloten module: deze eenvoudige GPIO-modules geven geen betrouwbare module-identiteit door. RAK13001: één 12–24V-ingang plus één relais. RAK13007: alleen één relais. Het relais gebruikt standaard IO4. Voor de RAK13001-ingang verwacht dit project IO3; controleer de resistor-routing, want RAK vermeldt ook SW1-varianten. Selecteren verandert de bedrading niet.","Select the installed module manually: these GPIO modules do not provide a reliable module identity. RAK13001: one 12–24 V input plus one relay. RAK13007: one relay only. Relay uses default IO4. This project expects IO3 for RAK13001 input; check resistor routing because RAK also documents SW1 variants. Selection cannot change wiring."],
+["input_enabled","Ingang gebruiken · 12–24 V DC","Use input · 12–24 V DC","checkbox",[],"Geïsoleerde K1/K2-ingang: standaard 12–24 V DC (wet-contact), volgens RAK. 5 V is niet gespecificeerd. Opgaande flank = spanning komt op; neergaande flank = spanning valt weg. Geen spanningsmeting of instelbare 12V-drempel. Intern is IO3 actief LAAG door de optocoupler. Controleer resistor-routing (RAK noemt ook SW1); nooit 12–24 V op een MCU-pin. Minimaal 80 ms stabiel; opstarten telt niet als flank. Droog contact vereist een printaanpassing.","Isolated K1/K2 input: default 12–24 V DC wet contact, per RAK. 5 V is not specified. Rising edge = voltage becomes present; falling edge = voltage disappears. Not a voltage measurement or adjustable 12 V threshold. Internal IO3 is active LOW due to the optocoupler. Verify resistor routing (RAK also lists SW1); never apply 12–24 V to an MCU pin. Stable for at least 80 ms; boot is not an edge. Dry contact requires a PCB modification."],
+["relay_enabled","Relaisuitgang gebruiken","Use relay output","checkbox",[],"Er is één fysieke relaisuitgang. Op de RAK13001 zijn NO1/NO2 de twee aansluitingen van hetzelfde contact, niet twee uitgangen. De RAK13007 heeft ook één relais en geen ingang. De uitgang start altijd UIT. Dit is apart van de MPPT LOAD-uitgang. De getoonde stand is de aansturing, zonder terugmelding van de contacten.","There is one physical relay output. On RAK13001, NO1/NO2 are two terminals of the same contact, not two outputs. RAK13007 also has one relay and no input. Output always starts OFF. It is separate from the MPPT LOAD output. Status shows the command, without contact feedback."],
+["relay_pulse_ms","Relaispuls (milliseconden)","Relay pulse (milliseconds)","number",[100,60000],"Duur voor de actie Relaispuls: 100–60000 ms; 1000 ms = 1 seconde. Daarna wordt de relaisuitgang weer UIT gezet. Een nieuwe puls herstart de tijd. Dit is geen nauwkeurige timinguitgang of veiligheidsfunctie. Een LoRa-puls is een radio-statusbericht en heeft niet deze pulsduur.","Duration of a relay-pulse action: 100–60000 ms; 1000 ms = 1 second. The relay then switches OFF. A new pulse restarts the timer. This is not a precision timing output or safety function. A LoRa pulse is a radio status message and does not use this duration."],
+["rising","↑ Opgaande flank · spanning komt op","↑ Rising edge · voltage becomes present"],
+["rise_lora","LoRa-bericht sturen","Send LoRa message","checkbox",[],"Bij het aanwezig worden van 12–24 V DC wordt een statusuplink aangevraagd. Kan samen met Bluetooth en/of relais. Snel opeenvolgende gebeurtenissen kunnen tot één statusbericht worden samengevoegd; duty-cycle en netwerkomstandigheden kunnen verzending uitstellen. Periodieke status blijft onafhankelijk werken.","Requests a status uplink when 12–24 V DC becomes present. Can be combined with Bluetooth and/or relay actions. Rapid events may be combined into one status message; duty-cycle and network conditions can delay sending. Periodic status remains independent."],
+["rise_ble","Bluetooth Functie","Bluetooth function","select",[[0,"Geen actie","No action"],[4,"Functie 1","Function 1"],[8,"Functie 2","Function 2"]],"Voer de gekozen opgeslagen Bluetooth Functie eenmaal uit bij deze flank. Je kunt deze combineren met een LoRa-bericht en een relaisactie. Bij een mislukte poging gelden de ingestelde herhalingen. Een wijziging in het functiescherm geldt ook voor deze verwijzing.","Run the selected saved Bluetooth function once on this edge. It can be combined with a LoRa message and relay action. Failed attempts use the configured retries. Changes in the function editor also apply to this reference."],
+["rise_relay","Relaisactie","Relay action","select",[[0,"Geen actie","No action"],[16,"Relais AAN","Relay ON"],[32,"Relais UIT","Relay OFF"],[64,"Relaispuls","Relay pulse"]],"Actie op de fysieke relaisuitgang wanneer 12–24 V DC opkomt. Alleen actief als Relaisuitgang gebruiken is aangevinkt. Dit bedient niet de MPPT. Combineren met een LoRa-bericht en/of Bluetooth is toegestaan.","Physical relay action when 12–24 V DC becomes present. Only active when Use relay output is enabled. Does not operate the MPPT. May be combined with a LoRa message and/or Bluetooth."],
+["falling","↓ Neergaande flank · spanning valt weg","↓ Falling edge · voltage disappears"],
+["fall_lora","LoRa-bericht sturen","Send LoRa message","checkbox",[],"Vraagt een statusuplink aan zodra de 12–24 V DC wegvalt. Onafhankelijk instelbaar van de opgaande flank. Uitvinken onderdrukt dit directe flankbericht; periodieke statusberichten blijven werken.","Requests a status uplink when 12–24 V DC disappears. Configured independently of the rising edge. Unchecking suppresses this immediate edge message; periodic status continues."],
+["fall_ble","Bluetooth Functie","Bluetooth function","select",[[0,"Geen actie","No action"],[4,"Functie 1","Function 1"],[8,"Functie 2","Function 2"]],"Voer de gekozen opgeslagen Bluetooth Functie eenmaal uit bij deze flank. Je kunt deze combineren met een LoRa-bericht en een relaisactie. Bij een mislukte poging gelden de ingestelde herhalingen. Een wijziging in het functiescherm geldt ook voor deze verwijzing.","Run the selected saved Bluetooth function once on this edge. It can be combined with a LoRa message and relay action. Failed attempts use the configured retries. Changes in the function editor also apply to this reference."],
+["fall_relay","Relaisactie","Relay action","select",[[0,"Geen actie","No action"],[16,"Relais AAN","Relay ON"],[32,"Relais UIT","Relay OFF"],[64,"Relaispuls","Relay pulse"]],"Relaisactie bij wegvallen van 12–24 V DC. AAN blijft aan tot een UIT-opdracht, pulsafloop of herstart. Geen actie verandert de bestaande relaisstand niet. De RAK moet voeding blijven houden.","Relay action when 12–24 V DC disappears. ON remains on until an OFF command, pulse expiry or reboot. No action leaves the relay unchanged. The RAK must remain powered."],
+["lora","LoRaWAN","LoRaWAN"],
+["region","Frequentieplan","Frequency plan","select",[[4,"EU868"],[5,"US915"],[6,"AU915"],[2,"RU864"],[3,"IN865"],[7,"KR920"],[8,"AS923-1"],[9,"AS923-2"],[10,"AS923-3"],[11,"AS923-4"]],"Voor Nederland: EU868. Kies het plan dat hoort bij je locatie, gateway én radio/antenne. Deze build is voor de hoge-band RAK11160(H); een keuzelijst maakt de hardware niet wereldwijd geschikt. Na wijzigen opnieuw aanmelden. Verkeerde regio kan communicatie verhinderen.","For the Netherlands: EU868. Match your location, gateway and radio/antenna. This build targets high-band RAK11160(H); a selector does not make the hardware suitable worldwide. Changing requires rejoining. An incorrect region can prevent communication."],
+["class","Apparaatklasse","Device class","select",[[0,"Class A · ontvangen na eigen uplink","Class A · receive after own uplink"],[2,"Class C · continu luisteren","Class C · listen continuously"]],"Beide klassen kunnen ontvangen. Class A opent twee korte ontvangstvensters na een eigen uplink. De server laat een opdracht op een volgende uplink wachten; het statusinterval bepaalt mede de wachttijd, maar ontvangst is niet gegarandeerd. Class C luistert vrijwel continu, behalve tijdens zenden: geschikt voor snelle afstandsbediening, met hoger stroomverbruik. Kies dezelfde klasse in het UG65 device profile; deze pagina wijzigt de gateway niet. Class B is niet geïmplementeerd.","Both classes can receive. Class A opens two short receive windows after its own uplink. Server commands wait for a subsequent uplink; the status interval affects the delay, but delivery is not guaranteed. Class C listens almost continuously except while transmitting: suitable for prompt remote control, at higher power consumption. Select the same class in the UG65 device profile; this page does not change the gateway. Class B is not implemented."],
+["fport","FPort","FPort","number",[1,223],"Applicatiepoort van de LoRaWAN-berichten, standaard 10. Gebruik 1–223 en stem downlinks en payload-codec hierop af. Dit is geen UDP-poort en geen radiofrequentie. Poort 0 is voor het LoRaWAN-protocol en wordt niet toegestaan.","Application port for LoRaWAN messages, default 10. Use 1–223 and align downlinks and the payload codec. This is not a UDP port or radio frequency. Port 0 is reserved for LoRaWAN protocol traffic and is not allowed."],
+["subband","Subband (US915/AU915)","Sub-band (US915/AU915)","select",[[0,"Alle","All"],[1,"1"],[2,"2"],[3,"3"],[4,"4"],[5,"5"],[6,"6"],[7,"7"],[8,"8"]],"Alleen relevant voor US915/AU915: kies de groep van acht uplink-kanalen die jouw netwerk gebruikt, of Alle. Voor andere regio’s wordt dit automatisch Alle. Controleer de netwerkdocumentatie; een verkeerde groep kan aanmelden verhinderen.","Only relevant to US915/AU915: select the group of eight uplink channels used by your network, or All. Other regions automatically use All. Check your network documentation; the wrong group can prevent joining."],
+["adr","Automatische datasnelheid (ADR)","Adaptive data rate (ADR)","select",[[1,"Aan","On"],[0,"Uit","Off"]],"Standaard Aan. De netwerkserver kan snelheid en zendvermogen aanpassen. Uit gebruikt de begin-datasnelheid van het gekozen regio-profiel; dit scherm biedt geen losse uplink-DR-keuze. ADR is geen instelling voor de Bluetooth- of WiFi-snelheid.","Default On. The network server may adjust data rate and transmit power. Off uses the starting data rate of the selected region profile; this page does not offer a separate uplink DR selector. ADR does not affect Bluetooth or WiFi speed."],
+["dev_eui","DevEUI · automatisch uitgelezen","DevEUI · read automatically","text",[16,16],"De actieve DevEUI wordt automatisch uit het RAK-board gelezen: 16 hextekens. Vul op de netwerkserver exact deze waarde in. Deze waarde blijft normaal alleen-lezen; bewust wijzigen kan onder Geavanceerd. Als de DevEUI eerder handmatig is gewijzigd, toont dit veld die opgeslagen waarde, niet noodzakelijk de oorspronkelijke stickerwaarde. De AppKey en JoinEUI zijn aparte instellingen.","The active DevEUI is read automatically from the RAK board: 16 hexadecimal characters. Register this exact value on the network server. Normally read-only; intentional editing is available under Advanced. If the DevEUI was changed previously, this shows that stored value, not necessarily the original sticker value. AppKey and JoinEUI are separate settings."],
+["join_eui","JoinEUI / AppEUI","JoinEUI / AppEUI","text",[16,16],"16 hextekens die overeenkomen met de applicatie-/joininstelling op de netwerkserver. Dit hoeft niet dezelfde waarde als DevEUI te zijn. Gebruik de waarde van jouw netwerk, niet zomaar die van een ander apparaat.","16 hexadecimal characters matching the application/join configuration on the network server. It need not equal DevEUI. Use your network value, not a value copied from an unrelated device."],
+["app_key","Nieuwe AppKey","New AppKey","password",[32,32],"Geheime OTAA-sleutel: precies 32 hextekens, gelijk aan de netwerkserver. Leeg laten behoudt de bestaande sleutel. De sleutel wordt niet uitgelezen in dit scherm.","Secret OTAA key: exactly 32 hexadecimal characters, matching the network server. Leave empty to retain the existing key. This page never reads the key back."],
+["rx2_custom","RX2-instelling","RX2 configuration","select",[[0,"Regiostandaard","Region default"],[1,"Handmatig","Custom"]],"Standaard gebruikt dit project de RX2-waarden van het regio-profiel. Voor EU868: 869525000 Hz en DR0. Handmatig is alleen nodig als de netwerkserver afwijkende waarden verlangt. De server kan tijdens de sessie waarden onderhandelen.","Default uses RX2 values from the region profile. For EU868: 869525000 Hz and DR0. Custom is needed only if the network server requires other values. The server may negotiate settings during the session."],
+["rx2_freq","RX2-frequentie (Hz)","RX2 frequency (Hz)","number",[100000000,1000000000],"Alleen bij Handmatig. Voer hele hertz in, dus 869525000 en niet 869.525. De waarde moet binnen het geselecteerde frequentieplan vallen en bij de netwerkserver passen. Voor US/AU geldt het raster 923300000 + n × 600000 Hz (n=0–7).","Custom mode only. Enter whole hertz, e.g. 869525000 rather than 869.525. Must fit the selected frequency plan and network server. US/AU use the grid 923300000 + n × 600000 Hz (n=0–7)."],
+["rx2_dr","RX2-datasnelheid (DR)","RX2 data rate (DR)","number",[0,13],"Alleen bij Handmatig. DR is een regio-afhankelijke LoRaWAN-code, geen bitrate. EU868 standaard DR0; US915/AU915 standaard DR8. Ongeldige combinaties worden geweigerd. Wijzig dit niet om Bluetooth- of WiFi-problemen op te lossen.","Custom mode only. DR is a region-specific LoRaWAN code, not a bitrate. EU868 defaults to DR0; US915/AU915 default to DR8. Invalid combinations are rejected. This does not fix Bluetooth or WiFi issues."],
+["status_min","Statusinterval (minuten)","Status interval (minutes)","number",[1,1440],"Periodiek LoRa-statusbericht. Flankberichten zijn apart instelbaar en komen daar bovenop. Korte intervallen, veel gebeurtenissen en herhaald aanmelden kosten extra energie en radiozendtijd. Duty-cycle of netwerkcondities kunnen berichten vertragen of snelle gebeurtenissen samenvoegen.","Periodic LoRa status message. Independently enabled edge messages are additional. Short intervals, frequent events and repeated joins consume extra energy and airtime. Duty cycle and network conditions can delay reports or combine rapid events."],
+["wifi_events","WiFi op gebeurtenissen","WiFi event windows"],
+["wifi_input","WiFi openen bij een ingangsflank","Open WiFi on an input edge","checkbox",[],"Opent of verlengt WiFi bij zowel opkomen als wegvallen van de ingang. Werkt alleen met een ingeschakelde ingang. De RAK moet na wegvallen van 12–24 V DC voeding blijven houden.","Opens or extends WiFi on either edge. Requires an enabled input. The RAK must remain powered when input voltage disappears."],
+["wifi_hold","WiFi aanhouden zolang ingang actief is","Keep WiFi on while input is active","checkbox",[],"Houdt WiFi continu beschikbaar zolang de ingang actief is. Voor naloop na wegvallen vink je ook openen bij een flank aan. Dit kan veel meer energie gebruiken dan een kort instellingenvenster.","Keeps WiFi available while input is active. Also enable input-edge opening for a timeout after it drops. This can use much more energy than a short setup window."],
+["wifi_input_min","WiFi-tijd na ingangsflank (minuten)","WiFi time after input edge (minutes)","number",[1,240],"Eigen nalooptijd voor ingangstriggers. Een nieuwe flank verlengt de tijd, maar verkort een nog langer lopend venster niet.","Independent input-trigger window. Another edge extends the timer, but never shortens a longer window already running."],
+["wifi_lora","WiFi openen na toegestane LoRa-opdracht","Open WiFi after an allowed LoRa command","checkbox",[],"Alleen geldige en ingeschakelde opdrachten op de ingestelde FPort openen WiFi. Onbekende of geblokkeerde opdrachten niet. Class A kan een downlink pas na een uplink ontvangen.","Only valid, enabled commands on the configured FPort open WiFi. Unknown or disabled commands do not. Class A receives downlinks after an uplink."],
+["wifi_lora_min","WiFi-tijd na LoRa-opdracht (minuten)","WiFi time after LoRa command (minutes)","number",[1,240],"Eigen nalooptijd na een toegestane ontvangen LoRa-opdracht. Dit is geen polling-interval en zorgt niet voor een extra Class-A-ontvangstvenster.","Independent window after an allowed received LoRa command. This is not a polling interval and does not create an additional Class-A receive window."],
+["fn1","Bluetooth Functie 1","Bluetooth Function 1"],
+["fn1_name","Functienaam","Function name","text",[1,24],"Een herkenbare naam voor verwijzingen bij ingangen en LoRa. Maximaal 24 gewone letters/cijfers of leestekens. De naam zelf bepaalt niet welke opdracht wordt uitgevoerd.","A recognizable name for input and LoRa references. Up to 24 printable ASCII characters. The name does not determine the executed command."],
+["fn1_kind","Actie","Action","select",[[0,"Uitgeschakeld","Disabled"],[1,"MPPT · Always on"],[2,"MPPT · Always off"],[5,"MPPT · BatteryLife"],[6,"MPPT · Conventional algorithm 1"],[7,"MPPT · Conventional algorithm 2"],[8,"MPPT · User defined algorithm 1"],[9,"MPPT · User defined algorithm 2"],[10,"MPPT · Automatic Energy Selector (AES)"],[3,"GATT schrijven","GATT write"],[4,"GATT schrijven + teruglezen","GATT write + readback"]],"MPPT: kiest de LOAD-regelmodus. BatteryLife regelt automatisch; Conventional 1/2 gebruiken vaste drempels. User defined 1/2 en AES gebruiken de Vlow/Vhigh en AES-tijd die al in de MPPT staan; stel die vooraf in VictronConnect in. Bestaande straatverlichtingsbits blijven behouden en kunnen de uiteindelijke uitgang beïnvloeden. Always on schakelt de ontlaadbeveiliging van deze LOAD-regel uit. De modus wordt eerst gelezen en alleen geschreven als hij verandert, omdat wijzigingen de MPPT-flash belasten. Bluetooth-bediening moet nog aan de echte MPPT worden getest. Generic: schrijf 1–20 bytes met bevestiging; met teruglezen moet de waarde exact overeenkomen.","MPPT selects the LOAD control mode. BatteryLife adapts; Conventional 1/2 use fixed thresholds. User defined 1/2 and AES use the thresholds and AES time already stored in the MPPT; configure them in VictronConnect first. Existing streetlight bits are preserved and may affect the actual output. Always on bypasses this LOAD algorithm's discharge protection. Read first, write only if changed to limit MPPT flash wear. Bluetooth operation still needs testing on a real MPPT. Generic writes 1–20 acknowledged bytes, optionally with exact readback."],
+["fn1_service","Service UUID","Service UUID","text",[0,36],"Alleen Generic: volledige UUID van 36 tekens, bijvoorbeeld 0000180f-0000-1000-8000-00805f9b34fb. Gebruik de documentatie van jouw apparaat. Een UUID identificeert een service, niet het apparaat.","Generic only: full 36-character UUID, e.g. 0000180f-0000-1000-8000-00805f9b34fb. Use your device documentation. A UUID identifies a service, not a device."],
+["fn1_char","GATT Characteristic UUID","GATT Characteristic UUID","text",[0,36],"Alleen Generic: volledige UUID van het beschrijfbare GATT-kenmerk binnen de gekozen service. De huidige driver vereist schrijven met antwoord. Alleen notificaties, scripts en write-without-response worden niet ondersteund.","Generic only: full UUID of the writable GATT characteristic inside the service. This driver requires write with response. Notification-only protocols, scripts and write-without-response are not supported."],
+["fn1_value","Te schrijven bytes (hex)","Bytes to write (hex)","text",[0,40],"Alleen Generic: 2–40 hextekens zonder spaties of 0x, dus 01 voor één byte of 0100 voor twee bytes. Bytevolgorde komt uit de apparaatdocumentatie. Dit is een beperkte opdrachtbeschrijving, geen uitvoerbaar script.","Generic only: 2–40 hex characters without spaces or 0x, e.g. 01 for one byte or 0100 for two. Byte order comes from the device documentation. This is a bounded command definition, not executable scripting."],
+["fn2","Bluetooth Functie 2","Bluetooth Function 2"],
+["fn2_name","Functienaam","Function name","text",[1,24],"Een herkenbare naam voor verwijzingen bij ingangen en LoRa. Maximaal 24 gewone letters/cijfers of leestekens. De naam zelf bepaalt niet welke opdracht wordt uitgevoerd.","A recognizable name for input and LoRa references. Up to 24 printable ASCII characters. The name does not determine the executed command."],
+["fn2_kind","Actie","Action","select",[[0,"Uitgeschakeld","Disabled"],[1,"MPPT · Always on"],[2,"MPPT · Always off"],[5,"MPPT · BatteryLife"],[6,"MPPT · Conventional algorithm 1"],[7,"MPPT · Conventional algorithm 2"],[8,"MPPT · User defined algorithm 1"],[9,"MPPT · User defined algorithm 2"],[10,"MPPT · Automatic Energy Selector (AES)"],[3,"GATT schrijven","GATT write"],[4,"GATT schrijven + teruglezen","GATT write + readback"]],"MPPT: kiest de LOAD-regelmodus. BatteryLife regelt automatisch; Conventional 1/2 gebruiken vaste drempels. User defined 1/2 en AES gebruiken de Vlow/Vhigh en AES-tijd die al in de MPPT staan; stel die vooraf in VictronConnect in. Bestaande straatverlichtingsbits blijven behouden en kunnen de uiteindelijke uitgang beïnvloeden. Always on schakelt de ontlaadbeveiliging van deze LOAD-regel uit. De modus wordt eerst gelezen en alleen geschreven als hij verandert, omdat wijzigingen de MPPT-flash belasten. Bluetooth-bediening moet nog aan de echte MPPT worden getest. Generic: schrijf 1–20 bytes met bevestiging; met teruglezen moet de waarde exact overeenkomen.","MPPT selects the LOAD control mode. BatteryLife adapts; Conventional 1/2 use fixed thresholds. User defined 1/2 and AES use the thresholds and AES time already stored in the MPPT; configure them in VictronConnect first. Existing streetlight bits are preserved and may affect the actual output. Always on bypasses this LOAD algorithm's discharge protection. Read first, write only if changed to limit MPPT flash wear. Bluetooth operation still needs testing on a real MPPT. Generic writes 1–20 acknowledged bytes, optionally with exact readback."],
+["fn2_service","Service UUID","Service UUID","text",[0,36],"Alleen Generic: volledige UUID van 36 tekens, bijvoorbeeld 0000180f-0000-1000-8000-00805f9b34fb. Gebruik de documentatie van jouw apparaat. Een UUID identificeert een service, niet het apparaat.","Generic only: full 36-character UUID, e.g. 0000180f-0000-1000-8000-00805f9b34fb. Use your device documentation. A UUID identifies a service, not a device."],
+["fn2_char","GATT Characteristic UUID","GATT Characteristic UUID","text",[0,36],"Alleen Generic: volledige UUID van het beschrijfbare GATT-kenmerk binnen de gekozen service. De huidige driver vereist schrijven met antwoord. Alleen notificaties, scripts en write-without-response worden niet ondersteund.","Generic only: full UUID of the writable GATT characteristic inside the service. This driver requires write with response. Notification-only protocols, scripts and write-without-response are not supported."],
+["fn2_value","Te schrijven bytes (hex)","Bytes to write (hex)","text",[0,40],"Alleen Generic: 2–40 hextekens zonder spaties of 0x, dus 01 voor één byte of 0100 voor twee bytes. Bytevolgorde komt uit de apparaatdocumentatie. Dit is een beperkte opdrachtbeschrijving, geen uitvoerbaar script.","Generic only: 2–40 hex characters without spaces or 0x, e.g. 01 for one byte or 0100 for two. Byte order comes from the device documentation. This is a bounded command definition, not executable scripting."],
+["routes","Ontvangen LoRa-opdrachten","Received LoRa commands"],
+["dl_fn1","Ontvangen: Bluetooth Functie 1","Receive: Bluetooth function 1","checkbox",[],"Sta de opdracht hex 01 toe op de gekozen FPort. Dit is een byte, geen tekst \"01\". De bijbehorende Bluetooth Functie of relaisuitgang moet ook aanstaan. Een downlink hex 20 vraagt altijd status op. Class A: eerst een uplink nodig.","Allow command hex 01 on the chosen FPort. This is one byte, not text \"01\". The corresponding Bluetooth function or relay must also be enabled. Hex 20 always requests status. Class A needs an uplink first."],
+["dl_fn2","Ontvangen: Bluetooth Functie 2","Receive: Bluetooth function 2","checkbox",[],"Sta de opdracht hex 02 toe op de gekozen FPort. Dit is een byte, geen tekst \"02\". De bijbehorende Bluetooth Functie of relaisuitgang moet ook aanstaan. Een downlink hex 20 vraagt altijd status op. Class A: eerst een uplink nodig.","Allow command hex 02 on the chosen FPort. This is one byte, not text \"02\". The corresponding Bluetooth function or relay must also be enabled. Hex 20 always requests status. Class A needs an uplink first."],
+["dl_off","Ontvangen: Relais UIT","Receive: Relay OFF","checkbox",[],"Sta de opdracht hex 10 toe op de gekozen FPort. Dit is een byte, geen tekst \"10\". De bijbehorende Bluetooth Functie of relaisuitgang moet ook aanstaan. Een downlink hex 20 vraagt altijd status op. Class A: eerst een uplink nodig.","Allow command hex 10 on the chosen FPort. This is one byte, not text \"10\". The corresponding Bluetooth function or relay must also be enabled. Hex 20 always requests status. Class A needs an uplink first."],
+["dl_on","Ontvangen: Relais AAN","Receive: Relay ON","checkbox",[],"Sta de opdracht hex 11 toe op de gekozen FPort. Dit is een byte, geen tekst \"11\". De bijbehorende Bluetooth Functie of relaisuitgang moet ook aanstaan. Een downlink hex 20 vraagt altijd status op. Class A: eerst een uplink nodig.","Allow command hex 11 on the chosen FPort. This is one byte, not text \"11\". The corresponding Bluetooth function or relay must also be enabled. Hex 20 always requests status. Class A needs an uplink first."],
+["dl_pulse","Ontvangen: Relaispuls","Receive: Relay pulse","checkbox",[],"Sta de opdracht hex 12 toe op de gekozen FPort. Dit is een byte, geen tekst \"12\". De bijbehorende Bluetooth Functie of relaisuitgang moet ook aanstaan. Een downlink hex 20 vraagt altijd status op. Class A: eerst een uplink nodig.","Allow command hex 12 on the chosen FPort. This is one byte, not text \"12\". The corresponding Bluetooth function or relay must also be enabled. Hex 20 always requests status. Class A needs an uplink first."]
+];
+// Generate bounded, stable function slots. Removing the last slot never renumbers others.
+const functionTemplate=F.filter(f=>f[0]==='fn1'||f[0].startsWith('fn1_'));
+for(let i=3;i<=10;i++){
+ const group=functionTemplate.map(f=>{const row=JSON.parse(JSON.stringify(f));row[0]=row[0].replace('fn1','fn'+i);if(row.length===3){row[1]='Bluetooth Functie '+i;row[2]='Bluetooth Function '+i;}return row;});
+ F.splice(F.findIndex(f=>f[0]==='routes'),0,...group);
+ const route=JSON.parse(JSON.stringify(F.find(f=>f[0]==='dl_fn1')));route[0]='dl_fn'+i;route[1]='Ontvangen: Bluetooth Functie '+i;route[2]='Receive: Bluetooth function '+i;
+ route[5]='Sta Bluetooth Functie '+i+' toe via LoRa. Stuur één byte '+i.toString(16).padStart(2,'0')+' (hex) op de ingestelde FPort. Alleen ingeschakelde functies worden uitgevoerd.';
+ route[6]='Allow Bluetooth Function '+i+' through LoRa. Send one byte '+i.toString(16).padStart(2,'0')+' (hex) on the configured FPort. Only enabled functions can run.';F.push(route);
+}
+for(const field of F.filter(f=>['rise_ble','fall_ble'].includes(f[0])))field[4]=[[0,'Geen','None'],...Array.from({length:10},(_,i)=>[i+1,'Functie '+(i+1),'Function '+(i+1)])];
+const $=id=>document.getElementById(id);
+// Stable stored profile IDs, independently ordered for a clear device picker.
+const profileField=F.find(f=>f[0]==='profile');
+profileField[4]=[[1,'Victron Smart MPPT · LOAD'],[3,'Victron Smart BatteryProtect'],[2,'Generic Bluetooth · GATT']];
+profileField[5]='Kies je apparaat. Smart BatteryProtect: AAN/UIT op de 100A-variant (product A3B1); andere varianten worden veilig geweigerd totdat ze getest zijn. Smart MPPT: LOAD-regelmodi; nog op de echte MPPT te testen. Generic: je eigen gedocumenteerde GATT-opdracht.';
+profileField[6]='Choose your device. Smart BatteryProtect: ON/OFF on the 100A variant (product A3B1); other variants are safely rejected until tested. Smart MPPT: LOAD control modes; still needs physical MPPT testing. Generic: your own documented GATT command.';
+for(const f of F.filter(f=>/^fn\d+_kind$/.test(f[0]))) {
+ f[4].push([11,'BatteryProtect · AAN','BatteryProtect · ON'],[12,'BatteryProtect · UIT','BatteryProtect · OFF']);
+ f[5]+=' BatteryProtect: leest eerst de apparaatidentiteit en modus; schrijft alleen bij wijziging. Succes vereist teruggelezen modus én uitgangsstatus. BMS- en onderspanningsbeveiliging blijven ongewijzigd.';
+ f[6]+=' BatteryProtect reads identity and mode first; writes only when changed. Success requires mode AND actual output readback. BMS and low-voltage protections are not modified.';
+}
+const MAX_FUNCTIONS=10;
+let functionCount=2,powerUnit='mAh';
+let lang=0,ready=false,saving=false,current=null,statusData=null,statusTimer,session=null,page='status',pendingImport=null;
+const pages={status:['Status','Status'],ble:['Bluetooth','Bluetooth'],io:['Ingangen & relais','Inputs & relay'],lora:['LoRaWAN','LoRaWAN'],wifi:['WiFi','WiFi'],manage:['Beheer','Manage']};
+const T=(nl,en)=>lang===0?nl:en;
+let grid;
+for(const f of F){
+ if(f.length===3){
+  const fs=document.createElement('fieldset'),legend=document.createElement('h2');
+  legend.id='legend_'+f[0];legend.className='panel-title';fs.append(legend);fs.setAttribute('aria-labelledby',legend.id);
+  fs.dataset.page=f[0]==='general'||f[0]==='wifi_events'?'wifi':['io','rising','falling'].includes(f[0])?'io':['lora','routes'].includes(f[0])?'lora':'ble';
+  grid=document.createElement('div');grid.className='grid'+(['rising','falling'].includes(f[0])?' edge-grid':'');
+  fs.append(grid);$('sections').append(fs);continue;
+ }
+ const [id,,,type,range]=f,box=document.createElement('div'),label=document.createElement('label');
+ box.className='field';box.id='field_'+id;label.htmlFor=id;label.id='label_'+id;box.append(label);
+ const el=document.createElement(type==='select'?'select':'input');el.id=id;el.name=id;
+ if(type==='select'){
+  for(const [v,t]of range){const opt=document.createElement('option');opt.value=v;opt.textContent=t;el.append(opt);}
+ }else{
+  el.type=type;
+  if(type==='checkbox')el.value='1';
+  else if(type==='number'){el.min=range[0];el.max=range[1];el.step='1';}
+  else{el.minLength=range[0];el.maxLength=range[1];el.autocomplete=type==='password'?'new-password':'off';el.spellcheck=false;}
+  if(type!=='password'&&type!=='checkbox')el.required=true;
+ }
+ const details=document.createElement('details'),summary=document.createElement('summary'),help=document.createElement('p');
+ summary.textContent='ⓘ';summary.setAttribute('aria-label','Info');help.id='help_'+id;el.setAttribute('aria-describedby',help.id);
+ details.append(summary,help);box.append(el,details);grid.append(box);
+}
+const identity=document.createElement('label');identity.className='identity-toggle';identity.innerHTML='<input id="edit_identity" type="checkbox"><span id="edit_identity_label"></span>';$('field_dev_eui').append(identity);
+for(const [field,id]of [['dev_eui','identity_warning'],['class','class_note'],['profile','profile_note'],['input_enabled','input_note']]){const p=document.createElement('p');p.id=id;p.className='panel-note';$('field_'+field).append(p);}
+const statusLabels={lora:['LoRa-status','LoRa status'],ble:['Bluetooth-status','Bluetooth status'],input:['Ingang · 12–24 V DC','Input · 12–24 V DC'],output:['Relaisuitgang','Relay output'],wifi:['WiFi-status','WiFi status'],uptime:['Uptime','Uptime']};
+const modeHelp={
+ 1:['Altijd AAN. Let op: deze LOAD-modus biedt geen onderspanningsafschakeling.','Always ON. Caution: this LOAD mode has no low-voltage cutoff.'],
+ 2:['Altijd UIT.','Always OFF.'],
+ 5:['BatteryLife: zelfaanpassende accubescherming; de MPPT bepaalt wanneer de LOAD beschikbaar is.','BatteryLife: adaptive battery protection; the MPPT decides when LOAD is available.'],
+ 6:['UIT onder / AAN boven: 12 V: 11,1 / 13,1 V · 24 V: 22,2 / 26,2 V · 48 V: 44,4 / 52,4 V. Alleen voor ondersteunde systeemspanningen.','OFF below / ON above: 12 V: 11.1 / 13.1 V · 24 V: 22.2 / 26.2 V · 48 V: 44.4 / 52.4 V. Supported system voltages only.'],
+ 7:['UIT onder / AAN boven: 12 V: 11,8 / 14,0 V · 24 V: 23,6 / 28,0 V · 48 V: 47,4 / 56,0 V. Alleen voor ondersteunde systeemspanningen.','OFF below / ON above: 12 V: 11.8 / 14.0 V · 24 V: 23.6 / 28.0 V · 48 V: 47.4 / 56.0 V. Supported system voltages only.'],
+ 8:['UIT onder Vlow; AAN boven Vhigh. Gebruikt bestaande drempels uit VictronConnect.','OFF below Vlow; ON above Vhigh. Uses existing VictronConnect thresholds.'],
+ 9:['AAN tussen Vlow en Vhigh; daarbuiten UIT. Gebruikt bestaande drempels uit VictronConnect.','ON between Vlow and Vhigh; OFF outside. Uses existing VictronConnect thresholds.'],
+ 10:['AAN boven Vhigh; UIT na de AES-tijd onder Vhigh, of bij spanning onder Vlow. Gebruikt bestaande MPPT-drempels en AES-tijd.','ON above Vhigh; OFF after the AES time below Vhigh, or below Vlow. Uses existing MPPT thresholds and AES time.']
+};
+for(let i=1;i<=MAX_FUNCTIONS;i++){const p=document.createElement('p');p.id='mode_help_'+i;p.className='panel-note';$('field_fn'+i+'_kind').append(p);}
+for(const id of Object.keys(statusLabels)){
+ const card=document.createElement('article');card.className='status-card';card.id='card_'+id;
+ for(const [tag,suffix]of [['h3','label'],['strong','value'],['small','detail']]){
+  const el=document.createElement(tag);el.id=id+'_'+suffix;card.append(el);
+ }
+ $('status_cards').append(card);
+}
+const testBox=document.createElement('fieldset'),testLegend=document.createElement('h2'),testInfo=document.createElement('p'),testButtons=document.createElement('div'),testResult=document.createElement('p');
+testLegend.id='test_title';testLegend.className='panel-title';testInfo.id='test_info';testInfo.className='edge-note';testButtons.className='test-buttons';testResult.id='test_result';testResult.setAttribute('role','status');
+const tests={ble_scan:['Bluetooth-scan (5 s)','Bluetooth scan (5 s)'],ble_fn1:['Bluetooth-functie 1 testen','Test Bluetooth function 1'],ble_fn2:['Bluetooth-functie 2 testen','Test Bluetooth function 2'],test_rising:['Test opgaande flank','Test rising edge'],test_falling:['Test neergaande flank','Test falling edge'],relay_pulse:['Test relaispuls','Test relay pulse'],relay_off:['Relais UIT','Relay OFF'],uplink:['LoRa-bericht sturen','Send LoRa message']};
+for(let i=3;i<=MAX_FUNCTIONS;i++)tests['ble_fn'+i]=['Bluetooth-functie '+i+' testen','Test Bluetooth function '+i];
+for(const id of Object.keys(tests)){const button=document.createElement('button');button.type='button';button.id='test_'+id;button.addEventListener('click',()=>runTest(id));testButtons.append(button);}
+testBox.dataset.page='status';testBox.append(testLegend,testInfo,testButtons,testResult);$('sections').append(testBox);
+function card(id,value,detail,state='neutral'){
+ $(id+'_label').textContent=statusLabels[id][lang];$(id+'_value').textContent=value;$(id+'_detail').textContent=detail;$('card_'+id).dataset.state=state;
+}
+function showStatus(c){
+ statusData=c;
+ for(const id of ['test_rising','test_falling'])$('test_'+id).hidden=!c.input_enabled;
+ for(const id of ['relay_pulse','relay_off'])$('test_'+id).hidden=!c.relay_enabled;
+ for(let i=1;i<=MAX_FUNCTIONS;i++){
+  const b=$('test_ble_fn'+i);b.hidden=i>(current?.function_count||2)||!current?.load_enabled||!current?.['fn'+i+'_kind'];b.disabled=!c.ble_available;
+ }
+ card('lora',c.joined?T('Aangemeld','Joined'):T('Niet aangemeld','Not joined'),T('Uplinks sinds start: ','Uplinks since boot: ')+(c.tx_count??'—'),c.joined?'ok':'attention');
+ const resultText=[
+  T('Nog geen opdracht uitgevoerd.','No command executed yet.'),(current?.profile===3?T('Geslaagd: BatteryProtect-modus én uitgangstoestand teruggelezen.','Success: BatteryProtect mode and output state read back.'):current?.profile===1?T('Geslaagd: MPPT-regelmodus teruggelezen; geen meting van de uitgang.','Success: MPPT control mode read back; not an output measurement.'):T('GATT-opdracht geslaagd. Alleen een functie met teruglezen controleert de waarde.','GATT command succeeded. Only a readback function verifies the value.')),
+  T('Controleer MAC-adres en instellingen.','Check MAC address and settings.'),T('Bluetooth-firmware ontbreekt of Bluetooth start niet.','Bluetooth firmware is missing or failed to start.'),
+  T('Doelapparaat niet gevonden.','Target device not found.'),T('Verbinding mislukt.','Connection failed.'),T('GATT niet gevonden.','GATT not found.'),
+  T('Eerste uitlezing mislukt.','Initial read failed.'),T('Schrijven mislukt.','Write failed.'),T('Terugleescontrole mislukt.','Readback failed.'),
+  T('Beveiliging mislukt.','Security failed.'),T('Bluetooth bezet.','Bluetooth busy.'),T('ESP reageert niet.','ESP not responding.')
+ ];
+ const target=(current?.victron_mac||'').toUpperCase(),configured=!!target&&target!=='00:00:00:00:00:00';
+ const sameTarget=target===(session?.ble_target_mac||'').toUpperCase();
+ const targetState=sameTarget?session?.ble_target_state||0:0;
+ const targetTexts=[T('Nog niet gezocht','Not checked yet'),T('Doelapparaat gevonden','Target device found'),T('Doelapparaat niet gevonden','Target device not found'),T('Zoeken mislukt','Check failed')];
+ let bleValue=!c.ble_available?T('Niet beschikbaar','Unavailable'):c.ble_pending?T('Opdracht bezig','Command pending'):!configured?T('MAC niet ingesteld','MAC not configured'):targetTexts[targetState]||targetTexts[0];
+ let bleDetail=!configured?T('Stel het MAC-adres in bij Bluetooth.','Set the target MAC address under Bluetooth.'):target+(targetState?T(' · laatste controle ',' · last checked ')+duration(session.ble_target_age_s||0)+T(' geleden.',' ago.'):T(' · gebruik Bluetooth-scan om te zoeken.',' · use Bluetooth scan to search.'));
+ bleDetail+=' '+(resultText[c.ble_result]||T('Onbekend resultaat.','Unknown result.'));
+ if(targetState===1)bleDetail+=' '+T('Gevonden is geen bevestiging van pairing of schakelen.','Discovery does not confirm pairing or switching.');
+ card('ble',bleValue,bleDetail,!c.ble_available?'error':targetState===1?'ok':targetState>1?'attention':'neutral');
+ card('input',!c.input_enabled?T('Uitgeschakeld','Disabled'):c.input_active?T('Spanning aanwezig','Voltage present'):T('Spanning afwezig','Voltage absent'),
+  T('Flanken sinds start: ','Edges since boot: ')+'↑ '+(c.rising_count??'—')+' / ↓ '+(c.falling_count??'—')+(c.input_overflow?T(' · wachtrij overgelopen: ',' · queue overflow: ')+c.input_overflow:''),c.input_overflow?'error':c.input_enabled&&c.input_active?'ok':'neutral');
+ card('output',!c.relay_enabled?T('Uitgeschakeld','Disabled'):c.relay_pulsing?T('Puls actief','Pulse active'):c.relay_on?T('AAN','ON'):T('UIT','OFF'),
+  T('Aangestuurde stand · geen contactterugmelding.','Commanded state · no contact feedback.'),c.relay_enabled&&c.relay_on?'ok':'neutral');
+ const clients=Number.isInteger(session?.wifi_clients)?session.wifi_clients:null;
+ const rssi=(session?.wifi_rssi_dbm||[]).filter(x=>Number.isInteger(x)&&x<0&&x>=-127);
+ const wifiDetail=[current?.wifi_ssid||'',clients===null?'':clients+(clients===1?T(' verbonden client',' connected client'):T(' verbonden clients',' connected clients')),rssi.length?'RSSI '+rssi.join(' / ')+' dBm':''].filter(Boolean).join(' · ');
+ card('wifi',clients===0?T('Geen clients','No clients'):'Connected',wifiDetail,clients===0?'neutral':'ok');
+ card('uptime',duration(c.uptime_s||0),T('Sinds de laatste herstart','Since the last restart'),'ok');
+ updateFirmware();renderPower();
+ $('status').classList.remove('stale');
+ const events=[T('Geen actie sinds start.','No action since boot.'),T('Laatste actie: opgaande flank.','Last action: rising edge.'),T('Laatste actie: neergaande flank.','Last action: falling edge.'),T('Laatste actie: LoRa-downlink.','Last action: LoRa downlink.'),T('Laatste actie: TEST opgaande flank.','Last action: TEST rising edge.'),T('Laatste actie: TEST neergaande flank.','Last action: TEST falling edge.'),T('Laatste actie: handmatige test.','Last action: manual test.')];
+ $('connection_note').textContent=events[c.last_event||0]+' '+T('Status wordt automatisch vernieuwd.','Status refreshes automatically.');
+}
+function duration(s){return Math.floor(s/86400)+'d '+Math.floor(s%86400/3600)+'h '+Math.floor(s%3600/60)+'m '+s%60+'s';}
+function translate(){
+ lang=Number($('language').value);document.documentElement.lang=lang?'en':'nl';
+ $('lang_nl').setAttribute('aria-pressed',String(!lang));$('lang_en').setAttribute('aria-pressed',String(!!lang));
+ for(const f of F){
+  if(f.length===3)$('legend_'+f[0]).textContent=f[1+lang];
+  else{
+   $('label_'+f[0]).textContent=f[1+lang];$('help_'+f[0]).textContent=f[5+lang];
+   if(f[3]==='select')f[4].forEach((option,i)=>{$(f[0]).options[i].textContent=option[lang===1&&option.length>2?2:1];});
+  }
+ }
+ $('subtitle').textContent=T('LoRaWAN · Bluetooth · Ingang & relais','LoRaWAN · Bluetooth · Input & relay');
+ $('save').textContent=T('Opslaan en herstarten','Save and restart');
+ $('identity_warning').textContent=T('DevEUI is uit het board gelezen. Alleen wijzigen als jouw netwerk dit vereist; pas ook de netwerkserver aan.','DevEUI was read from the board. Only change if your network requires it; update the network server too.');
+ $('edit_identity_label').textContent=T('DevEUI wijzigen','Edit DevEUI');
+ $('input_note').textContent=T('K1/K2: 12–24 V DC · 5 V niet gespecificeerd · minimaal 80 ms stabiel.','K1/K2: 12–24 V DC · 5 V not specified · stable for at least 80 ms.');
+ $('test_title').textContent=T('Testen & handmatig bedienen','Tests & manual controls');
+ $('test_info').textContent=T('Tests gebruiken de OPGESLAGEN regels en kunnen echt schakelen. Een flanktest simuleert alleen de gebeurtenis: de fysieke ingang en flanktellers blijven ongewijzigd. Sla gewijzigde regels eerst op.','Tests use the SAVED rules and can switch real outputs. Edge tests simulate only the event: physical input and edge counters remain unchanged. Save changed rules first.');
+ for(const [id,labels]of Object.entries(tests))$('test_'+id).textContent=labels[lang];
+ $('footer').textContent='© 2026 Roel Broersma';
+ translateExtra();visibility();
+ if(statusData)showStatus(statusData);else if(current)showStatus(current);
+}
+const rxDefault={2:[869100000,0],3:[866550000,2],4:[869525000,0],5:[923300000,8],6:[923300000,8],7:[921900000,0],8:[923200000,2],9:[921400000,2],10:[916600000,2],11:[917300000,2]};
+function visibility(){
+ updateClassNotice();
+ const io=+$('io_board').value;
+ if(io!==1)$('input_enabled').checked=false;if(io===0)$('relay_enabled').checked=false;
+ const input=io===1&&$('input_enabled').checked,relay=io!==0&&$('relay_enabled').checked;
+ $('field_input_enabled').hidden=io!==1;
+ $('field_relay_enabled').hidden=io===0;
+ $('field_relay_pulse_ms').hidden=!relay;
+ for(const name of ['rising','falling'])$('legend_'+name).parentElement.hidden=page!=='io'||!input;
+ for(const key of ['wifi_input','wifi_hold'])$('field_'+key).hidden=!input;
+ const generic=$('profile').value==='2',battery=$('profile').value==='3';
+ $('load_enabled').disabled=false;
+ const ble=$('load_enabled').checked;
+ $('function_tools').hidden=page!=='ble'||!ble;
+ $('function_count_label').textContent=functionCount+' / '+MAX_FUNCTIONS+' '+T('functies','functions');
+ $('add_function').disabled=functionCount>=MAX_FUNCTIONS;$('remove_function').disabled=functionCount<=1;
+ $('add_function').textContent=T('+ Functie toevoegen','+ Add function');$('remove_function').textContent=T('Laatste functie verwijderen','Remove last function');
+ $('profile_note').hidden=!battery;
+ $('profile_note').textContent=T('100A-variant (A3B1). AAN/UIT via PIN-pairing, met controle van de echte uitgangsstatus. Een actieve beveiliging kan inschakelen tegenhouden.','100A variant (A3B1). PIN-paired ON/OFF with actual output-state verification. Active protection may prevent switching on.');
+ if(!generic)$('smp').value='1';$('smp').disabled=!generic;
+ $('field_instance').hidden=generic||battery||!ble;
+ if(battery)$('instance').value='0';
+ for(const id of ['smp','ble_attempts'])$('field_'+id).hidden=!ble;
+ $('field_victron_pin').hidden=!ble||$('smp').value!=='1';
+ for(let i=1;i<=MAX_FUNCTIONS;i++){
+  $('legend_fn'+i).parentElement.hidden=page!=='ble'||!ble||i>functionCount;
+  const kind=$('fn'+i+'_kind');
+  for(const opt of kind.options)opt.hidden=+opt.value!==0&&(battery?![11,12].includes(+opt.value):generic?![3,4].includes(+opt.value):[3,4,11,12].includes(+opt.value));
+  if(kind.selectedOptions[0]?.hidden)kind.value='0';
+  const help=modeHelp[kind.value];$('mode_help_'+i).hidden=!help||generic;$('mode_help_'+i).textContent=help?help[lang]:'';
+  const g=generic && [3,4].includes(+kind.value);
+  for(const suffix of ['service','char','value']){
+   const el=$('fn'+i+'_'+suffix);$('field_'+el.id).hidden=!generic;el.required=g&&ble;
+   el.pattern=g?(suffix==='value'?'([0-9A-Fa-f]{2}){1,20}':'[0-9A-Fa-f]{8}(-[0-9A-Fa-f]{4}){3}-[0-9A-Fa-f]{12}'):'.*';
+  }
+  for(const edge of ['rise','fall']) $(edge+'_ble').options[i].textContent=$('fn'+i+'_name').value||T('Functie ','Function ')+i;
+  $('label_dl_fn'+i).textContent=T('Ontvangen: ','Receive: ')+($('fn'+i+'_name').value||T('Functie ','Function ')+i);
+  const usable=ble&&i<=functionCount&&+kind.value!==0;
+  $('dl_fn'+i).disabled=!usable;$('field_dl_fn'+i).hidden=!usable;
+  for(const edge of ['rise','fall']){const el=$(edge+'_ble');el.options[i].disabled=!usable;if(!usable&&+el.value===i)el.value='0';}
+ }
+ for(const id of ['dl_off','dl_on','dl_pulse']){$(id).disabled=!relay;$('field_'+id).hidden=!relay;}
+ $('legend_routes').parentElement.hidden=page!=='lora'||(!relay&&!ble);
+ for(const id of ['wifi_input','wifi_hold'])$(id).disabled=!input;
+ $('field_wifi_input_min').hidden=!input||!$('wifi_input').checked;
+ $('field_wifi_lora_min').hidden=!$('wifi_lora').checked;
+ $('identity_warning').hidden=!$('edit_identity').checked;
+ $('class_note').textContent=$('class').value==='2'?T('Continu luisteren voor snelle bediening. Stel ook de UG65 op Class C in. Meer stroomverbruik.','Continuous listening for prompt control. Also set the UG65 to Class C. Higher power consumption.'):T('Ontvangt alleen kort na een eigen uplink. Opdrachten kunnen wachten tot de volgende statusuitzending (ingesteld: ','Receives only shortly after its own uplink. Commands may wait for the next status transmission (configured: ')+$('status_min').value+T(' minuten). Voor snelle bediening: Class C op board én UG65.',' minutes). For prompt control: Class C on both board and UG65.');
+
+ const r=+$('region').value,custom=$('rx2_custom').value==='1',sub=r===5||r===6;
+ $('field_subband').hidden=!sub;if(!sub)$('subband').value='0';
+ for(const id of ['rx2_freq','rx2_dr']){$('field_'+id).hidden=!custom;$(id).required=custom;}
+ if(!custom&&rxDefault[r])[$('rx2_freq').value,$('rx2_dr').value]=rxDefault[r];
+ for(const edge of ['rise','fall']){
+  $(edge+'_lora').disabled=!$('input_enabled').checked;
+  $(edge+'_ble').disabled=!$('input_enabled').checked||!$('load_enabled').checked;
+  $(edge+'_relay').disabled=!$('input_enabled').checked||!$('relay_enabled').checked;
+  $('field_'+edge+'_ble').hidden=!ble;
+  $('field_'+edge+'_relay').hidden=!relay;
+ }
+ // Hide inactive controls and exclude their validation; switching tabs must not disable active settings.
+ for(const f of F){
+  if(f.length===3||f[3]==='checkbox'||f[0]==='smp'||/^(rise|fall)_/.test(f[0]))continue;
+  const inactive=$('field_'+f[0]).hidden||(/^fn\d+_/.test(f[0])&&(!ble||+f[0].match(/\d+/)[0]>functionCount));
+  $(f[0]).disabled=inactive;
+ }
+}
+function edgeMask(edge){if(!$('input_enabled').checked)return 0;const fn=$(edge+'_ble').disabled?0:+$(edge+'_ble').value;return ($(edge+'_lora').checked?1:0)|(fn?(fn===2?8:4):0)|($(edge+'_relay').disabled?0:+$(edge+'_relay').value);}
+function fillEdge(edge,mask,fn){$(edge+'_lora').checked=!!(mask&1);$(edge+'_ble').value=fn??((mask&4)?1:(mask&8)?2:0);$(edge+'_relay').value=mask&112;}
+async function refreshStatus(){
+ if(saving||!ready)return;
+ try{
+  const sr=await fetch('/session',{cache:'no-store',signal:AbortSignal.timeout(9000)});if(!sr.ok)throw Error();session=await sr.json();
+  const r=await fetch('/status',{cache:'no-store',signal:AbortSignal.timeout(9000)});if(!r.ok)throw Error();showStatus({...current,...await r.json()});
+ }
+ catch{$('status').classList.add('stale');card('wifi','Disconnected',T('Verbinding niet bevestigd','Connection not confirmed'),'attention');$('connection_note').textContent=T('Geen actuele verbinding. Getoonde status is de laatst ontvangen status.','No live connection. Displayed values are the last received status.');}
+}
+async function runTest(command){
+ if(!ready||saving)return;
+ if(!confirm(T('Deze test gebruikt de opgeslagen instellingen en kan de LOAD of het relais echt schakelen. Doorgaan?','This test uses saved settings and can switch LOAD or the relay. Continue?')))return;
+ saving=true;$('test_result').textContent=T('Test aanvragen…','Requesting test…');
+ try{
+  const r=await fetch('/action',{method:'POST',headers:{'X-LoRaBLE':session?.token||'1','Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({command}),signal:AbortSignal.timeout(15000)});
+  const result=await r.json();if(!r.ok||!result.ok)throw Error(result.code);
+  $('test_result').textContent=T('Test aangevraagd. Controleer de status; dit is nog geen bevestiging dat Bluetooth is geslaagd.','Test requested. Check status; this does not confirm Bluetooth success.');
+ }catch{$('test_result').textContent=T('Test niet bevestigd. Controleer de verbinding en of ingang/relais zijn ingeschakeld in de opgeslagen instellingen.','Test not confirmed. Check connection and whether input/relay are enabled in saved settings.');}
+ finally{saving=false;await refreshStatus();}
+}
+for(const [id,value]of [['lang_nl',0],['lang_en',1]])$(id).addEventListener('click',()=>{$('language').value=value;translate();});
+for(let i=3;i<=MAX_FUNCTIONS;i++)for(const key of ['kind','name'])$('fn'+i+'_'+key).addEventListener('change',visibility);
+for(let i=1;i<=MAX_FUNCTIONS;i++)$('dl_fn'+i).addEventListener('change',()=>autoClassC($('dl_fn'+i)));
+for(const id of ['dl_off','dl_on','dl_pulse','wifi_lora'])$(id).addEventListener('change',()=>autoClassC($(id)));
+function autoClassC(control){
+ if(control.checked&&$('class').value==='0'){
+  $('class').value='2';
+  classSuggested=true;
+ }
+ visibility();
+}
+const functionTools=document.createElement('fieldset');functionTools.id='function_tools';functionTools.dataset.page='ble';
+functionTools.innerHTML='<div class="tools"><button type="button" id="add_function"></button><button type="button" id="remove_function"></button><span id="function_count_label" class="panel-note"></span></div>';
+$('legend_fn1').parentElement.before(functionTools);
+$('add_function').onclick=()=>{if(functionCount<MAX_FUNCTIONS){functionCount++;visibility();$('fn'+functionCount+'_name').focus();}};
+$('remove_function').onclick=()=>{if(functionCount>1&&confirm(T('Laatste functie en haar koppelingen verwijderen? Dit wordt pas na opslaan toegepast.','Remove the last function and its routes? Applied only after saving.'))){
+ $('fn'+functionCount+'_kind').value='0';$('dl_fn'+functionCount).checked=false;for(const e of ['rise','fall'])if(+$(e+'_ble').value===functionCount)$(e+'_ble').value='0';functionCount--;visibility();
+}};
+for(const id of ['region','rx2_custom','input_enabled','relay_enabled','load_enabled','io_board','profile','fn1_kind','fn2_kind','fn1_name','fn2_name','smp','wifi_input','wifi_lora','class','status_min'])$(id).addEventListener('change',visibility);
+$('dev_eui').readOnly=true;$('edit_identity').addEventListener('change',()=>{$('dev_eui').readOnly=!$('edit_identity').checked;if($('edit_identity').checked)$('dev_eui').focus();else $('dev_eui').value=current?.dev_eui||'';visibility();});
+let classSuggested=false;
+const classNotice=document.createElement('p');classNotice.id='class_notice';classNotice.className='panel-note';classNotice.setAttribute('role','status');$('field_class').append(classNotice);
+$('wifi_ssid').addEventListener('input',()=>{document.title=$('title').textContent=$('wifi_ssid').value||'Victron LoRaBLE Remote';});
+$('victron_mac').pattern='([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}';
+for(const id of ['dev_eui','join_eui'])$(id).pattern='[0-9A-Fa-f]{16}';
+$('app_key').pattern='[0-9A-Fa-f]{32}';$('victron_pin').pattern='[0-9]{6}';$('victron_pin').inputMode='numeric';
+$('wifi_ssid').pattern='[ -~]{1,32}';$('wifi_password').pattern='[!-~]{12,63}';
+
+function applyFields(c){
+ functionCount=c.function_count||2;
+ $('edit_identity').checked=false;$('dev_eui').readOnly=true;
+ for(const f of F){
+  if(f.length===3||f[3]==='password'||/^(rise|fall|dl|wifi_input$|wifi_hold$|wifi_lora$)_?/.test(f[0])&&['wifi_input_min','wifi_lora_min'].indexOf(f[0])<0)continue;
+  const el=$(f[0]);if(f[3]==='checkbox')el.checked=!!c[f[0]];else el.value=c[f[0]]??'';
+ }
+ $('language').value=c.language;fillEdge('rise',c.rising_actions,c.rising_fn);fillEdge('fall',c.falling_actions,c.falling_fn);
+ ['wifi_input','wifi_hold','wifi_lora'].forEach((id,i)=>$(id).checked=!!(c.wifi_triggers&(1<<i)));
+ ['dl_off','dl_on','dl_pulse'].forEach((id,i)=>$(id).checked=!!(c.downlink_allowed&(1<<(i+2))));
+ for(let i=1;i<=MAX_FUNCTIONS;i++)$('dl_fn'+i).checked=!!((c.downlink_functions??(c.downlink_allowed&3))&(1<<(i-1)));
+ document.title=$('title').textContent=c.wifi_ssid;translate();visibility();
+}
+async function loadConfig(){
+ try{
+  const sr=await fetch('/session',{cache:'no-store',signal:AbortSignal.timeout(15000)});
+  if(!sr.ok)throw Error();session=await sr.json();
+  const r=await fetch('/config',{cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error();
+  current=await r.json();applyFields(current);ready=true;$('save').disabled=false;
+  refreshStatus();refreshLog();statusTimer=setInterval(refreshStatus,5000);
+ }catch{$('connection_note').textContent=T('Instellingen konden niet worden geladen. Controleer WiFi en herlaad de pagina.','Settings could not be loaded. Check WiFi and reload.');}
+}
+
+$('form').addEventListener('submit',async e=>{
+ e.preventDefault();if(!ready||saving||!$('form').reportValidity())return;
+ saving=true;$('save').disabled=true;$('result').textContent=T('Opslaan…','Saving…');
+ try{
+  const body=serialize();
+  body.set('rising_actions',edgeMask('rise'));body.set('falling_actions',edgeMask('fall'));
+
+  const r=await fetch('/save',{method:'POST',headers:{'X-LoRaBLE':session?.token||'1','Content-Type':'application/x-www-form-urlencoded'},body,signal:AbortSignal.timeout(20000)});
+  const result=await r.json();
+  if(!r.ok||!result.ok){$('result').textContent=T('Niet opgeslagen. Controleer de waarden.','Not saved. Check the values.')+' ('+result.code+')';$('save').disabled=false;saving=false;return;}
+  clearInterval(statusTimer);
+  $('result').textContent=T('Opgeslagen. Het board herstart. Verbind opnieuw met “','Saved. The board is restarting. Reconnect to “')+$('wifi_ssid').value+T('” en open http://192.168.4.1/.','” and open http://192.168.4.1/.');
+ }catch{
+  $('result').textContent=T('Verbinding onderbroken: opslag niet bevestigd. Verbind opnieuw en controleer de instellingen.','Connection lost: saving not confirmed. Reconnect and check settings.');$('save').disabled=false;saving=false;
+ }
+});
+
+function serialize(){
+ const body=new URLSearchParams(new FormData($('form')));body.set('schema','8');body.set('expected_revision',current.revision);
+ // The STM validates a complete record. Keep inactive settings, using saved values
+ // if an unfinished numeric edit was hidden by turning its feature off.
+ for(const f of F){
+  if(f.length===3||f[3]==='checkbox'||f[3]==='password'||!$(f[0]).disabled)continue;
+  let v=$(f[0]).value;
+  if(f[3]==='number'&&(!v||!Number.isInteger(+v)||+v<f[4][0]||+v>f[4][1]))v=current?.[f[0]]??f[4][0];
+  if(f[3]==='text'&&v.length<f[4][0])v=current?.[f[0]]||T('Functie','Function');
+  body.set(f[0],v);
+ }
+ body.set('smp',$('profile').value!=='2'?'1':$('smp').value);
+ body.set('rising_actions',edgeMask('rise'));body.set('falling_actions',edgeMask('fall'));
+ body.set('wifi_triggers',['wifi_input','wifi_hold','wifi_lora'].reduce((n,id,i)=>n|($(id).checked&&!$(id).disabled?1<<i:0),0));
+ body.set('function_count',functionCount);
+ body.set('rising_fn',$('rise_ble').disabled?0:$('rise_ble').value);body.set('falling_fn',$('fall_ble').disabled?0:$('fall_ble').value);
+ let fnMask=0;for(let i=1;i<=MAX_FUNCTIONS;i++){if($('dl_fn'+i).checked&&!$('dl_fn'+i).disabled)fnMask|=1<<(i-1);body.delete('dl_fn'+i);if(i>functionCount)body.set('fn'+i+'_kind','0');}
+ body.set('downlink_functions',fnMask);
+ body.set('downlink_allowed',(fnMask&3)|['dl_off','dl_on','dl_pulse'].reduce((n,id,i)=>n|($(id).checked&&!$(id).disabled?1<<(i+2):0),0));
+ for(const edge of ['rise','fall'])for(const kind of ['lora','ble','relay'])body.delete(edge+'_'+kind);
+ for(const id of ['wifi_input','wifi_hold','wifi_lora','dl_fn1','dl_fn2','dl_off','dl_on','dl_pulse'])body.delete(id);
+ return body;
+}
+for(const id of Object.keys(pages)){
+ const b=document.createElement('button');b.type='button';b.id='nav_'+id;b.onclick=()=>showPage(id);$('menu').append(b);
+}
+function showPage(id){
+ page=id;
+ for(const p of Object.keys(pages))$('nav_'+p).setAttribute('aria-current',p===id?'page':'false');
+ $('status').hidden=id!=='status';
+ for(const el of document.querySelectorAll('[data-page]'))el.hidden=el.dataset.page!==id;
+ $('save').hidden=id==='status'||id==='manage';
+ visibility();
+ if(id==='status'&&ready)refreshLog();
+}
+$('form').addEventListener('invalid',e=>{const panel=e.target.closest('[data-page]');if(panel)showPage(panel.dataset.page);},true);
+const manage=document.createElement('fieldset');manage.dataset.page='manage';
+manage.innerHTML='<h2 class="panel-title" id="manage_title"></h2><p id="running_firmware" class="firmware-line"></p><p id="backup_help" class="panel-note"></p><div class="tools"><button type="button" id="export"></button><label><span id="import_label"></span><input type="file" id="import" accept=".json,application/json"></label></div><pre id="import_preview"></pre><button type="button" id="apply_import" hidden></button><p id="import_result" role="status"></p><hr><h3 id="ota_title"></h3><p id="ota_help" class="panel-note"></p><input type="file" id="ota_file" accept=".packed"><button type="button" id="ota_upload"></button><progress id="ota_progress" value="0" max="100" hidden></progress><p id="ota_result" role="status"></p>';
+$('sections').append(manage);
+const logBox=document.createElement('fieldset');logBox.dataset.page='status';
+logBox.innerHTML='<h2 class="panel-title" id="log_title"></h2><p id="log_help" class="panel-note"></p><div class="tools"><button type="button" id="log_refresh"></button></div><ul id="log_rows"></ul>';
+$('sections').append(logBox);
+const power=document.createElement('fieldset');power.dataset.page='status';
+power.innerHTML='<div class="power-heading"><h2 class="panel-title" id="power_title"></h2><div class="unit-switch" role="group" aria-label="Energy unit"><button type="button" id="unit_mah" aria-pressed="true">mAh</button><button type="button" id="unit_wh" aria-pressed="false">Wh</button></div></div><p id="power_help" class="panel-note"></p><p id="power_class" class="panel-note"></p><div class="table-wrap"><table id="power_table"><thead><tr><th id="power_component"></th><th>mA</th><th id="power_hours"></th><th id="power_unit_heading">mAh / 24 h</th></tr></thead><tbody></tbody></table></div><div id="power_total" class="power-summary"></div><p id="power_excluded" class="panel-note"></p><details><summary id="power_reference_title"></summary><p id="power_reference"></p><p><a href="https://docs.rakwireless.com/product-categories/wisduo/rak11160-module/datasheet/" target="_blank" rel="noopener">RAK11160</a> · <a href="https://www.st.com/resource/en/datasheet/stm32wle5jc.pdf" target="_blank" rel="noopener">STM32WLE5</a> · <a href="https://documentation.espressif.com/esp8684_datasheet_en.html" target="_blank" rel="noopener">ESP8684</a> · <a href="https://docs.rakwireless.com/product-categories/wisblock/rak13001/datasheet/" target="_blank" rel="noopener">RAK13001</a></p></details>';
+$('sections').append(power);$('sections').append(testBox);
+$('unit_mah').onclick=()=>{powerUnit='mAh';renderPower();};$('unit_wh').onclick=()=>{powerUnit='Wh';renderPower();};
+power.querySelector('#power_reference').style.whiteSpace='pre-line';
+for(const [label,url]of [
+ ['Hongfa HF46F-G','https://www.hongfa.com/product/power-relay/HF46F-G'],
+ ['RAK13007 + schema','https://docs.rakwireless.com/product-categories/wisblock/rak13007/datasheet/'],
+ ['Omron G5LE','https://components.omron.com/sites/default/files/datasheet_pdf/K100-E1.pdf']
+]){const a=document.createElement('a');a.textContent=label;a.href=url;a.target='_blank';a.rel='noopener';power.querySelector('details p:last-child').append(' · ',a);}
+// Planning assumptions, not measurements. Radio states are mutually exclusive.
+// No calculator fields enter the settings form, export, or flash.
+const powerRows=[
+ ['stm',['STM32 48 MHz · SMPS, typisch','STM32 48 MHz · SMPS, typical'],3.45,24],
+ ['lora',['LoRa RX · Class C, chip','LoRa RX · Class C, chip'],4.82,24],
+ ['wifi',['ESP + WiFi · 1% zendtijd','ESP + WiFi · 1% TX time'],65*0.99+370*0.01,1],
+ ['bluetooth',['ESP + Bluetooth · 1 korte actie','ESP + Bluetooth · 1 short action'],62*0.99+190*0.01,10/3600],
+ ['esp_off',['ESP uit · resterende tijd','ESP off · remaining time'],0.001,23-10/3600],
+ ['relay_off',['Relais afgevallen · alleen spoel','Relay released · coil only'],0,24],
+ ['relay',['Relaismodule aangetrokken · voorbeeld','Relay module energized · example'],70,1]
+];
+for(const [id]of powerRows){
+ const row=document.createElement('tr');row.id='power_row_'+id;
+ row.innerHTML='<th id="power_label_'+id+'"></th><td id="power_ma_'+id+'"></td><td id="power_h_'+id+'"></td><td id="power_q_'+id+'"></td>';
+ power.querySelector('tbody').append(row);
+}
+function powerModel(io=current?.io_board){
+ const base=powerRows.filter(r=>!r[0].startsWith('relay')).reduce((q,r)=>q+r[2]*r[3],0);
+ // RAK13001 has a published whole-module value. RAK13007 is an inference
+ // from the RAK 3V schematic and Omron's 400mW family coil rating, not a
+ // measured module specification. 22.5 ohm = 3V^2 / 0.4W.
+ const relay=io===1?70:io===2?142:0;
+ return {base,relay,wifiHeavy:65*0.9+370*0.1,bleCharge:powerRows[3][2]*10/3600};
+}
+function renderPower(){
+ let total=0;
+ const scale=powerUnit==='Wh'?3.3/1000:1;
+ $('unit_mah').setAttribute('aria-pressed',String(powerUnit==='mAh'));$('unit_wh').setAttribute('aria-pressed',String(powerUnit==='Wh'));
+ $('power_unit_heading').textContent=powerUnit+' / 24 h';
+ const model=powerModel(),knownIo=[0,1,2].includes(current?.io_board);
+ for(const [id,labels,defaultMa,h]of powerRows){
+  const isRelay=id.startsWith('relay'),ma=id==='relay'?model.relay:defaultMa;
+  $('power_row_'+id).hidden=isRelay&&current?.io_board===0;
+  $('power_label_'+id).textContent=id==='relay'?(current?.io_board===2?'RAK13007 · G5LE-14-DC3 · '+T('afgeleid','derived'):'RAK13001 · HF46F · '+T('RAK typisch','RAK typical')):labels[lang];
+  $('power_ma_'+id).textContent=isRelay&&!knownIo?'—':String(+ma.toFixed(3));
+  $('power_h_'+id).textContent=id==='bluetooth'?'10 s':(id==='esp_off'?'≈23':String(h))+' h';
+  $('power_q_'+id).textContent=isRelay&&!knownIo?T('onbekend','unknown'):(id==='relay'?'+':'')+(ma*h*scale).toFixed(powerUnit==='Wh'?3:2);
+  if(!isRelay)total+=ma*h;
+ }
+ const energy=q=>'≈ '+(q*scale).toFixed(powerUnit==='Wh'?2:0)+' '+powerUnit;
+ $('power_total').replaceChildren();
+ for(const [label,q]of [[T('Relais uit','Relay off'),total],...(model.relay?[[T('Relais 1 uur aan','Relay on for 1 hour'),total+model.relay],[T('Relais 24 uur aan','Relay on for 24 hours'),total+model.relay*24]]:[])]){
+  const item=document.createElement('article'),caption=document.createElement('small'),value=document.createElement('strong');caption.textContent=label+' / 24 h';value.textContent=energy(q);item.append(caption,value);$('power_total').append(item);
+ }
+ $('power_class').textContent=T('Rekenscenario: Class C, continu ontvangen. Opgeslagen instelling: Class ','Calculation scenario: Class C, continuous reception. Saved setting: Class ')+(current?.class===2?'C':current?.class===1?'B':'A')+T('. Dit rekenscenario wijzigt niets.','. This scenario does not change settings.');
+}
+function updateFirmware(){
+ const stm=statusData?.firmware||'—',esp=session?.esp_firmware||'—';
+ $('running_firmware').textContent=T('Draait nu: ','Currently running: ')+'STM32 '+stm+' · ESP '+esp;
+}
+function updateClassNotice(){
+ classNotice.textContent=classSuggested&&$('class').value==='2'?T('Class C geselecteerd voor snelle LoRa-bediening. Stel ook je netwerkserver op Class C in. Dit verbruikt meer stroom; Class A blijft mogelijk met ontvangst na een uplink. Sla op om dit toe te passen.','Class C selected for prompt LoRa control. Enable Class C on your network server too. This uses more power; Class A remains possible with reception after an uplink. Save to apply.'):'';
+}
+function translateExtra(){
+ updateClassNotice();
+ for(const [id,labels]of Object.entries(pages))$('nav_'+id).textContent=labels[lang];
+ const texts={
+ manage_title:['Back-up & firmware','Backup & firmware'],
+ backup_help:['Exporteer de OPGESLAGEN instellingen als JSON. PIN, AppKey, WiFi-wachtwoord en DevEUI/JoinEUI worden niet geëxporteerd of geïmporteerd. Die blijven op dit board behouden; op een nieuw board vul je ze apart in. Importeren toont eerst de wijzigingen, zet ze daarna alleen in het formulier en slaat pas op als je Opslaan kiest.','Export SAVED settings as JSON. PIN, AppKey, WiFi password and DevEUI/JoinEUI are not exported or imported. They remain on this board; enter them separately on a new board. Import first previews changes, then fills the form. Nothing is saved until you choose Save.'],
+ export:['Instellingen exporteren','Export settings'],import_label:['JSON-bestand kiezen','Choose JSON file'],apply_import:['Overnemen in formulier','Apply to form'],
+ ota_title:['WiFi/Bluetooth-firmware bijwerken','Update WiFi/Bluetooth firmware'],
+ ota_help:['ESP8684-update: kies een passend LoRaBLE .packed-bestand en upload het. Tijdens Bluetooth kan WiFi tijdelijk wegvallen; begin pas als er geen opdracht bezig is. Houd de voeding aangesloten. Deze 2MB-updater heeft GEEN automatische terugval naar de oude firmware. Gebruik alleen een vertrouwde build voor dit board. De LoRa/I/O-firmware op de STM32 wordt hiermee niet bijgewerkt; daarvoor is voorlopig USB nodig.','ESP8684 update: select a matching LoRaBLE .packed file and upload it. Bluetooth temporarily pauses WiFi; start only when no command is active. Keep power connected. This 2MB updater has NO automatic rollback. Use only a trusted build for this board. This does not update the STM32 LoRa/I/O firmware; that still requires USB.'],
+ ota_upload:['Gekozen firmware uploaden','Upload selected firmware'],log_title:['Recente gebeurtenissen','Recent activity'],
+ log_help:['Maximaal 24 regels, alleen in RAM. Geen flashslijtage door logs. Tijd = uptime sinds opstarten; de lijst wordt bij herstart gewist. Er staan geen sleutels of PIN-codes in het log.','Up to 24 entries, RAM only. Logging does not wear flash. Time is uptime since boot; reboot clears the list. No keys or PINs are logged.'],
+ log_refresh:['Log vernieuwen','Refresh log'],power_title:['Verbruiksberekening','Consumption estimate'],
+ power_help:['Per dag · 3,3 V · WiFi 1 uur · Bluetooth 10 seconden. Datasheetschatting, geen meting. Relaismodel volgt je opgeslagen module.','Per day · 3.3 V · WiFi 1 hour · Bluetooth 10 seconds. Datasheet estimate, not a measurement. Relay model follows your saved module.'],
+ power_component:['Onderdeel','Component'],power_hours:['Tijd / 24 h','Time / 24 h'],power_reference_title:['Aannames, slaapstroom & bronnen','Assumptions, sleep current & sources'],
+ power_excluded:['Deelsom zonder voedingsverliezen, leds, extra randapparatuur en zenden. Eén LoRa-bericht bij SF12: circa +0,044 mAh / +0,000145 Wh. mAh geldt bij 3,3 V, niet aan de 12V-accu. Zie de aannames hieronder.','Partial sum excluding regulator losses, LEDs, extra peripherals and transmission. One SF12 LoRa message: about +0.044 mAh / +0.000145 Wh. mAh is at 3.3 V, not the 12V battery. See assumptions below.'],
+ power_reference:['STM32: 3,45 mA bij 48 MHz/SMPS, ST typisch bij 3 V en 25°C; zonder SMPS 5,65 mA (+52,8 mAh/dag). Randapparatuur/temperatuur veranderen dit. Firmware: 48 MHz, geen diepe slaap. LoRa RX: ST-chipwaarde 4,82 mA; RAK vermeldt 5,46 mA op moduleniveau (niet nogmaals optellen). Class C ontvangt ook wanneer WiFi uit is.\nWiFi: 99% RX (65 mA) + 1% TX (370 mA) = 68,05 mA; 10% TX geeft 95,5 mA. Datasheet-werktoestanden, geen gemeten duty-cycle of gegarandeerde bandbreedte. Dit is een accesspoint, geen zuinige slapende WiFi-client. ESP-CPU zit al in de ESP-waarden. Bluetooth: RX 62 mA/TX 190 mA bij +9 dBm, dezelfde 99/1-aanname = 63,28 mA. 10 s kost circa 0,18 mAh. Zoeken, pairing en retries tellen mee. ESP uit: 1 µA typisch.\nRAK13001: 70 mA voor de module volgens RAK. Hongfa noemt 200 mW bij nominale spoelspanning; bij 3 V komt dat overeen met circa 45 Ω. De 3,3V-voeding, transistor en ±10% spoeltolerantie verklaren variatie. RAK13007: G5LE-14-DC3 volgens RAK-schema; circa 142 mA is AFGELEID uit de 400mW-G5LE-familie, 3V-spoel (22,5 Ω), 0,2V-transistorverlies plus basisstroom/led. De geraadpleegde Omron-tabel specificeert de oude 3V-variant niet afzonderlijk; dus geen geverifieerde modulewaarde. Rond 23°C circa 124–163 mA in dit model, opwarming verandert de spoelweerstand. Beide relais zijn niet bistabiel. Relais UIT: 0 mA voor de spoel; overige ruststroom onbekend.\nEen LoRa-voorbeeld: 20 bytes applicatie + 13 bytes overhead, SF12/BW125, CR4/5, 8-symbolen preamble: circa 1,81 s per bericht. Met de RAK-referentie 92 mA bij +14 dBm kost dat circa 0,046 mAh per bericht (in Class C vervangt dit RX-tijd). ADR, regio, overhead en herhalingen veranderen dit.\nDe 2,8 µA van RAK geldt uitsluitend in Stop 1 met ESP uit, niet voor de huidige firmware of Class C.','STM32: 3.45 mA at 48 MHz/SMPS, ST typical at 3 V and 25°C; without SMPS 5.65 mA (+52.8 mAh/day). Peripherals/temperature change this. Firmware: 48 MHz, no deep sleep. LoRa RX: ST chip value 4.82 mA; RAK lists 5.46 mA at module level (do not add both). Class C receives even with WiFi off.\nWiFi: 99% RX (65 mA) + 1% TX (370 mA) = 68.05 mA; 10% TX gives 95.5 mA. Datasheet operating states, not a measured duty cycle or guaranteed range. This is an access point, not a sleeping WiFi station. ESP CPU is already included. Bluetooth: RX 62 mA/TX 190 mA at +9 dBm; the same 99/1 assumption = 63.28 mA. A 10 s action costs about 0.18 mAh. Discovery, pairing and retries count. ESP off: 1 µA typical.\nRAK13001: 70 mA for the module according to RAK. Hongfa specifies 200 mW at nominal coil voltage; at 3 V that implies about 45 Ω. The 3.3V supply, transistor and ±10% coil tolerance explain variation. RAK13007: G5LE-14-DC3 per RAK schematic; about 142 mA is INFERRED from the 400mW G5LE family, a 3V coil (22.5 Ω), 0.2V transistor drop plus base/LED current. The consulted Omron table does not separately specify the old 3V variant; this is not a verified module value. Around 23°C this model gives about 124–163 mA; heating changes coil resistance. Neither relay is latching. Relay OFF: 0 mA for the coil; other idle current is unknown.\nLoRa example: 20 application bytes + 13 overhead, SF12/BW125, CR4/5, 8-symbol preamble: about 1.81 s per packet. RAK reference 92 mA at +14 dBm gives about 0.046 mAh per packet (replaces RX time in Class C). ADR, region, overhead and retries change this.\nRAK’s 2.8 µA only applies in Stop 1 with ESP off, not with the current firmware or Class C.']
+ };
+ for(const [id,t]of Object.entries(texts))$(id).textContent=t[lang];
+ updateFirmware();renderPower();
+}
+const backupKeys=F.filter(f=>f.length>3&&f[3]!=='password').map(f=>f[0]).filter(id=>!['dev_eui','join_eui'].includes(id)&&!/^(rise|fall|dl)_/.test(id)&&!['wifi_input','wifi_hold','wifi_lora'].includes(id)).concat(['language','rising_actions','falling_actions','wifi_triggers','downlink_allowed','function_count','rising_fn','falling_fn','downlink_functions']);
+function portable(c){const out={};for(const k of backupKeys)if(k in c)out[k]=c[k];return out;}
+$('export').onclick=()=>{
+ if(!ready)return;const file={format:'LoRaBLE Remote',schema:8,settings:portable(current)};
+ const url=URL.createObjectURL(new Blob([JSON.stringify(file,null,2)],{type:'application/json'}));
+ const a=document.createElement('a');a.href=url;a.download='LoRaBLE-settings.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
+};
+$('import').onchange=async()=>{
+ pendingImport=null;$('apply_import').hidden=true;$('import_preview').textContent='';
+ try{
+  const file=$('import').files[0];if(!file||file.size>16384)throw Error('file_size');
+  const data=JSON.parse(await file.text());
+  if(data.format!=='LoRaBLE Remote'||data.schema!==8||!data.settings||Array.isArray(data.settings))throw Error('schema');
+  const keys=Object.keys(data.settings);
+  if(keys.some(k=>!backupKeys.includes(k))||backupKeys.some(k=>!(k in data.settings)))throw Error('unknown_or_missing_fields');
+  for(const f of F.filter(f=>f.length>3&&keys.includes(f[0]))){
+   const v=data.settings[f[0]],type=f[3],r=f[4];
+   if(type==='select'&&!r.some(o=>String(o[0])===String(v)))throw Error(f[0]);
+   if((type==='number'||type==='checkbox')&&(!Number.isInteger(v)||v<(type==='checkbox'?0:r[0])||v>(type==='checkbox'?1:r[1])))throw Error(f[0]);
+   if(type==='text'&&(typeof v!=='string'||v.length<r[0]||v.length>r[1]))throw Error(f[0]);
+  }
+  for(const [key,max]of [['rising_actions',127],['falling_actions',127],['wifi_triggers',7],['downlink_allowed',31],['function_count',10],['rising_fn',10],['falling_fn',10],['downlink_functions',1023]])
+   if(!Number.isInteger(data.settings[key])||data.settings[key]<0||data.settings[key]>max)throw Error(key);
+  pendingImport=data.settings;
+  const changes=keys.filter(k=>data.settings[k]!==current[k]);
+  $('import_preview').textContent=T('Te wijzigen velden:\n','Fields to change:\n')+(changes.join('\n')||T('Geen verschillen.','No differences.'));
+  $('apply_import').hidden=false;
+ }catch(e){$('import_result').textContent=T('Import geweigerd: ','Import rejected: ')+e.message;}
+};
+$('apply_import').onclick=()=>{
+ if(!pendingImport)return;
+ applyFields({...current,...pendingImport});pendingImport=null;$('apply_import').hidden=true;
+ $('import_result').textContent=T('In formulier overgenomen, nog NIET opgeslagen. Controleer en kies Opslaan.','Applied to form, NOT saved. Review and choose Save.');
+ showPage('ble');
+};
+const eventLabels=[
+ ['Onbekend','Unknown'],['Opgestart','Boot'],['Ingang opgaand','Input rising'],['Ingang neergaand','Input falling'],['LoRa-opdracht','LoRa command'],['Test opgaand','Test rising'],['Test neergaand','Test falling'],['Handmatige actie','Manual action'],['Bluetooth-resultaat','Bluetooth result'],['LoRa aangemeld (1/0)','LoRa joined (1/0)'],['Uplink verstuurd','Uplink sent'],['Relais AAN','Relay ON'],['Relais UIT','Relay OFF'],['Instellingen opgeslagen','Settings saved']
+];
+async function refreshLog(){
+ try{const r=await fetch('/log',{cache:'no-store',signal:AbortSignal.timeout(9000)});if(!r.ok)throw Error();const data=await r.json();
+ $('log_rows').replaceChildren();
+ for(const [seconds,code,value]of data.entries.slice().reverse()){const li=document.createElement('li');li.textContent=duration(seconds)+' · '+(eventLabels[code]||eventLabels[0])[lang]+' · '+value;$('log_rows').append(li);}
+ const sr=await fetch('/session',{cache:'no-store'});if(sr.ok){const next=await sr.json();session=next;updateFirmware();$('test_result').textContent=T('Laatste Bluetooth-scan: ','Last Bluetooth scan: ')+(next.ble_advertisements??0)+T(' advertenties; status ',' advertisements; status ')+(next.ble_scan_status??'—');}
+ }catch{$('log_rows').textContent=T('Log niet beschikbaar.','Log unavailable.');}
+}
+$('log_refresh').onclick=refreshLog;
+$('ota_upload').onclick=()=>{
+ const file=$('ota_file').files[0];
+ if(!file||file.size>0xa6000||!file.name.endsWith('.packed')){$('ota_result').textContent=T('Kies een passend .packed-bestand.','Choose a matching .packed file.');return;}
+ if(!session||statusData?.ble_pending||saving)return;
+ if(!confirm(T('ESP-firmware bijwerken zonder automatische rollback? Houd de voeding aangesloten.','Update ESP firmware without automatic rollback? Keep power connected.')))return;
+ saving=true;$('ota_upload').disabled=true;$('ota_progress').hidden=false;
+ const req=new XMLHttpRequest();req.open('POST','/ota');req.setRequestHeader('X-LoRaBLE',session.token);req.setRequestHeader('Content-Type','application/octet-stream');req.timeout=180000;
+ req.upload.onprogress=e=>{if(e.lengthComputable)$('ota_progress').value=e.loaded/e.total*100;};
+ req.onload=()=>{let ok=false;try{ok=req.status===200&&JSON.parse(req.responseText).ok;}catch{}
+  $('ota_result').textContent=ok?T('Update gecontroleerd; ESP herstart. Verbind opnieuw en controleer de versie.','Update checked; ESP restarts. Reconnect and verify the version.'):T('Update geweigerd. Controleer bestand en verbinding.','Update rejected. Check file and connection.');
+  saving=false;$('ota_upload').disabled=false;};
+ req.onerror=req.ontimeout=()=>{$('ota_result').textContent=T('Verbinding weg; update niet bevestigd. Controleer het board voordat je opnieuw uploadt.','Connection lost; update not confirmed. Check the board before retrying.');saving=false;$('ota_upload').disabled=false;};
+ req.send(file);
+};
+for(let i=1;i<=MAX_FUNCTIONS;i++){
+ $('fn'+i+'_name').pattern='[ -~]{1,24}';
+ for(const suffix of ['service','char'])$('fn'+i+'_'+suffix).pattern='[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}';
+ $('fn'+i+'_value').pattern='([0-9a-fA-F]{2}){1,20}';
+}
+translate();showPage('status');loadConfig();
+</script></body></html>

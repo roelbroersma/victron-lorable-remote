@@ -1,0 +1,14 @@
+const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict');
+const context={};vm.createContext(context);vm.runInContext(fs.readFileSync(__dirname+'/../stm32/ug65_payload_codec_v4.js','utf8'),context);
+const base=[4,9,0,1,1,1,0,4,2,1,7,0,255,255,2,6,4,3,3,1];
+let d=context.Decode(10,base);assert.equal(d.batteryprotect_on_verified,true);assert.equal(d.load_control_mode,null);assert.equal(d.load_always_on_verified,false);assert.equal(d.bluetooth_function,1);assert.equal(d.board_vbat_v,null);
+let off=base.slice();off[5]=0;off[17]=4;off[19]=10;d=context.Decode(10,off);assert.equal(d.batteryprotect_off_verified,true);assert.equal(d.bluetooth_function,10);assert.equal(d.ble_function_2_requested,false);
+let transient=base.slice();transient[5]=3;assert.equal(context.Decode(10,transient).batteryprotect_on_verified,false);
+let failed=base.slice();failed[3]=9;assert.equal(context.Decode(10,failed).batteryprotect_on_verified,false);
+let mppt=base.slice();mppt[18]=1;mppt[5]=4;assert.equal(context.Decode(10,mppt).load_always_on_verified,true);
+let generic=base.slice();generic[18]=2;assert.equal(context.Decode(10,generic).load_always_on_verified,false);
+assert.equal(context.decodeUplink({fPort:10,bytes:base}).data.batteryprotect_on_verified,true);
+for(const n of [0,1,7])assert.ok(context.decodeUplink({fPort:10,bytes:base.slice(0,n)}).errors);
+for(const p of [0,224,1.1])assert.ok(context.decodeUplink({fPort:p,bytes:base}).errors);
+assert.equal(context.Decode(10,[3,1,0,1,1,4,0,1]).load_always_on_verified,true);
+console.log('PASS: UG65/TTN codec, BatteryProtect ON/OFF/transient/failure, function 10, MPPT/Generic isolation, legacy and input guards.');
