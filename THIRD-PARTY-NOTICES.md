@@ -24,12 +24,12 @@ or redistributing individual SDK code.
 The stock RAK/Espressif bootloader and partition table stay on the device; they
 are not bundled or relicensed by this project. No official Victron application,
 extracted application resource, private device dump or pairing key is distributed.
-The tested register mapping is documented independently in
-[BatteryProtect research](BATTERYPROTECT-RESEARCH.md).
 
-The optional USB wrapper invokes an independently installed official RAK uploader;
-it does not bundle that executable. Download official tools from RAK, not from
-unknown repackagers.
+The first-install wizard uses the official RAK uploader. It can reuse a matching
+local installation or download the fixed RAK release directly from RAK's server;
+the archive and executable are checked against pinned SHA-256 hashes. The project
+does not bundle or relicense that executable. The temporary setup helper is built
+with the same RAK SDK, whose notices and RAK-product restriction also apply.
 
 License collection is a reproducible packaging aid, not legal advice or a claim
 that every future SDK combination has been reviewed. Re-audit when changing SDKs.

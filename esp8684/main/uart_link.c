@@ -1,6 +1,12 @@
 #include "uart_link.h"
+#include "sdkconfig.h"
+
+#if !CONFIG_UART_ISR_IN_IRAM
+#error "USB update staging requires CONFIG_UART_ISR_IN_IRAM to avoid UART data loss during flash writes"
+#endif
 
 #include <string.h>
+#include <stdatomic.h>
 
 #include "driver/uart.h"
 #include "freertos/FreeRTOS.h"
@@ -9,6 +15,18 @@
 
 static uart_link_frame_handler_t frame_handler;
 static SemaphoreHandle_t transmit_lock;
+static _Atomic(uart_raw_handler_t) raw_handler;
+void uart_link_raw_mode(uart_raw_handler_t handler){
+ xSemaphoreTake(transmit_lock,portMAX_DELAY);
+ atomic_store(&raw_handler,handler);
+ xSemaphoreGive(transmit_lock);
+}
+esp_err_t uart_link_raw_write(const void *bytes,size_t n){
+ if(!atomic_load(&raw_handler)||xSemaphoreTake(transmit_lock,pdMS_TO_TICKS(2000))!=pdTRUE)return ESP_ERR_INVALID_STATE;
+ int sent=uart_write_bytes(UART_LINK_PORT,bytes,n);
+ esp_err_t result=uart_wait_tx_done(UART_LINK_PORT,pdMS_TO_TICKS(3000));
+ xSemaphoreGive(transmit_lock);return sent==(int)n?result:ESP_FAIL;
+}
 
 static void uart_receive_task(void *argument)
 {
@@ -22,8 +40,10 @@ static void uart_receive_task(void *argument)
         const int count = uart_read_bytes(UART_LINK_PORT,
                                           bytes,
                                           sizeof(bytes),
-                                          pdMS_TO_TICKS(100));
+                                          pdMS_TO_TICKS(atomic_load(&raw_handler)?10:100));
         for (int index = 0; index < count; ++index) {
+            uart_raw_handler_t raw=atomic_load(&raw_handler);
+            if(raw){raw(bytes[index]);used=0;collecting=false;continue;}
             const char value = (char)bytes[index];
             if (value == '@') {
                 protocol_secure_zero(line, sizeof(line));
@@ -65,7 +85,7 @@ esp_err_t uart_link_start(uart_link_frame_handler_t handler)
     }
 
     transmit_lock = xSemaphoreCreateMutex();
-    if (transmit_lock == NULL) {
+    if (transmit_lock == NULL || atomic_load(&raw_handler)) {
         return ESP_ERR_NO_MEM;
     }
 
@@ -128,6 +148,7 @@ esp_err_t uart_link_send(const char *type, uint16_t id, const char *payload)
         protocol_secure_zero(frame, sizeof(frame));
         return ESP_ERR_TIMEOUT;
     }
+    if(atomic_load(&raw_handler)){xSemaphoreGive(transmit_lock);return ESP_ERR_INVALID_STATE;}
     const size_t length = strlen(frame);
     // RUI's short RX ring drops long bursts; pace every frame, including replies.
     size_t written = 0;

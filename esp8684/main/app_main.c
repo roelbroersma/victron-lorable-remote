@@ -16,6 +16,8 @@
 #include "nvs_flash.h"
 #include "ota_guard.h"
 #include "portal.h"
+#include "bundle_update.h"
+#include "usb_tunnel.h"
 #include "protocol.h"
 #include "uart_link.h"
 #include "victron_ble.h"
@@ -785,6 +787,8 @@ static void handle_hello(const protocol_frame_t *frame)
 
 static void receive_uart_frame(const protocol_frame_t *frame)
 {
+    if(bundle_receive_frame(frame))return;
+    if(usb_tunnel_receive(frame))return;
     if (strncmp(frame->type, "HTTP_", 5) == 0) { portal_receive_frame(frame); return; }
     if (strcmp(frame->type, "HELLO") == 0) {
         handle_hello(frame);
@@ -1120,4 +1124,5 @@ void app_main(void)
     }
 
     uart_started = true;
+    bundle_update_start();
 }

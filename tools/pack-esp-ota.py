@@ -40,7 +40,7 @@ def unpack(data):
         raise ValueError('Expected an ESP32-C2 application, not another chip or a merged image')
     return raw
 
-def pack(raw, version='LoRaBLE-C2-26M-v4.10'):
+def pack(raw, version='LoRaBLE-C2-26M-v4.11'):
     if not version.startswith('LoRaBLE-C2-26M-') or len(version.encode()) > 31:
         raise ValueError('Explicit C2/26MHz application marker required')
     compressed = lzma.compress(raw, format=lzma.FORMAT_XZ, check=lzma.CHECK_CRC32,
@@ -56,11 +56,19 @@ if __name__ == '__main__':
     parser.add_argument('input', type=Path)
     parser.add_argument('--output', type=Path)
     parser.add_argument('--verify', action='store_true')
-    parser.add_argument('--version', default='LoRaBLE-C2-26M-v4.10')
+    parser.add_argument('--extract', type=Path,
+        help='With --verify, extract the validated application to a NEW binary file')
+    parser.add_argument('--version', default='LoRaBLE-C2-26M-v4.11')
     args = parser.parse_args()
+    if args.extract and (not args.verify or args.output):
+        parser.error('--extract requires --verify and cannot be combined with --output')
     data = args.input.read_bytes()
     if args.verify:
         raw = unpack(data)
+        if args.extract:
+            # Exclusive creation prevents replacing a known recovery image.
+            with args.extract.open('xb') as output:
+                output.write(raw)
         print(f'Valid stock-layout OTA: packed={len(data)} app={len(raw)} sha256={hashlib.sha256(raw).hexdigest()}')
     else:
         if not args.output or args.output.exists():

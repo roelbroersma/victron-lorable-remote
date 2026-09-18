@@ -25,6 +25,7 @@ void companionBegin(const RuntimeConfig &config, uint32_t revision,
 void companionSetDemand(bool portalWanted, bool contactActive,
                         uint32_t secondsRemaining);
 void companionService(uint32_t now);
+bool companionUsbActive();
 
 // False means the active + four-waiting bounded queue is full.
 bool companionRequestVictronLoad(uint8_t value);

@@ -1,4 +1,4 @@
-name: Verify and publish release
+name: Build release package
 on:
   push:
     branches: [main]
@@ -13,25 +13,43 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Check packaged file hashes
-        run: sha256sum --check SHA256SUMS
-      - name: Test config migration, flash safety and Bluetooth frame parser
+      - name: Check firmware, installer and documentation
+        run: python3 tools/check-release.py
+      - name: Check configuration, network policy and frame handling
         run: |
-          g++ -std=c++11 -I tools/tests tools/tests/config-and-frames.cpp -o /tmp/lorable-tests
-          /tmp/lorable-tests
-          g++ -std=c++11 -I tools/tests tools/tests/network-policy.cpp -o /tmp/network-tests
-          /tmp/network-tests
-          g++ -std=c++11 -I tools/tests/manager -I tools/tests tools/tests/network-manager.cpp -o /tmp/manager-tests
-          /tmp/manager-tests
-      - name: Test UG65 and TTN codec
+          g++ -std=c++11 -I tools/tests tools/tests/config-and-frames.cpp -o /tmp/lorable-config
+          /tmp/lorable-config
+          g++ -std=c++11 -I tools/tests tools/tests/network-policy.cpp -o /tmp/lorable-network
+          /tmp/lorable-network
+          g++ -std=c++11 -I tools/tests/manager -I tools/tests tools/tests/network-manager.cpp -o /tmp/lorable-manager
+          /tmp/lorable-manager
+      - name: Check Milesight and TTN payload codec
         run: node tools/test-codec.cjs
-      - name: Test ESP package integrity and corruption rejection
-        run: python3 tools/test-ota-pack.py --image firmware/LoRaBLE-ESP8684-4.10.0.packed
-      - name: Check generated UI asset
+      - name: Check complete firmware integrity
+        run: python3 tools/test-update-bundle.py
+      - name: Check socket and UART configuration
+        run: python3 tools/test-portal-socket-budget.py
+      - name: Check embedded web interface
         run: node tools/check-web-asset.mjs
+      - name: Check SRAM updater
+        run: |
+          python3 -m pip install unicorn==2.1.4
+          python3 tools/test-ram-loader.py
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+        with:
+          persist-credentials: false
+      - name: Check Windows installer and recovery guards
+        shell: powershell
+        run: |
+          ./tools/test-first-install.ps1
+          ./tools/test-bundle-powershell.ps1
+          ./installer/First-Install.ps1 -CheckOnly -Language EN
   release:
     if: startsWith(github.ref, 'refs/tags/v')
-    needs: verify
+    needs: [verify, windows]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -39,15 +57,13 @@ jobs:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           persist-credentials: false
-      - name: Publish verified release assets
+      - name: Prepare release downloads
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION=$(node -p "'v'+require('./firmware/manifest.json').version")
-          test "$GITHUB_REF_NAME" = "$VERSION"
-          sha256sum --check SHA256SUMS
-          python3 tools/make-release-zip.py --output "LoRaBLE-Remote-$VERSION.zip"
-          gh release create "$VERSION" --verify-tag --draft --title "LoRaBLE Remote $VERSION — network priority" --notes-file docs/RELEASE-v410.md
-          gh release upload "$VERSION" firmware/LoRaBLE-STM32-4.10.0.bin firmware/LoRaBLE-ESP8684-4.10.0.packed firmware/manifest.json SHA256SUMS "LoRaBLE-Remote-$VERSION.zip"
-          gh release edit "$VERSION" --draft=false
+          VERSION=$(node -p "require('./firmware/manifest.json').version")
+          test "$GITHUB_REF_NAME" = "v$VERSION"
+          python3 tools/make-release-zip.py --output "dist/LoRaBLE-Remote-$VERSION-Windows.zip"
+          gh release create "v$VERSION" --verify-tag --draft --title "Victron LoRaBLE Remote $VERSION — One file. USB or WiFi." --notes-file docs/RELEASE.md
+          gh release upload "v$VERSION" "firmware/LoRaBLE-Remote-$VERSION.bin" "dist/LoRaBLE-Remote-$VERSION-Windows.zip" dist/SHA256SUMS

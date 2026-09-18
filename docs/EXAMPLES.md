@@ -15,7 +15,7 @@ suitable BatteryProtect or MPPT LOAD output. Functions 1/2 are modem ON/OFF;
 permit both in LoRa settings and use Class C at both ends. Send hex `01`, wait
 for verified action status and then the modem's own connection. Send `02` to
 turn it off. Never depend on that same switched modem for your only gateway's
-backhaul. Real MPPT control validation is still pending.
+backhaul.
 
 ## 2. Lokale spanning als eerste trigger / Local voltage trigger
 
@@ -61,7 +61,7 @@ included. Do not guess commands for an unknown device.
 
 ## 5. Eigen netwerk met TTN als reserve / Private network with TTN backup
 
-**NL.** Zet Eigen UG65 bovenaan en TTN tweede. Geef beide hun eigen JoinEUI en
+**NL.** Zet je eigen netwerk bovenaan (bijvoorbeeld Milesight UG63 / UG65) en TTN tweede. Geef beide hun eigen JoinEUI en
 AppKey; kies voor TTN het type TTN Sandbox en laat RX2 op automatisch. Zet de
 preempt-tijd van TTN op 1440 minuten. Als de eerste aanmelding mislukt, blijft
 het board een dag bij TTN: verbonden of wachtend op een toegestane nieuwe poging.
@@ -69,7 +69,7 @@ Daarna probeert het de eigen server opnieuw, zonder het board te herstarten.
 Wissel de volgorde met ↑/↓ als je TTN juist als voorkeur wilt. Registreer het
 end device op beide servers; alleen een aangesloten gateway is niet voldoende.
 
-**EN.** Put the private UG65 first and TTN second, with independent JoinEUI/AppKey
+**EN.** Put your private network first (for example, Milesight UG63 / UG65) and TTN second, with independent JoinEUI/AppKey
 tuples. Use TTN Sandbox type, automatic RX2 and 1440-minute backup preemption.
 After a failed preferred join the node stays on TTN for a day, joined or waiting
 for an allowed retry. It then tries the private network again without an MCU

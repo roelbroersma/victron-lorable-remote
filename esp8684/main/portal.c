@@ -1,4 +1,8 @@
 #include "portal.h"
+#include "sdkconfig.h"
+#include "portal_socket_budget.h"
+#include "bundle_update.h"
+#include "usb_tunnel.h"
 #include <stdio.h>
 #include <stdatomic.h>
 #include <stdlib.h>
@@ -20,6 +24,7 @@
 #include "uart_link.h"
 #include "portal_asset.h"
 #include "portal_limits.h"
+#include "update_bundle.h"
 
 #if CONFIG_PARTITION_TABLE_MD5
 #error "Stock ESP-AT 3.3 partition tables have no MD5 entry: disable CONFIG_PARTITION_TABLE_MD5"
@@ -31,7 +36,6 @@ static esp_netif_t *access_point_netif;
 static portal_hooks_t portal_hooks;
 static char csrf_token[33];
 static bool wifi_initialized, wifi_started;
-static atomic_bool ota_in_progress;
 static SemaphoreHandle_t response_signal;
 static portMUX_TYPE response_lock = portMUX_INITIALIZER_UNLOCKED;
 static uint16_t http_request_id = 0x8000, awaiting_id;
@@ -39,6 +43,7 @@ static char response[LORABLE_HTTP_BUFFER_SIZE];
 static size_t response_used;
 static unsigned response_status;
 static bool response_bad;
+static atomic_bool recovery_in_progress;
 
 void portal_receive_frame(const protocol_frame_t *frame)
 {
@@ -107,7 +112,7 @@ static esp_err_t session_get(httpd_req_t *r)
     }
     char body[512];
     snprintf(body, sizeof(body),
-      "{\"token\":\"%s\",\"native\":true,\"esp_firmware\":\"%s\",\"ble_advertisements\":%lu,\"ble_scan_status\":%d,\"wifi_seconds\":%lu,\"ota_target\":\"esp8684\",\"wifi_clients\":%s,\"wifi_rssi_dbm\":[%s],\"ble_target_state\":%u,\"ble_target_mac\":\"%s\",\"ble_target_age_s\":%lu}",
+      "{\"token\":\"%s\",\"native\":true,\"esp_firmware\":\"%s\",\"ble_advertisements\":%lu,\"ble_scan_status\":%d,\"wifi_seconds\":%lu,\"ota_target\":\"rak11162\",\"update_format\":1,\"wifi_clients\":%s,\"wifi_rssi_dbm\":[%s],\"ble_target_state\":%u,\"ble_target_mac\":\"%s\",\"ble_target_age_s\":%lu}",
       csrf_token, esp_app_get_description()->version,
       (unsigned long)status.last_ble_advertisements, status.last_ble_status,
       (unsigned long)status.seconds_left, count, rssi,
@@ -118,6 +123,7 @@ static esp_err_t session_get(httpd_req_t *r)
 }
 static esp_err_t proxy_request(httpd_req_t *r)
 {
+    if(portal_ota_in_progress()) return json_error(r,"409 Conflict","update_busy");
     // ESP HTTP server serializes handlers; only one UART request can be active.
     const bool post = r->method == HTTP_POST;
     if (post && !protected_request(r)) return json_error(r,"403 Forbidden","reload_page");
@@ -164,23 +170,32 @@ static esp_err_t proxy_request(httpd_req_t *r)
     if(response_status != 200) httpd_resp_set_status(r,"400 Bad Request");
     return httpd_resp_send(r,response,response_used);
 }
-static void restart_after_reply(void *ignored)
-{
-    (void)ignored;vTaskDelay(pdMS_TO_TICKS(1200));esp_restart();
-}
-static uint32_t u32le(const uint8_t *p) {return p[0]|((uint32_t)p[1]<<8)|((uint32_t)p[2]<<16)|((uint32_t)p[3]<<24);}
 static esp_err_t ota_post(httpd_req_t *r)
 {
     if(!protected_request(r)) return json_error(r,"403 Forbidden","reload_page");
+    if(atomic_load(&recovery_in_progress)) return json_error(r,"409 Conflict","update_busy");
+    return bundle_upload(r);
+}
+static void restart_after_reply(void *argument)
+{
+    (void)argument;vTaskDelay(pdMS_TO_TICKS(1200));esp_restart();
+}
+// Maintenance fallback: independent of app-tail staging and the control updater.
+// It retains the authenticated, header-last compressed OTA route used by 4.10.
+// The normal customer UI always uploads the complete .bin through /ota.
+static esp_err_t recovery_post(httpd_req_t *r)
+{
+    if(!protected_request(r)) return json_error(r,"403 Forbidden","reload_page");
+    if(portal_ota_in_progress()) return json_error(r,"409 Conflict","update_busy");
     const esp_partition_t *storage=esp_partition_find_first(ESP_PARTITION_TYPE_DATA,0x22,"storage");
     const esp_partition_t *app=esp_partition_find_first(ESP_PARTITION_TYPE_APP,ESP_PARTITION_SUBTYPE_APP_OTA_0,NULL);
     if(!storage || storage->address!=0x2a000 || storage->size!=0xa6000 ||
        !app || app->address!=0xd0000 || app->size!=0x130000)
         return json_error(r,"409 Conflict","wrong_partition_layout");
-    if(r->content_len<120 || r->content_len>storage->size)
+    if(r->content_len<120 || r->content_len>LBR_ESP_MAX)
         return json_error(r,"400 Bad Request","wrong_firmware_size");
     // Radio manager refuses BLE/stop during upload; header is committed LAST.
-    atomic_store(&ota_in_progress,true);
+    atomic_store(&recovery_in_progress,true);
     uart_link_send("OTA_STATE",0,"1");
     uint8_t header[88],buffer[1024],digest[16];
     size_t used=0;
@@ -193,9 +208,9 @@ static esp_err_t ota_post(httpd_req_t *r)
     failure="incompatible_firmware";
     if(memcmp(header,"ESP\0",4) || header[4]!=2 || header[5]!=1 ||
        header[6] || header[7] || memcmp(header+8,"LoRaBLE-C2-26M-",14) ||
-       u32le(header+40)!=(uint32_t)r->content_len-sizeof(header) ||
-       u32le(header+76) || u32le(header+80) ||
-       esp_rom_crc32_le(0,header,84)!=u32le(header+84)) goto failed;
+       lbr_u32(header+40)!=(uint32_t)r->content_len-sizeof(header) ||
+       lbr_u32(header+76) || lbr_u32(header+80) ||
+       esp_rom_crc32_le(0,header,84)!=lbr_u32(header+84)) goto failed;
     failure="flash_write_failed";
     if(esp_partition_erase_range(storage,0,(r->content_len+4095)&~4095)!=ESP_OK) goto failed;
     md5_context_t md5;
@@ -220,6 +235,8 @@ static esp_err_t ota_post(httpd_req_t *r)
     }
     esp_rom_md5_final(digest,&md5);
     if(memcmp(digest,header+44,16)) {failure="flash_verify_failed";goto failed;}
+    // Discard any obsolete complete-update journal before enabling recovery.
+    if(esp_partition_erase_range(storage,LBR_META_OFFSET,4096)!=ESP_OK) goto failed;
     // A valid compressed header is the stock bootloader's update trigger.
     if(esp_partition_write(storage,0,header,sizeof(header))!=ESP_OK) goto failed;
     httpd_resp_set_type(r,"application/json");
@@ -227,7 +244,7 @@ static esp_err_t ota_post(httpd_req_t *r)
     if(xTaskCreate(restart_after_reply,"ota_restart",2048,NULL,5,NULL)!=pdPASS) esp_restart();
     return ESP_OK;
 failed:
-    atomic_store(&ota_in_progress,false);
+    atomic_store(&recovery_in_progress,false);
     uart_link_send("OTA_STATE",0,"0");
     return json_error(r,"400 Bad Request",failure);
 }
@@ -235,8 +252,10 @@ static esp_err_t start_http_server(void)
 {
     httpd_config_t configuration = HTTPD_DEFAULT_CONFIG();
     configuration.stack_size = 8192;
-    configuration.max_open_sockets = 2;
-    configuration.max_uri_handlers = 9;
+    // Browsers keep several HTTP/1.1 sockets. Leave room for the internal USB
+    // connection as well; a two-socket LRU could evict it before its first byte.
+    configuration.max_open_sockets = LORABLE_HTTP_CLIENT_SOCKETS;
+    configuration.max_uri_handlers = 10;
     configuration.lru_purge_enable = true;
     configuration.recv_wait_timeout = 5;
     configuration.send_wait_timeout = 5;
@@ -257,6 +276,8 @@ static esp_err_t start_http_server(void)
       {.uri="/save",.method=HTTP_POST,.handler=proxy_request},
       {.uri="/action",.method=HTTP_POST,.handler=proxy_request},
       {.uri="/ota",.method=HTTP_POST,.handler=ota_post}
+      ,{.uri="/update",.method=HTTP_GET,.handler=bundle_status}
+      ,{.uri="/service-ota",.method=HTTP_POST,.handler=recovery_post}
     };
     for (size_t i=0;i<sizeof(routes)/sizeof(routes[0]);++i)
       if((result=httpd_register_uri_handler(server,&routes[i]))!=ESP_OK) return result;
@@ -416,5 +437,5 @@ bool portal_running(void)
 
 bool portal_ota_in_progress(void)
 {
-    return atomic_load_explicit(&ota_in_progress, memory_order_acquire);
+    return bundle_busy()||usb_tunnel_busy()||atomic_load(&recovery_in_progress);
 }

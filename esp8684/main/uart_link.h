@@ -18,6 +18,9 @@ typedef void (*uart_link_frame_handler_t)(const protocol_frame_t *frame);
 
 esp_err_t uart_link_start(uart_link_frame_handler_t handler);
 esp_err_t uart_link_send(const char *type, uint16_t id, const char *payload);
+typedef void (*uart_raw_handler_t)(uint8_t byte);
+void uart_link_raw_mode(uart_raw_handler_t handler);
+esp_err_t uart_link_raw_write(const void *bytes, size_t length);
 
 #ifdef __cplusplus
 }

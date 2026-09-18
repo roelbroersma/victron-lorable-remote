@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 
-// Shared by the legacy BLE-AT path, the ESP-v4 protocol parser and the UG65
+// Shared by the legacy BLE-AT path, the ESP-v4 protocol parser and the LoRaWAN
 // decoder table. Codes 1..11 are ESP/native transaction results; code 12 is
 // generated locally by STM32 when the companion link/protocol times out.
 enum BleResult : uint8_t

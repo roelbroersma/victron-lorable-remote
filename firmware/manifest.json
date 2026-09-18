@@ -1,18 +1,15 @@
 {
-  "version": "4.10.0",
-  "release_status": "release",
-  "images": [
-    {
-      "path": "firmware/LoRaBLE-STM32-4.10.0.bin",
-      "target": "stm32-usb",
-      "bytes": 191496,
-      "sha256": "e9d410af72a9cd8be129a00b72d671e0db78143fe78f9dd94c57e80e3e776649"
-    },
-    {
-      "path": "firmware/LoRaBLE-ESP8684-4.10.0.packed",
-      "target": "esp8684-browser",
-      "bytes": 516792,
-      "sha256": "13dfdf9d4a8569a3f766d839e48f6b830c80800bc7115b2829a5edcd66f7e251"
-    }
-  ]
+  "version": "4.11.0",
+  "target": "RAK11162",
+  "format": 1,
+  "firmware": {
+    "path": "firmware/LoRaBLE-Remote-4.11.0.bin",
+    "bytes": 723772,
+    "sha256": "c175db2834c9f7c4d32ae6fb097765a7ec7abc4f55c7a4a6846c7aebe237a1b9"
+  },
+  "installer_helper": {
+    "path": "installer/bootstrap-image.json",
+    "sha256": "07ffa5e675f51fe24f57589c9bedc434e6542604c1afca0c23385578a09b06a6",
+    "image_sha256": "cea4ea2d0211f728a2f5ba73c49ce03a50b0db93dd5c5df9eafe873db076fd54"
+  }
 }

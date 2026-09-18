@@ -36,7 +36,7 @@ typedef struct {
     uint8_t desired_value;
     uint8_t max_attempts;
     uint8_t generic_kind; // 0 Victron, 3 acknowledged GATT write, 4 write+exact readback
-    uint8_t driver; // 1 SmartSolar MPPT; 3 Smart BatteryProtect (tested PID A3B1)
+    uint8_t driver; // 1 SmartSolar MPPT; 3 Smart BatteryProtect (supported PID A3B1)
     char service_uuid[37], characteristic_uuid[37];
     uint8_t value[32], value_length;
 } victron_request_t;

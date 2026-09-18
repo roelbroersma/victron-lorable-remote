@@ -1,167 +1,82 @@
 # Victron LoRaBLE Remote
 
-Een eerste schakelopdracht zonder een permanent draaiend modem.
+Schakel een modem, router of andere belasting op afstand in — zonder die apparatuur voortdurend aan te laten staan.
 
-[English](README.en.md) · [Installeren](docs/INSTALL.md) · [UG65 / TTN](docs/NETWORKS.md) · [Voorbeelden](docs/EXAMPLES.md) · [Teststatus](VALIDATION-v410.md)
+[English](README.en.md) · [Download](https://github.com/roelbroersma/victron-lorable-remote/releases/latest) · [Installatie](docs/INSTALL.md) · [LoRaWAN instellen](docs/NETWORKS.md) · [Voorbeelden](docs/EXAMPLES.md)
 
-[Download release 4.10.0](https://github.com/roelbroersma/victron-lorable-remote/releases/tag/v4.10.0)
-— volledige ZIP, STM32 USB-firmware en ESP-browserupdate. Werk beide processors bij.
+LoRaBLE Remote verbindt **LoRaWAN met Bluetooth en relais**. Een klein RAK WisBlock-board ontvangt de eerste opdracht en schakelt bijvoorbeeld een Victron Smart MPPT, Smart BatteryProtect of relais. Zo zet je de voeding van een 4G/5G-modem of WiFi-router pas aan wanneer je die nodig hebt.
 
-## Waarom?
+Gebruik je eigen LoRaWAN-netwerk — bijvoorbeeld met een **Milesight UG63 / UG65** — of een netwerk zoals **The Things Network (TTN)**. Vier netwerkprofielen bieden prioriteit, fallback en een instelbare terugkeertijd. Eén netwerk is tegelijk actief.
 
-Een 4G/5G-modem of WiFi-router continu voeden om hem op afstand te kunnen bereiken
-kost energie. LoRaBLE Remote ontvangt de eerste opdracht via LoRaWAN, of via een
-lokale ingang, en schakelt daarna een Bluetooth-apparaat of relais. Daarmee kun
-je bijvoorbeeld de voeding van dat modem inschakelen. Na afloop schakel je hem
-weer uit. De LoRa-ontvanger en zijn gateway moeten zelf bereikbaar en gevoed blijven.
+## Snel beginnen
 
-**Dit is geen microampère-ontvanger:** Class C luistert bijna continu. De huidige
-firmware laat ook de STM32 wakker. De datasheetschatting zonder relais is circa
-0,88 Wh per dag bij één uur WiFi, exclusief voedingsverliezen, leds en zenden.
-Het voordeel is afhankelijk van het verbruik en de uit-tijd van je modem.
-[Berekening en bronnen](POWER-BUDGET.md).
+1. Download **LoRaBLE-Remote-4.11.0-Windows.zip** bij de [laatste release](https://github.com/roelbroersma/victron-lorable-remote/releases/latest) en pak de ZIP volledig uit.
+2. Sluit het RAK-board via zijn gewone USB-data-aansluiting aan en open **Install.cmd**. Kies NL of EN en volg de stappen. Zie de [compatibiliteit en installatievoorwaarden](docs/INSTALL.md).
+3. Verbind na installatie met WiFi **Victron LoRaBLE Remote**, wachtwoord **CHANGE-ME-FIRST**, en open **http://192.168.4.1/**. Wijzig het wachtwoord meteen.
+4. Kies je Bluetooth-apparaat, maak functies aan en vul je LoRaWAN-netwerkgegevens in. Koppel gewenste functies aan een ingang of LoRaWAN-opdracht.
 
-## Versie 4.10 — netwerkprofielen
+Een eerste fabrieksinstallatie gebruikt USB en tijdelijk de WiFi van de pc. De wizard regelt die verbinding; Arduino IDE, Python en losse programmeerpinnen zijn niet nodig voor de ondersteunde fabrieksroute. Daarna gebruik je **één compleet `.bin`-bestand** voor updates via USB of **Beheer → Firmware bijwerken**.
 
-Op het testboard is de Smart BatteryProtect 100A via de RAK/ESP UIT en AAN gezet.
-Beide toestanden zijn onafhankelijk via pc-Bluetooth teruggelezen. WiFi-OTA van
-de ESP werkt met de bestaande WiFi-naam inclusief spaties.
+## Wat kun je ermee?
 
-| Onderdeel | Status |
+| Onderdeel | Mogelijkheden |
 |---|---|
-| Smart BatteryProtect 12/24V-100A, product A3B1 | AAN/UIT fysiek getest; modus én uitgangsstatus gecontroleerd |
-| SmartSolar MPPT met LOAD | Acht modi geïmplementeerd; nog niet op de echte MPPT getest |
-| Generic Bluetooth | GATT-service, kenmerk en 1–20 bytes per functie; geen scripts |
-| Bluetooth-functies | Toevoegen met +, maximaal 10, eigen naam en stabiel nummer |
-| I/O | Geen / RAK13001 / RAK13007 handmatig selecteerbaar |
-| LoRa | Functies 1–10 en relais afzonderlijk toestaan; Class A of C |
-| WiFi | Tijdvensters; pauzeert tijdens Bluetooth en keert daarna terug |
-| Instellingen | NL/EN, help, export/import; CRC-gecontroleerde A/B-flashopslag |
-| Status | Uptime, WiFi-clients/RSSI, doelapparaatcontrole, RAM-log en handmatig testen |
-| Stroomweergave | Vaste datasheetschatting met mAh/Wh-keuze, geen verplichte rekeninvoer |
-| Updates | STM32 via USB; ESP via browser met passend .packed-bestand |
-| TTN | Configuratie en codec aanwezig; live join/downlink nog te testen |
-| Netwerkprioriteit / preempt | Vier OTAA-profielen, ↑/↓ of slepen, instelbare terugkeertijd en echte ACK-controles |
-| Nieuwe module zonder testpinnen | Experimentele interne USEROTA-route; nieuwe fabrieksmodule nog te valideren |
+| Victron Smart MPPT | Acht regelmodi voor de LOAD-uitgang |
+| Victron Smart BatteryProtect | AAN/UIT met teruglezen van modus en uitgangsstatus; product A3B1, 12/24V-100A |
+| Generic Bluetooth | Eigen GATT-service, characteristic en 1–20 opdrachtbytes |
+| Bluetooth-functies | Maximaal tien benoemde opdrachten voor één doelapparaat |
+| Ingangen en relais | Per opgaande/neergaande flank een Bluetooth-functie, LoRa-statusbericht en/of relaisactie |
+| LoRaWAN | Vier OTAA-profielen, prioriteitsvolgorde, fallback, preempt-timer, Class A/C en opdrachttoestemmingen |
+| WiFi | Instelbare tijdvensters na opstart, ingang of LoRa-opdracht |
+| Webinterface | Nederlands/Engels, veldhulp, uptime, recente gebeurtenissen, handbediening en energie-inschatting |
+| Beheer | Instellingen opslaan, exporteren/importeren en complete firmware bijwerken |
 
-Deze firmware is geen veiligheidsvoorziening en niet bedoeld voor onbewaakte
-kritieke belastingen. Een LoRa-verzoek is geen aflevergarantie. Gebruik een zekering,
-passende bedrading en een lokale uitschakelmogelijkheid.
+![Webinterface — status](docs/images/status.png)
+
+Interface met voorbeeldinstellingen.
 
 ## Hardware
 
-![Statuspagina met voorbeeldgegevens](docs/images/portal-v410-status.png)
-
-*Interfacevoorbeeld met testgegevens; geen live gatewaymeting.*
-
 | Onderdeel | Functie |
 |---|---|
-| RAK11162 met RAK11160-module | STM32WLE5 voor LoRa/logica + ESP8684 voor WiFi/Bluetooth |
-| RAK19010 | WisBlock-basisboard |
-| RAK19012 | USB/LiPo/solar-voeding en USB-programmeerroute |
-| RAK19016 | Alternatieve 5–24V-voedingsmodule; niet tegelijk in hetzelfde power-slot |
-| RAK13001 | 1 geïsoleerde 12–24V DC-input + 1 output/relais, niet bistabiel |
-| RAK13007 | 1 output/relais, geen ingang, niet bistabiel; nog niet fysiek getest |
-| Antennes | Passende LoRa-antenne én 2,4GHz-antenne op de juiste connectoren |
+| **RAK11162** met RAK11160-module | LoRaWAN, WiFi en Bluetooth |
+| **RAK19010** | WisBlock-basisboard |
+| **RAK19012** | USB/LiPo/solar-voedingsmodule met USB-programmeeraansluiting |
+| **RAK19016** | Alternatieve 5–24V-voedingsmodule voor gebruik na installatie |
+| **RAK13001**, optioneel | Eén geïsoleerde 12–24V DC-input en één output/relais |
+| **RAK13007**, optioneel | Eén output/relais, geen ingang |
+| Antennes | Passende LoRa-antenne en 2,4GHz-antenne |
 
-Geen I/O-module is ook mogelijk: dan gebruik je alleen LoRa → Bluetooth.
-De software herkent deze I/O-modules niet automatisch. Selecteer wat er echt
-gemonteerd is. Relaiscontacten leveren geen voedingsspanning; ze onderbreken of
-verbinden een extern circuit. Controleer maximale contactstroom, spanning en de
-inschakelstroom van je belasting in de moduledatasheet.
+Zonder I/O-module kun je gewoon LoRaWAN → Bluetooth gebruiken. Selecteer de werkelijk gemonteerde I/O-module in de instellingen; modules worden niet automatisch herkend. Gebruik één voedingsmodule per power-slot.
 
-**Nooit 12V op een MCU-pin.** RAK13001 is gespecificeerd voor 12–24V DC, niet als
-betrouwbare 5V-ingang. Opgaande flank betekent externe spanning aanwezig;
-neergaande flank betekent spanning weg. De interne optocoupler werkt omgekeerd.
-De firmware verwacht de DI-route op WB_IO3 en het relais op WB_IO4; controleer
-de modulejumpers. Booten veroorzaakt op zichzelf geen ingangsflank.
+RAK13001 detecteert de **aanwezigheid van 12–24V DC**: opgaand = spanning aanwezig, neergaand = spanning weg. De ingang is geen voltmeter. Sluit nooit 12V rechtstreeks op een processorpin aan. Controleer de modulejumpers: ingang op **WB_IO3**, relais op **WB_IO4**. De relais zijn niet bistabiel en verbruiken spoelstroom zolang ze aangetrokken zijn. Contacten leveren zelf geen voeding.
 
-## Instellen
+## LoRaWAN-opdrachten
 
-1. Installeer eerst de passende STM32- én ESP-firmware; zie de [installatiekeuze](docs/INSTALL.md).
-2. Verbind met de WiFi van het board en open http://192.168.4.1/.
-   Nieuwe publieke installaties gebruiken `Victron LoRaBLE Remote` /
-   `CHANGE-ME-FIRST`; wijzig dat wachtwoord meteen. WiFi staat na opstart één uur aan.
-3. Kies het apparaatprofiel, MAC en echte Bluetooth-PIN. Voor Victron is pairing
-   verplicht. Smart BatteryProtect gebruikt automatisch instance 0.
-4. Voeg benoemde functies toe met +. Eén profiel/MAC geldt voor alle functies:
-   dit zijn maximaal tien opdrachten voor **één doelapparaat**, geen tien apparaten.
-5. Kies de I/O-module en stel, indien aanwezig, per flank een Bluetooth-functie,
-   statusbericht en/of relaisactie in.
-6. Stel maximaal vier LoRaWAN-netwerkprofielen in en zet ze met ↑/↓ of slepen op prioriteit.
-   Per profiel: naam, aan/uit, type, JoinEUI, AppKey, preempt-tijd en optioneel RX2.
-   DevEUI, regio, Class en FPort zijn gemeenschappelijk. De bestaande configuratie
-   wordt bij upgraden profiel 1. Zie [overstapgedrag](docs/NETWORKS.md).
-   Schakel alleen de ontvangen opdrachten in die je wilt toestaan.
-7. Een nieuw aangevinkte ontvangstroute kiest Class C in het formulier en toont
-   uitleg. Zet de netwerkserver óók op Class C. Je kunt bewust Class A kiezen:
-   ontvangst is dan alleen mogelijk na een eigen uplink. Opslaan past wijzigingen toe.
-8. Test onder Status eerst zonder aangesloten belasting.
+Stuur **hexbytes**, geen ASCII-tekst, op de ingestelde FPort; standaard **10**. De bijbehorende functie en ontvangstrechten moeten ingeschakeld zijn.
 
-Opslaan bewaart de configuratie en herstart. De publieke first-boot-configuratie
-schakelt geen onbekende ingang, uitgang of Bluetooth-route in en bevat geen
-installatiesleutels. Bestaande opgeslagen instellingen worden bijwerken behouden.
-
-![Netwerkprofielen met prioriteit en preempt](docs/images/portal-v410-networks.png)
-
-*Voorbeeldinstellingen; vul je eigen sleutels in. Eén netwerk is tegelijk actief.*
-
-## LoRa-opdrachten
-
-Hexbytes op de ingestelde applicatie-FPort, standaard 10. Geen ASCII-cijfers.
-
-| Hex | Actie |
+| Payload | Actie |
 |---|---|
-| 01 … 09, 0A | Bluetooth-functie 1 … 10 |
-| 10 | Relais UIT |
-| 11 | Relais AAN |
-| 12 | Relaispuls |
-| 20 | Status opvragen |
+| `01` … `09`, `0A` | Bluetooth-functie 1 … 10 |
+| `10` | Relais UIT |
+| `11` | Relais AAN |
+| `12` | Relaispuls met ingestelde duur |
+| `20` | Status opvragen |
 
-De betrokken functie/uitgang én LoRa-toestemming moeten aan staan. Nummer 10
-(decimaal) is byte **0A**, niet 10. Een puls is voor het lokale relais;
-Bluetooth-functies voeren hun opgeslagen opdracht uit. Verwijderen kan alleen
-vanaf de laatste functie, zodat bestaande downlinknummers niet verschuiven.
+Functie 10 is **`0A`**, niet `10`. De [payloadcodec](stm32/lorawan-payload-codec.js) bevat zowel Milesight `Decode` als TTN `decodeUplink`. Zie [netwerkinstellingen](docs/NETWORKS.md) voor registratie, kanaalplan, Class C en fallback.
 
-De [codec](stm32/ug65_payload_codec_v4.js) bevat zowel UG65 `Decode` als
-TTN `decodeUplink`. Schema 4 onderscheidt MPPT-regelmodus van BatteryProtect-
-uitgangsstatus en meldt het laatst gevraagde functienummer. Een verzoek en een
-geslaagde uitvoering zijn verschillende statussen.
+## Energie en gebruik
 
-## Bluetooth-beperkingen
+Het voordeel zit in apparatuur die je **uit kunt laten**. Class C houdt de LoRa-ontvanger vrijwel continu beschikbaar en is geen microampère-slaapstand. Class A ontvangt alleen na een eigen uplink. De webinterface toont een datasheetgebaseerde dagraming in mAh of Wh, met WiFi- en relaisscenario's. Voedingsverliezen, aangesloten belastingen en werkelijk radioverkeer bepalen het totale verbruik.
 
-- BatteryProtect: alleen de geteste A3B1-productvariant mag schrijven. De andere
-  varianten worden veilig geweigerd. BMS-modus en beveiligingsdrempels blijven ongemoeid.
-- MPPT: Always on/off, BatteryLife, Conventional 1/2, User defined 1/2 en AES.
-  User defined/AES gebruiken de reeds ingestelde spanningsdrempels en tijden.
-  Always on/off herstelt geen eerder automatisch programma.
-- Generic: volledige service- en characteristic-UUID, hexbytes, schrijven met
-  antwoord; optioneel exact teruglezen. Een GATT-writebevestiging is geen bewijs
-  dat een mechanische uitgang echt geschakeld heeft.
-- Het aantal pogingen omvat de eerste poging. Er wordt alleen na mislukken herhaald.
-- WiFi en Bluetooth worden tijdgedeeld. Er is geen permanente Bluetooth-verbinding.
+WiFi pauzeert tijdens een Bluetooth-opdracht en keert daarna terug binnen het ingestelde tijdvenster. Herhalingen vinden alleen plaats na een mislukte poging. MPPT-modi User defined en AES gebruiken de drempels en tijden die al in VictronConnect zijn ingesteld. Andere BatteryProtect-productvarianten worden geweigerd; beveiligingsdrempels en BMS-modus blijven ongemoeid.
 
-## Flash en privacy
+Voed het board onafhankelijk van de belasting die het schakelt. Houd ook je gateway bereikbaar wanneer het modem uitstaat. Gebruik passende bedrading, zekeringen en een lokale uitschakelmogelijkheid. Dit project is geen veiligheidscontroller; een ontvangen opdracht en een uitgevoerde actie zijn verschillende statussen.
 
-Instellingen: twee afwisselende STM32-records met CRC en terugleescontrole.
-Ongewijzigd opslaan schrijft geen nieuw configuratierecord. De maximaal 24
-logregels, uptime en waarnemingen blijven uitsluitend in RAM. LoRaWAN kan zelf
-noodzakelijke nonces/tellers in NVM bewaren.
+## Instellingen en broncode
 
-Export/import bevat geen AppKey, PIN, WiFi-wachtwoord of DevEUI/JoinEUI. Import
-vult eerst een formulier; daarna bewust opslaan. Houd geheime gegevens apart.
-De ESP gebruikt één applicatieslot: WiFi-OTA heeft **geen automatische rollback**.
-Firmware is niet digitaal ondertekend; installeer uitsluitend vertrouwde bestanden.
+Instellingen blijven bij updates behouden. Ongewijzigd opslaan schrijft geen nieuw configuratierecord; gebeurtenissen en uptime blijven in RAM. Exports bevatten geen AppKeys, Bluetooth-PIN, WiFi-wachtwoord of netwerkidentiteiten. Bewaar die gegevens apart.
 
-## Broncode en bouwen
+De Arduino-sketch staat in [stm32](stm32/stm32.ino). [Bouwinstructies](docs/DEVELOPMENT.md) beschrijven de firmware, webinterface, installer en releasebestanden. Download firmware alleen uit een vertrouwde bron en houd de voeding aangesloten tijdens updates; er is geen automatische rollback.
 
-- Arduino-sketch: [stm32/stm32.ino](stm32/stm32.ino), RUI BSP **4.2.4**.
-- Publieke USB-build: `tools/build.ps1 -Public`; sluit `settings.local.h` uit.
-- ESP: ESP-IDF **5.5.5**, ESP32-C2, **26MHz, 2MB**, `esp8684/build.ps1`.
-- Webbron: `web/index.html`; `node tools/build-web.mjs` genereert het kleine gzip-asset.
-- Tests, exacte grenzen en bestanden: [validatie](VALIDATION-v410.md).
-- [Release-instructies](docs/RELEASING.md); publiceer nooit de hele werkmap.
-
-MIT voor de eigen projectcode: © 2026 Roel Broersma. Meegebouwde bibliotheken
-houden hun eigen voorwaarden; zie [third-party notices](THIRD-PARTY-NOTICES.md).
-Onafhankelijk project, niet afkomstig van of goedgekeurd door Victron Energy of RAKwireless.
+© 2026 Roel Broersma. Eigen projectcode: [MIT](LICENSE). Bibliotheken behouden hun [eigen licenties](THIRD-PARTY-NOTICES.md). Onafhankelijk project; niet verbonden aan Victron Energy, RAKwireless of Milesight.

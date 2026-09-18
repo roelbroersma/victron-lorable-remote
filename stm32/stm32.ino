@@ -969,7 +969,7 @@ static void receiveCallback(SERVICE_LORA_RECEIVE_T *data)
 static void joinCallback(int32_t status)
 {
     networkJoinResult(status);
-    Serial.printf("LoRaWAN join-status: %ld\r\n", (long)status);
+    if(!companionUsbActive())Serial.printf("LoRaWAN join-status: %ld\r\n", (long)status);
     if (status == RAK_LORAMAC_STATUS_OK)
     {
         // Downlink FCnt restarts for a fresh OTAA session. Do not let the
@@ -989,7 +989,7 @@ static void sendCallback(int32_t status)
 {
     networkTxComplete(healthTxInFlight,status==RAK_LORAMAC_STATUS_OK&&api.lorawan.cfs.get());
     healthTxInFlight=false;
-    Serial.printf("LoRaWAN uplink-status: %ld\r\n", (long)status);
+    if(!companionUsbActive())Serial.printf("LoRaWAN uplink-status: %ld\r\n", (long)status);
     statusTxInFlight = false;
     if (status == RAK_LORAMAC_STATUS_OK)
     {
@@ -1044,7 +1044,7 @@ static bool configureLorawan()
 
     if(!runtimeConfig.networksInitialized) {
         NetworkProfile &p=runtimeConfig.networks[0];
-        strcpy(p.name,"Private / UG65");memcpy(p.joinEui,nodeAppEui,8);memcpy(p.appKey,nodeAppKey,16);
+        strcpy(p.name,"Private network");memcpy(p.joinEui,nodeAppEui,8);memcpy(p.appKey,nodeAppKey,16);
         p.enabled=!isAllZero(nodeAppKey,16);p.rx2Custom=runtimeConfig.rx2Custom;
         p.rx2DataRate=runtimeConfig.rx2DataRate;p.rx2Frequency=runtimeConfig.rx2Frequency;
         runtimeConfig.networksInitialized=1;
@@ -1508,7 +1508,7 @@ void setup()
     // concurrently consume replies intended for the portal/companion parser.
     Serial1.begin(115200, RAK_CUSTOM_MODE);
     delay(1500);
-    Serial.println("Victron LoRaBLE Remote - firmware v4.10.0");
+    Serial.println("Victron LoRaBLE Remote - firmware v4.11.0");
     activityAdd(1);
 
     setEspPowerMode(POWER_OFF);

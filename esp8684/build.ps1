@@ -1,5 +1,5 @@
 param(
- [string]$BuildDirectory='build_native410',
+ [string]$BuildDirectory='build_native411_uart',
  [string]$IdfRoot=$env:IDF_PATH,
  [string]$IdfToolsPath=$env:IDF_TOOLS_PATH
 )

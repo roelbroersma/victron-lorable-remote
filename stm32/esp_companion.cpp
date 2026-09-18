@@ -3,6 +3,8 @@
 #include "settings.h"
 #include "victron_result_codes.h"
 #include "legacy_at_portal.h"
+#include "firmware_update.h"
+#include "update_bundle.h"
 
 #if !LEGACY_BLE_AT
 
@@ -11,6 +13,13 @@
 #include <errno.h>
 #include <stdlib.h>
 #include <string.h>
+#include <service_nvm.h>
+#include <service_mode_cli.h>
+#include <udrv_delay.h>
+#include <stm32wlxx_hal.h>
+// RUI 4.2.4 RAM configuration. A bounded USB exchange must neither reinitialize
+// shared UART hardware nor write a mode change to flash for every poll.
+extern "C" PRE_rui_cfg_t g_rui_cfg_t;
 
 namespace
 {
@@ -79,6 +88,20 @@ static uint32_t nextPortalRetryAt = 0;
 static bool victronPending = false;
 static uint8_t desiredLoadValue = 0;
 static uint32_t otaHoldUntil=0;
+static uint32_t updateSize,updateCrc,updateMode,updatePreparedAt;
+static volatile bool usbRequested;
+static bool usbAwaiting,usbReady;
+static volatile bool usbRawActive;
+static uint32_t usbRequestedAt;
+static uint32_t usbWakeUntil;
+static uint8_t usbProtocol=1;
+static int usbCommand(SERIAL_PORT port,char *cmd,stParam *param){
+ (void)port;(void)cmd;
+ if(param->argc!=1 || (strcmp(param->argv[0],"1")&&strcmp(param->argv[0],"2")) || usbRequested || usbAwaiting || victronPending)return AT_PARAM_ERROR;
+ usbProtocol=param->argv[0][0]-'0';
+ usbRequestedAt=millis();usbWakeUntil=usbRequestedAt+600000UL;
+ usbRequested=true;return AT_OK;
+}
 static uint32_t scanHoldUntil=0;
 static uint8_t victronQueuedCount = 0;
 static uint32_t victronActivatedAt = 0;
@@ -879,6 +902,27 @@ static bool payloadProtoOne(const char *payload)
 
 static void handleFrame(const char *type, uint16_t id, char *payload)
 {
+    if(!strcmp(type,"USB_READY")&&usbAwaiting){
+        usbAwaiting=false;usbReady=!strcmp(payload,"1")||!strcmp(payload,"2");
+        if(!usbReady){otaHoldUntil=0;Serial.println("LBR_USB_UNAVAILABLE");}return;
+    }
+    if (!strcmp(type,"UPDATE_PREPARE")) {
+        unsigned long size=0,crc=0,mode=0;char extra;
+        bool valid=sscanf(payload,"%lu,%lu,%lu%c",&size,&crc,&mode,&extra)==3 &&
+          size>=256 && size<=LBR_STM_MAX && size%8==0 && mode<=1 &&
+          linkReady && !victronPending && !victronQueuedCount && firmwareUpdateReady();
+        if(valid){updateSize=size;updateCrc=crc;updateMode=mode;updatePreparedAt=millis();otaHoldUntil=millis()+600000UL;}
+        else updatePreparedAt=0;
+        sendFrame("UPDATE_READY",0,valid?"1":"0");return;
+    }
+    if (!strcmp(type,"UPDATE_EXEC")) {
+        unsigned long size=0,crc=0,mode=0;char extra;
+        if(updatePreparedAt && millis()-updatePreparedAt<10000 &&
+           sscanf(payload,"%lu,%lu,%lu%c",&size,&crc,&mode,&extra)==3 &&
+           size==updateSize && crc==updateCrc && mode==updateMode && !victronPending)
+            firmwareUpdateLaunch(size,crc,mode);
+        updatePreparedAt=0;return;
+    }
 #ifdef ESP_RECOVERY_SSID
     if(!strcmp(type,"READY") || !strcmp(type,"HELLO_ACK") || !strcmp(type,"RESULT") || !strcmp(type,"PORTAL_STATE"))
       Serial.printf("ESP %s %u %s\\r\\n",type,id,payload);
@@ -1304,8 +1348,9 @@ static void sendVictronRequest(uint32_t now)
 } // namespace
 
 void companionBegin(const RuntimeConfig &config, uint32_t revision,
-                    const uint8_t devEui[8], const uint8_t joinEui[8])
+                      const uint8_t devEui[8], const uint8_t joinEui[8])
 {
+    api.system.atMode.add("USB","1: legacy; 2: checked local USB firmware transport","USB",usbCommand,RAK_ATCMD_PERM_WRITE);
 #ifdef ESP_RECOVERY_SSID
     recoveryConfig=config;activeConfigPointer=&recoveryConfig;
 #else
@@ -1328,6 +1373,13 @@ void companionSetDemand(bool portalWanted, bool contactActive,
                         uint32_t secondsRemaining)
 {
     const uint32_t now = millis();
+    // A local USB updater also works after the configured WiFi window expires.
+    // This temporary maintenance demand is RAM-only and never changes settings.
+    if(usbWakeUntil && !timeReached(now,usbWakeUntil)){
+        portalWanted=true;
+        const uint32_t usbSeconds=(usbWakeUntil-now+999UL)/1000UL;
+        if(secondsRemaining<usbSeconds)secondsRemaining=usbSeconds;
+    }
     if (desiredPortal != portalWanted)
     {
         desiredPortal = portalWanted;
@@ -1347,6 +1399,51 @@ void companionSetDemand(bool portalWanted, bool contactActive,
 void companionService(uint32_t now)
 {
     if(espPowered) readEspFrames();
+    if(usbReady){
+        usbReady=false;otaHoldUntil=millis()+600000UL;
+        const SERVICE_MODE_TYPE savedMode=g_rui_cfg_t.mode_type[DEFAULT_SERIAL_CONSOLE];
+        usbRawActive=true;
+        g_rui_cfg_t.mode_type[DEFAULT_SERIAL_CONSOLE]=SERVICE_MODE_TYPE_CUSTOM;
+        Serial.println(usbProtocol==2?"LBR_USB_READY2":"LBR_USB_READY");Serial.flush();
+        uint32_t last=millis(),start=last;char tail[10]={0};bool end=false;
+        // ESP ends an abandoned exchange after 15 s. Stay in raw mode long
+        // enough to receive its terminator instead of feeding it to the AT CLI.
+        while(!end && millis()-last<35000UL && millis()-start<660000UL){
+            uint8_t bytes[64];size_t count=0;
+            while(Serial.available() && count<sizeof(bytes)){
+                const int c=Serial.read();if(c<0)break;bytes[count++]=(uint8_t)c;
+            }
+            if(count){Serial1.write(bytes,count);last=millis();}
+            count=0;
+            while(Serial1.available() && count<sizeof(bytes)){
+                const int value=Serial1.read();if(value<0)break;
+                const char c=(char)value;bytes[count++]=(uint8_t)c;last=millis();
+                memmove(tail,tail+1,8);tail[8]=c;
+                if(!strcmp(tail,"~LBR-END~")){end=true;break;}
+            }
+            if(count)Serial.write(bytes,count);
+            // Arduino delay() calls rui_running(), reentering the application/
+            // serial event pump inside this raw exchange. UART DMA interrupts
+            // remain enabled; use only the hardware wait and feed the watchdog.
+            // The SDK watchdog handle is optional; the reload register is safe
+            // with the watchdog either active or inactive. Do not initialize it.
+            IWDG->KR=0xAAAAu;udrv_delay_us(100);
+        }
+        Serial.flush();g_rui_cfg_t.mode_type[DEFAULT_SERIAL_CONSOLE]=savedMode;
+        usbRawActive=false;
+        service_mode_cli_init(DEFAULT_SERIAL_CONSOLE);otaHoldUntil=millis()+15000UL;
+        return;
+    }
+    if(usbAwaiting && now-usbRequestedAt>6000UL){usbAwaiting=false;otaHoldUntil=0;Serial.println("LBR_USB_UNAVAILABLE");}
+    if(usbRequested){
+        if(linkReady&&portalRunning&&!victronPending&&!victronQueuedCount){
+            usbRequested=false;
+            usbAwaiting=true;usbRequestedAt=now;otaHoldUntil=now+720000UL;sendFrame("USB_OPEN",0,usbProtocol==2?"2":"1");
+        }else if(now-usbRequestedAt>15000UL){
+            usbRequested=false;
+            Serial.printf("LBR_USB_UNAVAILABLE link=%u portal=%u busy=%u queued=%u\r\n",linkReady,portalRunning,victronPending,victronQueuedCount);
+        }
+    }
     if(otaHoldUntil && !timeReached(now,otaHoldUntil)) return;
     const bool powerWanted = desiredPortal || victronPending || victronQueuedCount > 0 ||
         (otaHoldUntil && !timeReached(now,otaHoldUntil)) || (scanHoldUntil && !timeReached(now,scanHoldUntil));
@@ -1490,6 +1587,8 @@ bool companionRequestVictronLoad(uint8_t value)
     victronEverAccepted = false;
     return true;
 }
+
+bool companionUsbActive(){return usbRawActive;}
 
 bool companionTakeVictronResult(uint8_t &result, uint8_t &attempts,
                                 uint8_t &loadValue)

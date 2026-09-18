@@ -5,6 +5,8 @@ idf_component_register(
         "ble_scan.c"
         "ota_guard.c"
         "portal.c"
+        "bundle_update.c"
+        "usb_tunnel.c"
         "protocol.c"
         "uart_link.c"
         "victron_ble.c"

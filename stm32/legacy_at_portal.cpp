@@ -438,7 +438,7 @@ static void sendConfiguration(int8_t link)
 
 static void sendStatus(int8_t link)
 {
-    String json("{\"firmware\":\"4.10.0\"");
+    String json("{\"firmware\":\"4.11.0\"");
     #define STATE(name, value) appendJsonNumber(json, name, (uint32_t)(value), false)
     STATE("joined", live.joined);
     STATE("ble_available", live.bleAvailable);
