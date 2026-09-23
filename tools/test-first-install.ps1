@@ -1,4 +1,4 @@
-param([string]$Firmware=(Join-Path $PSScriptRoot '../firmware/LoRaBLE-Remote-4.11.0.bin'))
+param([string]$Firmware=(Join-Path (Split-Path -Parent $PSScriptRoot) ((Get-Content (Join-Path $PSScriptRoot '../firmware/manifest.json') -Raw | ConvertFrom-Json).firmware.path)))
 $ErrorActionPreference='Stop';$root=Split-Path -Parent $PSScriptRoot
 . (Join-Path $root 'installer/FirstInstall.Core.ps1')
 function Assert($Condition,[string]$Message){if(-not $Condition){throw $Message}}

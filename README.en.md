@@ -1,82 +1,83 @@
 # Victron LoRaBLE Remote
 
-Switch on a modem, router or other load remotely — without leaving that equipment powered all the time.
+**Power your modem, router or other equipment only when you need it.**
 
-[Nederlands](README.md) · [Download](https://github.com/roelbroersma/victron-lorable-remote/releases/latest) · [Installation](docs/INSTALL.md) · [LoRaWAN setup](docs/NETWORKS.md) · [Examples](docs/EXAMPLES.md)
+[Nederlands](README.md) · [Download](https://github.com/roelbroersma/victron-lorable-remote/releases/latest) · [Installation](docs/INSTALL.md#english) · [LoRaWAN setup](docs/NETWORKS.md#english) · [Examples](docs/EXAMPLES.md)
 
-LoRaBLE Remote bridges **LoRaWAN to Bluetooth and relays**. A small RAK WisBlock board receives the initial command and operates a Victron Smart MPPT, Smart BatteryProtect or relay. Power your 4G/5G modem or WiFi router only when you need it.
+LoRaBLE Remote receives a LoRaWAN command and operates a device through **Bluetooth or a relay**. Leave your 4G/5G modem off until you need remote access. A local voltage input can trigger the same functions.
 
-Use your own LoRaWAN network — for example, a **Milesight UG63 / UG65** — or a network such as **The Things Network (TTN)**. Four network profiles provide priority, fallback and a configurable return timer. One network session is active at a time.
+Use a private LoRaWAN network — for example, a **Milesight UG63 / UG65** — or **The Things Network (TTN)**. Configure up to four networks with priority and automatic fallback. One network session is active at a time.
 
 ## Get started
 
-1. Download **LoRaBLE-Remote-4.11.0-Windows.zip** from the [latest release](https://github.com/roelbroersma/victron-lorable-remote/releases/latest) and extract the entire ZIP.
-2. Connect the board's normal USB data port and open **Install.cmd**. Choose NL or EN and follow the prompts. Read the [installation requirements and compatibility](docs/INSTALL.md).
+1. Download the **Windows.zip** from the [latest release](https://github.com/roelbroersma/victron-lorable-remote/releases/latest) and extract everything.
+2. Connect your **RAK11162** by USB and open **Install.cmd**. Follow the wizard.
 3. Connect to WiFi **Victron LoRaBLE Remote**, password **CHANGE-ME-FIRST**, and open **http://192.168.4.1/**. Change the password immediately.
-4. Select your Bluetooth device, add functions and enter your LoRaWAN network credentials. Assign functions to input edges or LoRaWAN commands.
+4. Select your device, add Bluetooth functions, enter LoRaWAN credentials and click **Save**.
 
-Initial factory installation uses USB and temporarily connects the PC to device WiFi. The wizard handles that connection; no Arduino IDE, Python or separate programming pins are needed for the supported factory route. Subsequent updates use **one complete `.bin` file** through USB or **Manage → Firmware update**.
+First installation uses a Windows PC with USB and WiFi; the wizard handles the temporary WiFi connection. Later updates use **one complete .bin file**, through USB or **Manage → Update firmware**. Settings are retained. [Step-by-step installation →](docs/INSTALL.md#english)
 
-## Features
+## What can you control?
 
-| Component | Capabilities |
+| Device | Functions |
 |---|---|
-| Victron Smart MPPT | Eight LOAD output operating modes |
-| Victron Smart BatteryProtect | ON/OFF with mode and output-state readback; product A3B1, 12/24V-100A |
-| Generic Bluetooth | Custom GATT service, characteristic and 1–20 command bytes |
-| Bluetooth functions | Up to ten named commands for one target device |
-| Inputs and relays | Rising/falling edges trigger a Bluetooth function, LoRa status message and/or relay action |
-| LoRaWAN | Four OTAA profiles, priority, fallback, preemption, Class A/C and command permissions |
-| WiFi | Configurable windows after startup, input events or LoRa commands |
-| Web interface | English/Dutch, field help, uptime, recent events, manual controls and an energy estimate |
-| Management | Persistent settings, export/import and complete firmware updates |
+| **Victron Smart MPPT** | Eight LOAD output operating modes |
+| **Victron Smart BatteryProtect** | ON/OFF; 12/24V-100A, product A3B1 |
+| **Generic Bluetooth** | Custom GATT service, characteristic and command bytes |
+| **Relay / dry contact** | On, off or a timed pulse |
 
-![Web interface — status](docs/images/status.png)
+Create up to **ten named Bluetooth functions** for one target device. Assign them to LoRaWAN commands or rising/falling input edges. Enable only the actions you want to allow.
 
-Interface shown with example settings.
+The English/Dutch web interface includes status, recent events, manual controls, an energy estimate and field help. WiFi can stay available for a configurable period after startup or a trigger.
+
+<details>
+<summary>See the interface: status, networks and management</summary>
+
+![Status with example settings](docs/images/status.png)
+
+![Network profiles and priority](docs/images/networks.png)
+
+![Backup, restore, update and restart](docs/images/manage.png)
+
+</details>
 
 ## Hardware
 
 | Component | Purpose |
 |---|---|
 | **RAK11162** with RAK11160 module | LoRaWAN, WiFi and Bluetooth |
-| **RAK19010** | WisBlock baseboard |
-| **RAK19012** | USB/LiPo/solar power module with USB programming connection |
-| **RAK19016** | Alternative 5–24V power module for operation after installation |
+| **RAK19010 + RAK19012** | Baseboard with USB/LiPo/solar power and USB programming connection |
+| **RAK19016**, alternative after installation | 5–24V power module |
 | **RAK13001**, optional | One isolated 12–24V DC input and one relay output |
 | **RAK13007**, optional | One relay output, no input |
-| Antennas | Appropriate LoRa and 2.4GHz antennas |
+| Antennas | LoRa and 2.4GHz |
 
-LoRaWAN → Bluetooth works without an I/O module. Select the fitted I/O board in settings; modules are not automatically detected. Use one power module per power slot.
+Select the fitted I/O module yourself; LoRaWAN → Bluetooth also works without one. Use one power module per power slot.
 
-RAK13001 detects **12–24V DC presence**: rising means voltage appears; falling means it disappears. It is not a voltmeter. Never connect 12V directly to a processor pin. Check module routing: input **WB_IO3**, relay **WB_IO4**. Both relays are non-latching and consume coil power while energized. Relay contacts do not supply power themselves.
+RAK13001 detects **12–24V DC presence/absence**, not battery voltage. Check jumpers: input **WB_IO3**, relay **WB_IO4**. Never connect 12V directly to a processor pin. Relay contacts do not provide power; the relays consume coil current while energized.
 
-## LoRaWAN commands
+## Send a command
 
-Send **hex bytes**, not ASCII text, on the configured FPort, default **10**. Enable the corresponding function and downlink permission first.
+Send **HEX** on the configured FPort, default **10**, and enable the corresponding downlink permissions.
 
-| Payload | Action |
+| HEX | Action |
 |---|---|
 | `01` … `09`, `0A` | Bluetooth function 1 … 10 |
-| `10` | Relay OFF |
-| `11` | Relay ON |
-| `12` | Relay pulse for the configured duration |
+| `10` / `11` | Relay off / on |
+| `12` | Relay pulse |
 | `20` | Request status |
 
-Function 10 is **`0A`**, not `10`. The [payload codec](stm32/lorawan-payload-codec.js) includes Milesight `Decode` and TTN `decodeUplink`. See [network setup](docs/NETWORKS.md) for registration, channel plans, Class C and fallback.
+Function 10 is **`0A`**, not `10`. Use **Class C** on both device and network server to receive commands without waiting for an uplink. [Configure TTN, Milesight and the payload codec →](docs/NETWORKS.md#english)
 
-## Energy and operation
+## Good to know
 
-The benefit comes from equipment you can **leave switched off**. Class C keeps the LoRa receiver available almost continuously; it is not a microamp sleep mode. Class A receives only after an uplink. The portal shows a datasheet-based daily estimate in mAh or Wh, including WiFi and relay scenarios. Conversion losses, connected loads and actual radio traffic determine total consumption.
+- **Saving is explicit:** network reordering also requires Save. Events and uptime stay in RAM.
+- **Backups exclude secrets:** retain AppKeys, Bluetooth PIN and WiFi password separately.
+- **Energy:** savings come from equipment you can leave off. Class C listens almost continuously; it is not a microamp sleep mode. The interface estimates daily use in mAh or Wh.
+- **Bluetooth:** WiFi pauses during commands. MPPT User defined/AES uses existing VictronConnect thresholds; the BatteryProtect profile accepts product A3B1 and leaves protection thresholds and BMS mode unchanged.
 
-WiFi pauses during a Bluetooth command and returns within the configured window. Retries occur only after failure. MPPT User defined and AES modes use thresholds and times already configured in VictronConnect. Other BatteryProtect product variants are refused; BMS mode and protection thresholds remain unchanged.
+Power the board independently of its switched load and keep the gateway reachable while your modem is off. Use appropriate fuses and a local disconnect; this is not a safety controller. Maintain power throughout updates.
 
-Power the board independently of its switched load. Keep the gateway reachable while the modem is off. Use appropriate wiring, fuses and a local disconnect. This project is not a safety controller; command reception and successful execution are separate statuses.
+[Arduino sketch](stm32/stm32.ino) · [Building and source](docs/DEVELOPMENT.md#english) · [Help / issues](https://github.com/roelbroersma/victron-lorable-remote/issues)
 
-## Settings and source
-
-Updates retain settings. Unchanged saves avoid a new configuration write; events and uptime stay in RAM. Exports omit AppKeys, Bluetooth PIN, WiFi password and network identities. Keep those separately.
-
-The Arduino sketch is in [stm32](stm32/stm32.ino). [Build instructions](docs/DEVELOPMENT.md) cover firmware, the portal, installer and release packaging. Install only trusted firmware and maintain power throughout updates; there is no automatic rollback.
-
-© 2026 Roel Broersma. Original code: [MIT](LICENSE). Dependencies retain their [own licenses](THIRD-PARTY-NOTICES.md). Independent project; not affiliated with Victron Energy, RAKwireless or Milesight.
+© 2026 Roel Broersma · [MIT](LICENSE) · [Dependency licenses](THIRD-PARTY-NOTICES.md). Independent project; not affiliated with Victron Energy, RAKwireless or Milesight.

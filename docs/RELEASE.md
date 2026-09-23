@@ -1,39 +1,41 @@
-# 4.11.0 — One file. USB or WiFi.
+# 4.11.1 — Simpler setup and device management
 
 ## Nederlands
 
-**Eén compleet firmwarebestand, een Windows-installatiewizard en bediening via je eigen LoRaWAN-netwerk of TTN.**
+Een overzichtelijker **Beheer**, duidelijke opslag van instellingen en een kortere installatiehandleiding.
 
-- Eerste installatie met **Install.cmd**: USB aansluiten, taal en COM-poort kiezen en de wizard volgen. De tijdelijke WiFi-verbinding wordt automatisch geregeld.
-- Volgende updates met hetzelfde complete **.bin** via USB of **Beheer → Firmware bijwerken**. Instellingen blijven behouden.
-- Vier LoRaWAN-netwerkprofielen met eigen sleutels, prioriteitsvolgorde, fallback en instelbare preempt-tijd.
-- Victron Smart MPPT, Smart BatteryProtect A3B1 en Generic Bluetooth; maximaal tien benoemde functies.
-- Lokale inputacties en relaisbediening, afzonderlijke LoRa-ontvangstrechten en een gedeelde Milesight/TTN-payloadcodec.
-- Nederlands/Engelse webinterface met veldhulp, status, recente gebeurtenissen, handbediening en energie-inschatting.
+- **Back-up en herstellen:** downloaden, of Bladeren… → Herstellen.
+- **Firmware bijwerken:** Bladeren… → Updaten, met behoud van instellingen.
+- **Herstarten:** opnieuw opstarten vanuit de webinterface, met bevestiging.
+- **Netwerkvolgorde:** wijzigingen blijven een concept totdat je op **Opslaan** klikt. De opslagbalk laat zien wat nog niet is opgeslagen.
+- **Duidelijke meldingen:** ongeldige velden worden aangewezen; ongewijzigd opslaan veroorzaakt geen herstart of extra flashschrijfactie.
+- **Kortere uitleg:** twee installatieroutes en concrete TTN/Milesight-instellingen voor Class C, uplinks en downlinks.
 
-**Download:** kies **LoRaBLE-Remote-4.11.0-Windows.zip** voor installatie via Windows, of **LoRaBLE-Remote-4.11.0.bin** voor een bestaande complete updater. **SHA256SUMS** bevat de controlesommen van beide downloads. De broncode staat in deze repository en in GitHubs Source code-downloads.
+**Welke download?**
 
-Hardware: RAK11162 met RAK11160-module. De fabriekswizard ondersteunt de oorspronkelijke RAK-indeling met ESP-AT 3.3.0.0 / ESP32C2-2MB / SDK 5.0.6. LoRaBLE 4.10 en ouder vereisen afzonderlijke migratie; het complete bestand is geen directe upgrade voor die versies. Zie [installatie](https://github.com/roelbroersma/victron-lorable-remote/blob/main/docs/INSTALL.md).
+- **LoRaBLE-Remote-4.11.1-Windows.zip** — eerste installatie op RAK11162 of bijwerken via USB. Uitpakken en **Install.cmd** openen; de wizard regelt de tijdelijke WiFi-verbinding bij eerste installatie.
+- **LoRaBLE-Remote-4.11.1.bin** — bijwerken via **Beheer** met de complete updater, beschikbaar vanaf LoRaBLE 4.11. Hetzelfde firmwarebestand zit in de Windows-ZIP.
+- **SHA256SUMS** — controlesommen van beide downloads.
 
-Gebruik bijvoorbeeld een **Milesight UG63 / UG65** voor je eigen netwerkserver, of **The Things Network**. Deze gateways zijn voorbeelden; registreer het apparaat op iedere gewenste netwerkserver. Zie [netwerkinstellingen](https://github.com/roelbroersma/victron-lorable-remote/blob/main/docs/NETWORKS.md).
-
-Houd de voeding aangesloten tijdens installatie. Gebruik uitsluitend het meegeleverde installatiepad, geen generieke chipflasher of erase-all.
+[Installatie](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.11.1/docs/INSTALL.md) · [LoRaWAN instellen](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.11.1/docs/NETWORKS.md) · [Voorbeelden](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.11.1/docs/EXAMPLES.md)
 
 ## English
 
-**One complete firmware file, a Windows installation wizard, and remote control through your own LoRaWAN network or TTN.**
+Clearer **Manage** controls, explicit saving and a shorter installation guide.
 
-- First installation with **Install.cmd**, including automatic temporary WiFi connection.
-- Subsequent updates use the same complete **.bin** through USB or **Manage → Firmware update**, retaining settings.
-- Four independent OTAA profiles with priority, fallback and configurable preemption.
-- Victron Smart MPPT, Smart BatteryProtect A3B1 and Generic Bluetooth profiles, with up to ten named functions.
-- Input-edge actions, relay control, individual downlink permissions and a shared Milesight/TTN payload codec.
-- English/Dutch portal with field help, status, recent events, manual controls and energy estimates.
+- **Backup and restore:** download, or Browse… → Restore.
+- **Firmware updates:** Browse… → Update, retaining settings.
+- **Restart:** reboot from the web interface after confirmation.
+- **Network priority:** changes remain a draft until you click **Save**; the save bar identifies unsaved changes.
+- **Clear feedback:** invalid fields are revealed; unchanged saves cause neither a restart nor an extra configuration write.
+- **Shorter guides:** two installation routes and practical TTN/Milesight settings for Class C, uplinks and downlinks.
 
-Download **LoRaBLE-Remote-4.11.0-Windows.zip** for Windows installation or **LoRaBLE-Remote-4.11.0.bin** for an existing complete updater. **SHA256SUMS** covers both downloads. Source is available in the repository and GitHub's Source code archives.
+**Choose your download**
 
-For RAK11162 with the RAK11160 module. Factory installation requires the original RAK layout and ESP-AT 3.3.0.0 / ESP32C2-2MB / SDK 5.0.6. LoRaBLE 4.10 and earlier require separate migration, not a direct complete-file update. Read [installation](https://github.com/roelbroersma/victron-lorable-remote/blob/main/docs/INSTALL.md) before proceeding.
+- **LoRaBLE-Remote-4.11.1-Windows.zip** — RAK11162 first installation or USB update. Extract and open **Install.cmd**; the wizard handles temporary WiFi during first installation.
+- **LoRaBLE-Remote-4.11.1.bin** — update through **Manage** using the complete updater, available since LoRaBLE 4.11. The Windows ZIP contains the same firmware file.
+- **SHA256SUMS** — checksums for both downloads.
 
-Use a private LoRaWAN server, for example a **Milesight UG63 / UG65**, or **The Things Network**. These are examples, not gateway requirements. Maintain power throughout installation; do not use a generic chip flasher or erase-all.
+[Installation](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.11.1/docs/INSTALL.md#english) · [Network setup](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.11.1/docs/NETWORKS.md#english) · [Examples](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.11.1/docs/EXAMPLES.md)
 
-© 2026 Roel Broersma. Original project code is MIT; dependencies retain their own licenses.
+© 2026 Roel Broersma. MIT project code; dependency licenses included.

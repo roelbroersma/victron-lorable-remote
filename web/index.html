@@ -13,9 +13,10 @@ nav{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:22px}
 @media(max-width:620px){nav{grid-template-columns:repeat(3,1fr)}}
 .panel-title{margin:0 0 20px;padding:0;font-size:18px;line-height:1.4;color:var(--navy)}.firmware-line{border-radius:8px;background:#eef6fb;padding:12px;font-size:14px}.table-wrap{overflow-x:auto}#power_table{width:100%;border-collapse:collapse;font-size:13px}#power_table th,#power_table td{text-align:left;padding:9px 5px;border-bottom:1px solid #e1eaf0}#power_table th{font-weight:600}#power_table input{width:100%;min-width:62px;padding:8px;font-size:13px}#power_table td:nth-child(2),#power_table td:nth-child(3){width:20%}.power-total{font-weight:650;font-size:14px}#power_reference{font-size:13px}#running_firmware{overflow-wrap:anywhere}@media(max-width:620px){#power_table th,#power_table td{padding:8px 3px;font-size:11px}#power_table input{min-width:53px}.panel-title{font-size:17px}}
 .power-heading{display:flex;align-items:center;justify-content:space-between;gap:12px}.power-heading h2{margin:0}.unit-switch{display:flex;background:#edf4f8;border-radius:9px;padding:3px;flex-shrink:0}.unit-switch button{padding:7px 12px;width:auto;font-size:12px;background:transparent;color:#45667c;font-weight:500}.unit-switch button[aria-pressed=true]{background:white;color:#087bb8;box-shadow:0 1px 5px #153f5820}.power-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.power-summary article{background:#eef6fb;border-radius:10px;padding:13px}.power-summary small{display:block;color:#527084;font-size:12px;line-height:1.5}.power-summary strong{display:block;color:#087bb8;font-size:20px;margin-top:5px;font-weight:650}.power-total{font-weight:400}#power_table tbody th{font-weight:400;color:#456174}#power_table td:last-child{text-align:right;font-variant-numeric:tabular-nums}#power_excluded{font-size:12px}#power_class{font-size:12px;color:#657f90}#power_reference{font-weight:400}#power_reference_title{font-size:13px}@media(max-width:620px){.power-summary{grid-template-columns:1fr}.power-summary article{display:flex;align-items:center;justify-content:space-between;gap:10px}.power-summary strong{margin:0;font-size:18px}.power-heading h2{font-size:16px}}
+#save_bar{position:sticky;bottom:12px;z-index:2;display:flex;align-items:center;gap:18px;padding:12px 16px;background:#f4f8fbf5;border:1px solid #d0dfe8;border-radius:12px;box-shadow:0 4px 18px #17354b12}#save_bar.unsaved{background:#e9f5fcf5;border-color:#8abfdc}#save_note{flex:1;margin:0;font-size:13px;color:#48657a;line-height:1.5}#save{width:auto;min-width:110px;padding:12px 20px}.manage-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.manage-card{min-width:0;padding:18px;border:1px solid #dce7ee;border-radius:12px;display:flex;flex-direction:column;gap:12px}.manage-card h3{margin:0;font-size:16px}.manage-card p{margin:0;font-size:13px;line-height:1.6;color:#48657a}.manage-card button{width:auto;align-self:flex-start;padding:11px 18px;font-size:14px}.manage-card>button:last-child{margin-top:auto}.manage-card details{margin:0;font-size:12px}.manage-card details p{margin-top:8px}.file-picker{display:flex;align-items:center;gap:10px;min-width:0}.file-picker button{flex-shrink:0;background:#e8f2f8;color:#086b9e;padding:9px 12px}.file-picker span{min-width:0;font-size:12px;color:#597488;overflow-wrap:anywhere}.manage-card [role=status]:empty{display:none}.secondary{background:#e8f2f8;color:#086b9e}button:disabled{cursor:default}@media(max-width:620px){.manage-grid{grid-template-columns:1fr}.manage-card{padding:16px}#save_bar{gap:10px;padding:10px 12px}#save_note{font-size:12px}#save{min-width:90px;padding:12px}}
 </style></head><body><header><div class="topline"><small class="brand" id="firmware_badge">LoRaBLE Remote</small><div id="language_slot"><input type="hidden" id="language" name="language" value="0" form="form"><div class="flags" role="group" aria-label="Language"><button type="button" class="flag" id="lang_nl" aria-label="Nederlands" aria-pressed="true" title="Nederlands"><svg viewBox="0 0 30 20" aria-hidden="true"><path fill="#ae1c28" d="M0 0h30v7H0z"/><path fill="#fff" d="M0 7h30v6H0z"/><path fill="#21468b" d="M0 13h30v7H0z"/></svg></button><button type="button" class="flag" id="lang_en" aria-label="English" aria-pressed="false" title="English"><svg viewBox="0 0 60 40" aria-hidden="true"><path fill="#012169" d="M0 0h60v40H0z"/><path stroke="#fff" stroke-width="8" d="m0 0 60 40m0-40L0 40"/><path stroke="#c8102e" stroke-width="3" d="m0 0 60 40m0-40L0 40"/><path stroke="#fff" stroke-width="13" d="M30 0v40M0 20h60"/><path stroke="#c8102e" stroke-width="8" d="M30 0v40M0 20h60"/></svg></button></div></div></div><h1 id="title">Victron LoRaBLE Remote</h1><p id="subtitle"></p></header><main><nav id="menu" aria-label="Navigation"></nav>
 <section id="status" aria-labelledby="status_title"><h2 id="status_title">Status</h2><div id="status_cards" class="status-grid"></div><p id="connection_note" role="status">Instellingen laden / Loading settings…</p></section>
-<form id="form"><div id="sections"></div><button id="save" disabled></button><p id="result" role="status" aria-live="polite"></p></form><footer id="footer"></footer></main>
+<form id="form" novalidate><div id="sections"></div><div id="save_bar" hidden><p id="save_note" role="status"></p><button id="save" type="submit" disabled></button></div><p id="result" role="status" aria-live="polite"></p></form><footer id="footer"></footer></main>
 <script>
 'use strict';
 // One definition per field, with a complete help text in both languages.
@@ -123,6 +124,7 @@ for(const f of F.filter(f=>/^fn\d+_kind$/.test(f[0]))) {
 const MAX_FUNCTIONS=10;
 let functionCount=2,powerUnit='mAh',networkOrder=[0,1,2,3];
 let lang=0,ready=false,saving=false,current=null,statusData=null,statusTimer,session=null,page='status',pendingImport=null;
+let baseline='',dirty=false;
 const pages={status:['Status','Status'],ble:['Bluetooth','Bluetooth'],io:['Ingangen & relais','Inputs & relay'],lora:['LoRaWAN','LoRaWAN'],wifi:['WiFi','WiFi'],manage:['Beheer','Manage']};
 const T=(nl,en)=>lang===0?nl:en;
 let grid;
@@ -165,12 +167,12 @@ for(let i=0;i<4;i++){
  $('net_up_'+i).onclick=()=>moveNetwork(i,-1);$('net_down_'+i).onclick=()=>moveNetwork(i,1);
  $('net_drag_'+i).ondragstart=e=>{draggedNetwork=i;e.dataTransfer.setData('text/plain',String(i));e.dataTransfer.effectAllowed='move';};
  fs.ondragover=e=>{if(draggedNetwork!==null)e.preventDefault();};
- fs.ondrop=e=>{e.preventDefault();if(draggedNetwork===null)return;const from=networkOrder.indexOf(draggedNetwork),to=networkOrder.indexOf(i);networkOrder.splice(from,1);networkOrder.splice(to,0,draggedNetwork);draggedNetwork=null;renderNetworks();};
+ fs.ondrop=e=>{e.preventDefault();if(draggedNetwork===null||saving)return;const from=networkOrder.indexOf(draggedNetwork),to=networkOrder.indexOf(i);networkOrder.splice(from,1);networkOrder.splice(to,0,draggedNetwork);draggedNetwork=null;renderNetworks();updateDirty();};
  $('net_drag_'+i).ondragend=()=>draggedNetwork=null;
  $('net'+i+'_name').pattern='[ -~]{1,24}';$('net'+i+'_join_eui').pattern='[0-9A-Fa-f]{16}';$('net'+i+'_app_key').pattern='[0-9A-Fa-f]{32}';
  for(const f of networkFields)$('net'+i+'_'+f[0]).addEventListener('input',renderNetworks);
 }
-function moveNetwork(slot,delta){const at=networkOrder.indexOf(slot),to=at+delta;if(to<0||to>3)return;[networkOrder[at],networkOrder[to]]=[networkOrder[to],networkOrder[at]];renderNetworks();}
+function moveNetwork(slot,delta){const at=networkOrder.indexOf(slot),to=at+delta;if(saving||to<0||to>3)return;[networkOrder[at],networkOrder[to]]=[networkOrder[to],networkOrder[at]];renderNetworks();updateDirty();}
 function renderNetworks(){
  let first=true;
  for(const [rank,i]of networkOrder.entries()){
@@ -271,7 +273,7 @@ function translate(){
   }
  }
  $('subtitle').textContent=T('LoRaWAN · Bluetooth · Ingang & relais','LoRaWAN · Bluetooth · Input & relay');
- $('save').textContent=T('Opslaan en herstarten','Save and restart');
+ $('save').textContent=T('Opslaan','Save');
  $('identity_warning').textContent=T('DevEUI is uit het board gelezen. Alleen wijzigen als jouw netwerk dit vereist; pas ook de netwerkserver aan.','DevEUI was read from the board. Only change if your network requires it; update the network server too.');
  $('edit_identity_label').textContent=T('DevEUI wijzigen','Edit DevEUI');
  $('input_note').textContent=T('K1/K2: 12–24 V DC · 5 V niet gespecificeerd · minimaal 80 ms stabiel.','K1/K2: 12–24 V DC · 5 V not specified · stable for at least 80 ms.');
@@ -373,7 +375,7 @@ async function runTest(command){
  }catch{$('test_result').textContent=T('Test niet bevestigd. Controleer de verbinding en of ingang/relais zijn ingeschakeld in de opgeslagen instellingen.','Test not confirmed. Check connection and whether input/relay are enabled in saved settings.');}
  finally{saving=false;await refreshStatus();}
 }
-for(const [id,value]of [['lang_nl',0],['lang_en',1]])$(id).addEventListener('click',()=>{$('language').value=value;translate();});
+for(const [id,value]of [['lang_nl',0],['lang_en',1]])$(id).addEventListener('click',()=>{$('language').value=value;translate();updateDirty();});
 for(let i=3;i<=MAX_FUNCTIONS;i++)for(const key of ['kind','name'])$('fn'+i+'_'+key).addEventListener('change',visibility);
 for(let i=1;i<=MAX_FUNCTIONS;i++)$('dl_fn'+i).addEventListener('change',()=>autoClassC($('dl_fn'+i)));
 for(const id of ['dl_off','dl_on','dl_pulse','wifi_lora'])$(id).addEventListener('change',()=>autoClassC($(id)));
@@ -387,9 +389,9 @@ function autoClassC(control){
 const functionTools=document.createElement('fieldset');functionTools.id='function_tools';functionTools.dataset.page='ble';
 functionTools.innerHTML='<div class="tools"><button type="button" id="add_function"></button><button type="button" id="remove_function"></button><span id="function_count_label" class="panel-note"></span></div>';
 $('legend_fn1').parentElement.before(functionTools);
-$('add_function').onclick=()=>{if(functionCount<MAX_FUNCTIONS){functionCount++;visibility();$('fn'+functionCount+'_name').focus();}};
+$('add_function').onclick=()=>{if(!saving&&functionCount<MAX_FUNCTIONS){functionCount++;visibility();updateDirty();$('fn'+functionCount+'_name').focus();}};
 $('remove_function').onclick=()=>{if(functionCount>1&&confirm(T('Laatste functie en haar koppelingen verwijderen? Dit wordt pas na opslaan toegepast.','Remove the last function and its routes? Applied only after saving.'))){
- $('fn'+functionCount+'_kind').value='0';$('dl_fn'+functionCount).checked=false;for(const e of ['rise','fall'])if(+$(e+'_ble').value===functionCount)$(e+'_ble').value='0';functionCount--;visibility();
+ $('fn'+functionCount+'_kind').value='0';$('dl_fn'+functionCount).checked=false;for(const e of ['rise','fall'])if(+$(e+'_ble').value===functionCount)$(e+'_ble').value='0';functionCount--;visibility();updateDirty();
 }};
 for(const id of ['region','rx2_custom','input_enabled','relay_enabled','load_enabled','io_board','profile','fn1_kind','fn2_kind','fn1_name','fn2_name','smp','wifi_input','wifi_lora','class','status_min'])$(id).addEventListener('change',visibility);
 $('dev_eui').readOnly=true;$('edit_identity').addEventListener('change',()=>{$('dev_eui').readOnly=!$('edit_identity').checked;if($('edit_identity').checked)$('dev_eui').focus();else $('dev_eui').value=current?.dev_eui||'';visibility();});
@@ -421,27 +423,57 @@ async function loadConfig(){
   const sr=await fetch('/session',{cache:'no-store',signal:AbortSignal.timeout(15000)});
   if(!sr.ok)throw Error();session=await sr.json();
   const r=await fetch('/config',{cache:'no-store',signal:AbortSignal.timeout(15000)});if(!r.ok)throw Error();
-  current=await r.json();applyFields(current);ready=true;$('save').disabled=false;
+  current=await r.json();for(const f of F)if(f[3]==='password')$(f[0]).value='';applyFields(current);baseline=formSignature();ready=true;updateDirty();
   refreshStatus();refreshLog();statusTimer=setInterval(refreshStatus,5000);
  }catch{$('connection_note').textContent=T('Instellingen konden niet worden geladen. Controleer WiFi en herlaad de pagina.','Settings could not be loaded. Check WiFi and reload.');}
 }
 
-$('form').addEventListener('submit',async e=>{
- e.preventDefault();if(!ready||saving||!$('form').reportValidity())return;
- saving=true;$('save').disabled=true;$('result').textContent=T('Opslaan…','Saving…');
+function formSignature(){return JSON.stringify([...serialize()].sort((a,b)=>a[0].localeCompare(b[0])||a[1].localeCompare(b[1])));}
+function updateDirty(){
+ dirty=ready&&formSignature()!==baseline;
+ $('save_bar').hidden=!ready||page==='status'||page==='manage';
+ $('save_bar').classList.toggle('unsaved',dirty);
+ $('save').disabled=!ready||saving||!dirty;
+ $('sections').inert=saving;
+ $('save_note').textContent=dirty?T('Niet opgeslagen · Opslaan past je wijzigingen toe en herstart het apparaat.','Unsaved changes · Save applies your changes and restarts the device.'):T('Geen wijzigingen.','No changes.');
+ if($('reboot'))$('reboot').disabled=!ready||saving;
+ if($('export')){
+  for(const id of ['export','import_browse','ota_browse'])$(id).disabled=!ready||saving;
+  $('apply_import').disabled=!ready||saving||!pendingImport;
+  $('ota_upload').disabled=!ready||saving||!$('ota_file').files.length;
+ }
+}
+for(const event of ['input','change'])$('form').addEventListener(event,()=>{if(ready&&!saving){$('result').textContent='';updateDirty();}});
+window.addEventListener('beforeunload',e=>{if(dirty&&!saving){e.preventDefault();e.returnValue='';}});
+function validateForm(){
+ const invalid=[...$('form').elements].find(el=>el.willValidate&&!el.validity.valid);
+ if(!invalid)return true;
+ const panel=invalid.closest('[data-page]');if(panel)showPage(panel.dataset.page);
+ for(let el=invalid.parentElement;el;el=el.parentElement)if(el.tagName==='DETAILS')el.open=true;
+ $('result').textContent=T('Nog niet opgeslagen. Controleer: ','Not saved. Check: ')+($('label_'+invalid.id)?.textContent||invalid.id)+'.';
+ invalid.focus();invalid.reportValidity();return false;
+}
+$('form').addEventListener('submit',e=>{e.preventDefault();saveSettings();});
+async function saveSettings(){
+ if(!ready||saving)return false;
+ updateDirty();if(!dirty){$('result').textContent=T('Geen wijzigingen om op te slaan.','No changes to save.');return false;}
+ if(!validateForm())return false;
+ saving=true;updateDirty();$('result').textContent=T('Opslaan…','Saving…');
  try{
   const body=serialize();
   body.set('rising_actions',edgeMask('rise'));body.set('falling_actions',edgeMask('fall'));
 
   const r=await fetch('/save',{method:'POST',headers:{'X-LoRaBLE':session?.token||'1','Content-Type':'application/x-www-form-urlencoded'},body,signal:AbortSignal.timeout(20000)});
   const result=await r.json();
-  if(!r.ok||!result.ok){$('result').textContent=T('Niet opgeslagen. Controleer de waarden.','Not saved. Check the values.')+' ('+result.code+')';$('save').disabled=false;saving=false;return;}
+  if(!r.ok||!result.ok){$('result').textContent=T('Niet opgeslagen. Controleer de waarden.','Not saved. Check the values.')+' ('+result.code+')';saving=false;updateDirty();return false;}
+  if(result.code==='unchanged'){baseline=formSignature();saving=false;updateDirty();$('result').textContent=T('Instellingen zijn al opgeslagen.','These settings are already saved.');return true;}
   clearInterval(statusTimer);
   $('result').textContent=T('Opgeslagen. Het board herstart. Verbind opnieuw met “','Saved. The board is restarting. Reconnect to “')+$('wifi_ssid').value+T('” en open http://192.168.4.1/.','” and open http://192.168.4.1/.');
+  dirty=false;watchRestart(session?.token,'result');return true;
  }catch{
-  $('result').textContent=T('Verbinding onderbroken: opslag niet bevestigd. Verbind opnieuw en controleer de instellingen.','Connection lost: saving not confirmed. Reconnect and check settings.');$('save').disabled=false;saving=false;
+  $('result').textContent=T('Verbinding onderbroken: opslag niet bevestigd. Verbind opnieuw en controleer de instellingen.','Connection lost: saving not confirmed. Reconnect and check settings.');saving=false;updateDirty();return false;
  }
-});
+}
 
 function serialize(){
  const body=new URLSearchParams(new FormData($('form')));body.set('schema','9');body.set('expected_revision',current.revision);
@@ -475,13 +507,17 @@ function showPage(id){
  for(const p of Object.keys(pages))$('nav_'+p).setAttribute('aria-current',p===id?'page':'false');
  $('status').hidden=id!=='status';
  for(const el of document.querySelectorAll('[data-page]'))el.hidden=el.dataset.page!==id;
- $('save').hidden=id==='status'||id==='manage';
  visibility();
+ updateDirty();
  if(id==='status'&&ready)refreshLog();
 }
 $('form').addEventListener('invalid',e=>{const panel=e.target.closest('[data-page]');if(panel)showPage(panel.dataset.page);const details=e.target.closest('details');if(details)details.open=true;},true);
 const manage=document.createElement('fieldset');manage.dataset.page='manage';
-manage.innerHTML='<h2 class="panel-title" id="manage_title"></h2><p id="running_firmware" class="firmware-line"></p><p id="backup_help" class="panel-note"></p><div class="tools"><button type="button" id="export"></button><label><span id="import_label"></span><input type="file" id="import" accept=".json,application/json"></label></div><pre id="import_preview"></pre><button type="button" id="apply_import" hidden></button><p id="import_result" role="status"></p><hr><h3 id="ota_title"></h3><p id="ota_help" class="panel-note"></p><input type="file" id="ota_file" accept=".bin"><button type="button" id="ota_upload"></button><progress id="ota_progress" value="0" max="100" hidden></progress><p id="ota_result" role="status"></p>';
+manage.innerHTML='<h2 class="panel-title" id="manage_title"></h2><p id="running_firmware" class="firmware-line"></p><div class="manage-grid">'+
+ '<article class="manage-card"><h3 id="backup_title"></h3><p id="backup_help"></p><details><summary id="backup_info_title"></summary><p id="backup_info"></p></details><button type="button" id="export"></button></article>'+
+ '<article class="manage-card"><h3 id="restore_title"></h3><p id="restore_help"></p><div class="file-picker"><input type="file" id="import" accept=".json,application/json" hidden><button type="button" id="import_browse"></button><span id="import_name"></span></div><p id="import_preview"></p><button type="button" id="apply_import" disabled></button><p id="import_result" role="status"></p></article>'+
+ '<article class="manage-card"><h3 id="ota_title"></h3><p id="ota_help"></p><div class="file-picker"><input type="file" id="ota_file" accept=".bin" hidden><button type="button" id="ota_browse"></button><span id="ota_name"></span></div><button type="button" id="ota_upload" disabled></button><progress id="ota_progress" value="0" max="100" hidden></progress><p id="ota_result" role="status"></p></article>'+
+ '<article class="manage-card"><h3 id="reboot_title"></h3><p id="reboot_help"></p><button type="button" class="secondary" id="reboot" disabled></button><p id="reboot_result" role="status"></p></article></div>';
 $('sections').append(manage);
 const logBox=document.createElement('fieldset');logBox.dataset.page='status';
 logBox.innerHTML='<h2 class="panel-title" id="log_title"></h2><p id="log_help" class="panel-note"></p><div class="tools"><button type="button" id="log_refresh"></button></div><ul id="log_rows"></ul>';
@@ -554,12 +590,16 @@ function translateExtra(){
  updateClassNotice();
  for(const [id,labels]of Object.entries(pages))$('nav_'+id).textContent=labels[lang];
  const texts={
- manage_title:['Back-up & firmware','Backup & firmware'],
- backup_help:['Exporteer de opgeslagen instellingen, netwerkvolgorde en JoinEUIs als JSON. PIN, AppKeys, WiFi-wachtwoord en DevEUI worden niet geëxporteerd. Sleutels blijven per profielslot op dit board bewaard; op een nieuw board vul je ze opnieuw in. Controleer na import of iedere JoinEUI bij de bewaarde AppKey hoort. Oude v4.9-backups behouden je huidige netwerkprofielen. Importeren vult alleen het formulier; kies daarna Opslaan.','Export saved settings, network priority and JoinEUIs as JSON. PIN, AppKeys, WiFi password and DevEUI are excluded. Keys remain in their profile slots on this board; enter them again on a new board. After importing, check that each JoinEUI matches its retained AppKey. Old v4.9 backups retain the current network profiles. Import fills the form only; then choose Save.'],
- export:['Instellingen exporteren','Export settings'],import_label:['JSON-bestand kiezen','Choose JSON file'],apply_import:['Overnemen in formulier','Apply to form'],
+ manage_title:['Beheer','Manage'],backup_title:['Back-up','Backup'],restore_title:['Herstellen','Restore'],
+ backup_help:['Download je opgeslagen instellingen. Zonder wachtwoorden, AppKeys en Bluetooth-PIN.','Download your saved settings. Excludes passwords, AppKeys and the Bluetooth PIN.'],
+ backup_info_title:['Wat zit er in de back-up?','What is included?'],
+ backup_info:['Instellingen, netwerkvolgorde en JoinEUIs. Niet-opgeslagen wijzigingen en de DevEUI gaan niet mee. Geheime sleutels blijven op dit board per profielslot bewaard; op een nieuw board vul je ze opnieuw in. Controleer bij herstellen of JoinEUIs en bewaarde AppKeys bij elkaar horen. Back-ups van v4.9 behouden je huidige netwerkprofielen.','Settings, network priority and JoinEUIs. Unsaved changes and the DevEUI are excluded. Secret keys stay in their profile slots on this board; enter them again on a new board. When restoring, check that JoinEUIs match retained AppKeys. Backups from v4.9 retain your current network profiles.'],
+ restore_help:['Kies een back-upbestand (.json). Herstellen slaat de instellingen op en herstart het apparaat.','Choose a backup file (.json). Restore saves the settings and restarts the device.'],
+ export:['Back-up downloaden','Download backup'],apply_import:['Herstellen','Restore'],import_browse:['Bladeren…','Browse…'],ota_browse:['Bladeren…','Browse…'],
  ota_title:['Firmware bijwerken','Update firmware'],
- ota_help:['Kies het LoRaBLE .bin-bestand uit de release. Hetzelfde bestand werkt met het USB-installatiescript. Het apparaat controleert en installeert de volledige firmware. Je instellingen blijven bewaard. Houd de voeding aangesloten; bediening wordt tijdelijk onderbroken en het relais valt af. Verbind opnieuw met WiFi als daarom wordt gevraagd. Gebruik alleen firmware uit een vertrouwde bron.','Choose the LoRaBLE .bin file from the release. The same file works with the USB installer. The device checks and installs the complete firmware, retaining your settings. Keep power connected; controls are temporarily unavailable and the relay releases. Reconnect to WiFi when prompted. Only install firmware from a trusted source.'],
- ota_upload:['Gekozen firmware uploaden','Upload selected firmware'],log_title:['Recente gebeurtenissen','Recent activity'],
+ ota_help:['Kies het complete LoRaBLE-bestand (.bin). Instellingen blijven bewaard. Houd de voeding aangesloten.','Choose the complete LoRaBLE file (.bin). Settings are retained. Keep power connected.'],
+ ota_upload:['Updaten','Update'],reboot_title:['Opnieuw opstarten','Restart'],reboot:['Herstarten','Restart'],
+ reboot_help:['Herstart zonder instellingen te wijzigen. WiFi wordt kort onderbroken en het relais valt af.','Restart without changing saved settings. WiFi briefly disconnects and the relay releases.'],log_title:['Recente gebeurtenissen','Recent activity'],
  log_help:['Maximaal 24 regels, alleen in RAM. Geen flashslijtage door logs. Tijd = uptime sinds opstarten; de lijst wordt bij herstart gewist. Er staan geen sleutels of PIN-codes in het log.','Up to 24 entries, RAM only. Logging does not wear flash. Time is uptime since boot; reboot clears the list. No keys or PINs are logged.'],
  log_refresh:['Log vernieuwen','Refresh log'],power_title:['Verbruiksberekening','Consumption estimate'],
  power_help:['Per dag · 3,3 V · WiFi 1 uur · Bluetooth 10 seconden. Datasheetschatting, geen meting. Relaismodel volgt je opgeslagen module.','Per day · 3.3 V · WiFi 1 hour · Bluetooth 10 seconds. Datasheet estimate, not a measurement. Relay model follows your saved module.'],
@@ -568,20 +608,27 @@ function translateExtra(){
  power_reference:['STM32: 3,45 mA bij 48 MHz/SMPS, ST typisch bij 3 V en 25°C; zonder SMPS 5,65 mA (+52,8 mAh/dag). Randapparatuur/temperatuur veranderen dit. Firmware: 48 MHz, geen diepe slaap. LoRa RX: ST-chipwaarde 4,82 mA; RAK vermeldt 5,46 mA op moduleniveau (niet nogmaals optellen). Class C ontvangt ook wanneer WiFi uit is.\nWiFi: 99% RX (65 mA) + 1% TX (370 mA) = 68,05 mA; 10% TX geeft 95,5 mA. Datasheet-werktoestanden, geen gemeten duty-cycle of gegarandeerde bandbreedte. Dit is een accesspoint, geen zuinige slapende WiFi-client. ESP-CPU zit al in de ESP-waarden. Bluetooth: RX 62 mA/TX 190 mA bij +9 dBm, dezelfde 99/1-aanname = 63,28 mA. 10 s kost circa 0,18 mAh. Zoeken, pairing en retries tellen mee. ESP uit: 1 µA typisch.\nRAK13001: 70 mA voor de module volgens RAK. Hongfa noemt 200 mW bij nominale spoelspanning; bij 3 V komt dat overeen met circa 45 Ω. De 3,3V-voeding, transistor en ±10% spoeltolerantie verklaren variatie. RAK13007: G5LE-14-DC3 volgens RAK-schema; circa 142 mA is AFGELEID uit de 400mW-G5LE-familie, 3V-spoel (22,5 Ω), 0,2V-transistorverlies plus basisstroom/led. De geraadpleegde Omron-tabel specificeert de oude 3V-variant niet afzonderlijk; dus geen geverifieerde modulewaarde. Rond 23°C circa 124–163 mA in dit model, opwarming verandert de spoelweerstand. Beide relais zijn niet bistabiel. Relais UIT: 0 mA voor de spoel; overige ruststroom onbekend.\nEen LoRa-voorbeeld: 20 bytes applicatie + 13 bytes overhead, SF12/BW125, CR4/5, 8-symbolen preamble: circa 1,81 s per bericht. Met de RAK-referentie 92 mA bij +14 dBm kost dat circa 0,046 mAh per bericht (in Class C vervangt dit RX-tijd). ADR, regio, overhead en herhalingen veranderen dit.\nDe 2,8 µA van RAK geldt uitsluitend in Stop 1 met ESP uit, niet voor de huidige firmware of Class C.','STM32: 3.45 mA at 48 MHz/SMPS, ST typical at 3 V and 25°C; without SMPS 5.65 mA (+52.8 mAh/day). Peripherals/temperature change this. Firmware: 48 MHz, no deep sleep. LoRa RX: ST chip value 4.82 mA; RAK lists 5.46 mA at module level (do not add both). Class C receives even with WiFi off.\nWiFi: 99% RX (65 mA) + 1% TX (370 mA) = 68.05 mA; 10% TX gives 95.5 mA. Datasheet operating states, not a measured duty cycle or guaranteed range. This is an access point, not a sleeping WiFi station. ESP CPU is already included. Bluetooth: RX 62 mA/TX 190 mA at +9 dBm; the same 99/1 assumption = 63.28 mA. A 10 s action costs about 0.18 mAh. Discovery, pairing and retries count. ESP off: 1 µA typical.\nRAK13001: 70 mA for the module according to RAK. Hongfa specifies 200 mW at nominal coil voltage; at 3 V that implies about 45 Ω. The 3.3V supply, transistor and ±10% coil tolerance explain variation. RAK13007: G5LE-14-DC3 per RAK schematic; about 142 mA is INFERRED from the 400mW G5LE family, a 3V coil (22.5 Ω), 0.2V transistor drop plus base/LED current. The consulted Omron table does not separately specify the old 3V variant; this is not a verified module value. Around 23°C this model gives about 124–163 mA; heating changes coil resistance. Neither relay is latching. Relay OFF: 0 mA for the coil; other idle current is unknown.\nLoRa example: 20 application bytes + 13 overhead, SF12/BW125, CR4/5, 8-symbol preamble: about 1.81 s per packet. RAK reference 92 mA at +14 dBm gives about 0.046 mAh per packet (replaces RX time in Class C). ADR, region, overhead and retries change this.\nRAK’s 2.8 µA only applies in Stop 1 with ESP off, not with the current firmware or Class C.']
  };
  for(const [id,t]of Object.entries(texts))$(id).textContent=t[lang];
- updateFirmware();renderPower();
+ for(const [input,label]of [['import','import_name'],['ota_file','ota_name']])$(label).textContent=$(input).files[0]?.name||T('Geen bestand gekozen','No file selected');
+ updateFirmware();renderPower();updateDirty();
 }
 const backupKeys=F.filter(f=>f.length>3&&f[3]!=='password').map(f=>f[0]).filter(id=>!['dev_eui','join_eui'].includes(id)&&!/^(rise|fall|dl)_/.test(id)&&!['wifi_input','wifi_hold','wifi_lora'].includes(id)).concat(['language','rising_actions','falling_actions','wifi_triggers','downlink_allowed','function_count','rising_fn','falling_fn','downlink_functions',...Array.from({length:4},(_,i)=>'net'+i+'_order')]);
 function portable(c){const out={};for(const k of backupKeys)if(k in c)out[k]=c[k];return out;}
 $('export').onclick=()=>{
- if(!ready)return;const file={format:'LoRaBLE Remote',schema:9,settings:portable(current)};
+ if(!ready||saving)return;const file={format:'LoRaBLE Remote',schema:9,settings:portable(current)};
  const url=URL.createObjectURL(new Blob([JSON.stringify(file,null,2)],{type:'application/json'}));
  const a=document.createElement('a');a.href=url;a.download='LoRaBLE-settings.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);
 };
+for(const [button,input]of [['import_browse','import'],['ota_browse','ota_file']])$(button).onclick=()=>{if(ready&&!saving)$(input).click();};
+let importSelection=0;
 $('import').onchange=async()=>{
- pendingImport=null;$('apply_import').hidden=true;$('import_preview').textContent='';
+ const selection=++importSelection;
+ pendingImport=null;$('import_preview').textContent='';$('import_result').textContent='';
+ $('import_name').textContent=$('import').files[0]?.name||T('Geen bestand gekozen','No file selected');updateDirty();
+ if(!ready||saving||!$('import').files.length)return;
  try{
   const file=$('import').files[0];if(!file||file.size>16384)throw Error('file_size');
   const data=JSON.parse(await file.text());
+  if(selection!==importSelection)return;
   if(data.format!=='LoRaBLE Remote'||![8,9].includes(data.schema)||!data.settings||Array.isArray(data.settings))throw Error('schema');
   if(data.schema===8)for(const key of backupKeys.filter(k=>k.startsWith('net')))data.settings[key]=current[key];
   const keys=Object.keys(data.settings);
@@ -598,16 +645,48 @@ $('import').onchange=async()=>{
   if(new Set(order).size!==4||order.some(n=>!Number.isInteger(n)||n<0||n>3))throw Error('network_order');
   pendingImport=data.settings;
   const changes=keys.filter(k=>data.settings[k]!==current[k]);
-  $('import_preview').textContent=T('Te wijzigen velden:\n','Fields to change:\n')+(changes.join('\n')||T('Geen verschillen.','No differences.'));
-  $('apply_import').hidden=false;
- }catch(e){$('import_result').textContent=T('Import geweigerd: ','Import rejected: ')+e.message;}
+  $('import_preview').textContent=changes.length?T('Back-up gereed om te herstellen.','Backup ready to restore.'):T('Deze back-up komt overeen met je opgeslagen instellingen.','This backup matches your saved settings.');
+ }catch(e){if(selection===importSelection)$('import_result').textContent=T('Ongeldige back-up. Kies een LoRaBLE-instellingenbestand.','Invalid backup. Choose a LoRaBLE settings file.');}
+ if(selection===importSelection)updateDirty();
 };
-$('apply_import').onclick=()=>{
- if(!pendingImport)return;
- applyFields({...current,...pendingImport});pendingImport=null;$('apply_import').hidden=true;
- $('import_result').textContent=T('In formulier overgenomen, nog NIET opgeslagen. Controleer en kies Opslaan.','Applied to form, NOT saved. Review and choose Save.');
- showPage('ble');
+$('apply_import').onclick=async()=>{
+ if(!pendingImport||!ready||saving)return;
+ if(!confirm(T('Back-up herstellen en opslaan? Niet-opgeslagen wijzigingen worden vervangen. Het apparaat herstart en het relais valt af. Bewaarde sleutels blijven staan: controleer dat ze bij de netwerken in deze back-up horen.','Restore and save this backup? Unsaved changes will be replaced. The device restarts and the relay releases. Retained keys stay in place: check they match the networks in this backup.')))return;
+ for(const f of F)if(f[3]==='password')$(f[0]).value='';
+ applyFields({...current,...pendingImport});pendingImport=null;updateDirty();
+ $('import_result').textContent=T('Herstellen…','Restoring…');
+ const ok=await saveSettings();
+ $('import_result').textContent=ok?T('Instellingen hersteld.','Settings restored.'):$('result').textContent;
 };
+$('reboot').onclick=async()=>{
+ if(!ready||saving)return;
+ const warning=dirty?T('Niet-opgeslagen wijzigingen gaan verloren. ','Unsaved changes will be lost. '):'';
+ if(!confirm(warning+T('Apparaat herstarten? Opgeslagen instellingen blijven behouden. WiFi wordt onderbroken en het relais valt af.','Restart the device? Saved settings are retained. WiFi disconnects and the relay releases.')))return;
+ saving=true;updateDirty();$('reboot_result').textContent=T('Herstart aanvragen…','Requesting restart…');
+ try{
+  const r=await fetch('/action',{method:'POST',headers:{'X-LoRaBLE':session?.token||'1','Content-Type':'application/x-www-form-urlencoded'},body:new URLSearchParams({command:'reboot'}),signal:AbortSignal.timeout(15000)});
+  const result=await r.json();if(!r.ok||!result.ok)throw Error();
+  clearInterval(statusTimer);dirty=false;
+  $('reboot_result').textContent=T('Apparaat herstart. Verbind zo nodig opnieuw met WiFi.','Device restarting. Reconnect to WiFi if needed.');
+  watchRestart(session?.token,'reboot_result');
+ }catch{$('reboot_result').textContent=T('Herstart niet bevestigd. Controleer de verbinding en probeer opnieuw zodra Bluetooth klaar is.','Restart not confirmed. Check the connection and retry once Bluetooth is finished.');saving=false;updateDirty();}
+};
+async function watchRestart(previousToken,resultId){
+ await new Promise(r=>setTimeout(r,4000));
+ const until=Date.now()+90000;
+ while(Date.now()<until){
+  try{
+   const r=await fetch('/session',{cache:'no-store',signal:AbortSignal.timeout(3000)});
+   if(r.ok&&(await r.json()).token!==previousToken){
+    saving=false;ready=false;clearInterval(statusTimer);await loadConfig();
+    if(ready){$('result').textContent='';$(resultId).textContent=T('Apparaat opnieuw verbonden.','Device reconnected.');updateDirty();return;}
+    saving=true;
+   }
+  }catch{}
+  await new Promise(r=>setTimeout(r,2000));
+ }
+ $(resultId).textContent=T('Verbind opnieuw met de WiFi van het apparaat en herlaad deze pagina.','Reconnect to the device WiFi and reload this page.');
+}
 const eventLabels=[
  ['Onbekend','Unknown'],['Opgestart','Boot'],['Ingang opgaand','Input rising'],['Ingang neergaand','Input falling'],['LoRa-opdracht','LoRa command'],['Test opgaand','Test rising'],['Test neergaand','Test falling'],['Handmatige actie','Manual action'],['Bluetooth-resultaat','Bluetooth result'],['LoRa aangemeld (1/0)','LoRa joined (1/0)'],['Uplink verstuurd','Uplink sent'],['Relais AAN','Relay ON'],['Relais UIT','Relay OFF'],['Instellingen opgeslagen','Settings saved']
 ];
@@ -621,21 +700,23 @@ async function refreshLog(){
 }
 $('log_refresh').onclick=refreshLog;
 $('ota_file').accept='.bin';
+$('ota_file').onchange=()=>{$('ota_name').textContent=$('ota_file').files[0]?.name||T('Geen bestand gekozen','No file selected');$('ota_result').textContent='';updateDirty();};
 $('ota_upload').onclick=async()=>{
+ if(!ready||saving||!session)return;
  const file=$('ota_file').files[0];
  if(!file||file.size>0xd6100||file.size<256||!file.name.toLowerCase().endsWith('.bin')){$('ota_result').textContent=T('Kies het LoRaBLE .bin-firmwarebestand.','Choose the LoRaBLE .bin firmware file.');return;}
  const header=new Uint8Array(await file.slice(0,256).arrayBuffer());
  if(String.fromCharCode(...header.slice(0,8))!=='LBRUPD1\0'){$('ota_result').textContent=T('Dit is geen compleet LoRaBLE-firmwarebestand.','This is not a complete LoRaBLE firmware file.');return;}
  const target=String.fromCharCode(...header.slice(16,48)).split('\0')[0];
  if(!session||statusData?.ble_pending||saving)return;
- if(!confirm(T('Firmware '+target+' installeren? Laat de voeding aangesloten. Het relais valt af.','Install firmware '+target+'? Keep power connected. The relay will release.')))return;
- saving=true;$('ota_upload').disabled=true;$('ota_progress').hidden=false;
+ if(!confirm((dirty?T('Niet-opgeslagen wijzigingen gaan verloren. ','Unsaved changes will be lost. '):'')+T('Firmware '+target+' installeren? Gebruik een vertrouwd LoRaBLE-bestand en laat de voeding aangesloten. Het relais valt af.','Install firmware '+target+'? Use a trusted LoRaBLE file and keep power connected. The relay will release.')))return;
+ saving=true;updateDirty();$('ota_progress').value=0;$('ota_progress').hidden=false;
  const req=new XMLHttpRequest();req.open('POST','/ota');req.setRequestHeader('X-LoRaBLE',session.token);req.setRequestHeader('Content-Type','application/octet-stream');req.timeout=180000;
  req.upload.onprogress=e=>{if(e.lengthComputable)$('ota_progress').value=e.loaded/e.total*100;};
  req.onload=()=>{let ok=false;try{ok=req.status===200&&JSON.parse(req.responseText).ok;}catch{}
   $('ota_result').textContent=ok?T('Firmware gecontroleerd. Installatie gestart; verbind opnieuw met WiFi.','Firmware checked. Installation started; reconnect to WiFi.'):T('Update geweigerd. Controleer bestand en verbinding.','Update rejected. Check file and connection.');
-  if(ok)watchUpdate(target);else{saving=false;$('ota_upload').disabled=false;}};
- req.onerror=req.ontimeout=()=>{$('ota_result').textContent=T('Verbinding weg; update niet bevestigd. Controleer het board voordat je opnieuw uploadt.','Connection lost; update not confirmed. Check the board before retrying.');saving=false;$('ota_upload').disabled=false;};
+  if(ok)watchUpdate(target);else{saving=false;updateDirty();}};
+ req.onerror=req.ontimeout=()=>{$('ota_result').textContent=T('Verbinding weg; update niet bevestigd. Controleer het board voordat je opnieuw uploadt.','Connection lost; update not confirmed. Check the board before retrying.');saving=false;updateDirty();};
  req.send(file);
 };
 async function watchUpdate(target){
@@ -648,12 +729,12 @@ async function watchUpdate(target){
    if(u.phase===5){$('ota_result').textContent=T('Installatie onderbroken (code ','Installation interrupted (code ')+u.error+T('). Houd de voeding aan en gebruik zo nodig het USB-installatiescript.','). Keep power connected and use the USB installer if needed.');break;}
    if(u.phase===4&&u.version===target){
     const state=await fetch('/status',{cache:'no-store',signal:AbortSignal.timeout(5000)}).then(r=>r.json());
-    if(state.firmware===target){$('ota_result').textContent=T('Firmware '+target+' geïnstalleerd. Instellingen behouden.','Firmware '+target+' installed. Settings retained.');$('running_firmware').textContent='Firmware: '+target;saving=false;$('ota_upload').disabled=false;return;}
+    if(state.firmware===target){saving=false;ready=false;clearInterval(statusTimer);await loadConfig();$('ota_result').textContent=T('Firmware '+target+' geïnstalleerd. Instellingen behouden.','Firmware '+target+' installed. Settings retained.');updateDirty();return;}
    }
    $('ota_result').textContent=T('Firmware wordt geïnstalleerd. Houd de voeding aangesloten.','Installing firmware. Keep power connected.');
   }catch{$('ota_result').textContent=T('Verbind opnieuw met de WiFi van het apparaat. De installatie gaat intern verder.','Reconnect to the device WiFi. Installation continues internally.');}
  }
- saving=false;$('ota_upload').disabled=false;
+ saving=false;updateDirty();
 }
 for(let i=1;i<=MAX_FUNCTIONS;i++){
  $('fn'+i+'_name').pattern='[ -~]{1,24}';

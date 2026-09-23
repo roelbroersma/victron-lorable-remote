@@ -438,7 +438,7 @@ static void sendConfiguration(int8_t link)
 
 static void sendStatus(int8_t link)
 {
-    String json("{\"firmware\":\"4.11.0\"");
+    String json("{\"firmware\":\"4.11.1\"");
     #define STATE(name, value) appendJsonNumber(json, name, (uint32_t)(value), false)
     STATE("joined", live.joined);
     STATE("ble_available", live.bleAvailable);
@@ -811,6 +811,8 @@ static void handleRequest()
             if (!strcmp(command, "relay_pulse") && snapshot.relayEnabled) action = 3;
             if (!strcmp(command, "relay_off") && snapshot.relayEnabled) action = 4;
             if (!strcmp(command, "uplink")) action = 5;
+            if (!strcmp(command, "reboot") && !updatePending && !live.blePending)
+                action = PORTAL_ACTION_REBOOT;
 #if !LEGACY_BLE_AT
             if(!strcmp(command,"ble_scan")) action=6;
             for(unsigned i=0;i<snapshot.functionCount;++i) {
@@ -819,7 +821,7 @@ static void handleRequest()
             }
 #endif
         }
-        pendingAction = action;
+        if (action) pendingAction = action;
         paused = true;
         sendMessagePage(link, action != 0, action ? "queued" : "action_unavailable");
         paused = false;
@@ -1046,7 +1048,7 @@ void legacyPortalConfigResult(uint16_t requestId, bool ok,
     if (responseLink < 0 || requestId != responseRequestId) return;
     paused = true;
     if (ok)
-        sendMessagePage(responseLink, true, "saved");
+        sendMessagePage(responseLink, true, code && !strcmp(code, "unchanged") ? "unchanged" : "saved");
     else if (code != nullptr && strcmp(code, "lorawan_update_pending") == 0)
         sendMessagePage(responseLink, true, "saved_pending");
     else

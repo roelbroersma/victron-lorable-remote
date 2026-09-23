@@ -1,6 +1,7 @@
 from pathlib import Path
 import argparse
 import importlib.util
+import json
 import struct
 import zlib
 import unittest
@@ -8,7 +9,7 @@ import unittest
 ROOT=Path(__file__).resolve().parent.parent
 spec=importlib.util.spec_from_file_location('bundle',ROOT/'tools/update-bundle.py')
 bundle=importlib.util.module_from_spec(spec);spec.loader.exec_module(bundle)
-IMAGE=ROOT/'firmware/LoRaBLE-Remote-4.11.0.bin'
+IMAGE=ROOT/json.loads((ROOT/'firmware/manifest.json').read_text())['firmware']['path']
 
 class Bundles(unittest.TestCase):
     @classmethod

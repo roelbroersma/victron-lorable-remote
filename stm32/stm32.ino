@@ -1357,6 +1357,7 @@ static void servicePortalApi()
         else if (action == 3) executeActions(ACTION_RELAY_PULSE | ACTION_UPLINK, 6);
         else if (action == 4) executeActions(ACTION_RELAY_OFF | ACTION_UPLINK, 6);
         else if (action == 5) executeActions(ACTION_UPLINK, 6);
+        else if (action == PORTAL_ACTION_REBOOT) pendingRebootAt = millis() + 2500UL;
 #if !LEGACY_BLE_AT
         else if(action==6) companionScan();
         else if(action>=7 && action<7+runtimeConfig.functionCount) executeActions((action==8?ACTION_LOAD_OFF:ACTION_LOAD_ON)|ACTION_UPLINK,6,action-7);
@@ -1372,7 +1373,7 @@ static void servicePortalApi()
         const bool saved = applyConfigRequest(request, credentialsChanged, errorCode);
         const bool durableStateChanged = runtimeConfigRevision() != revisionBefore;
         legacyPortalConfigResult(request.requestId, saved,
-                                 runtimeConfigRevision(), errorCode);
+                                 runtimeConfigRevision(), saved && !durableStateChanged ? "unchanged" : errorCode);
         if (saved || durableStateChanged)
         {
             legacyPortalUpdateSnapshot(runtimeConfig, nodeDevEui, nodeAppEui);
@@ -1508,7 +1509,7 @@ void setup()
     // concurrently consume replies intended for the portal/companion parser.
     Serial1.begin(115200, RAK_CUSTOM_MODE);
     delay(1500);
-    Serial.println("Victron LoRaBLE Remote - firmware v4.11.0");
+    Serial.println("Victron LoRaBLE Remote - firmware v4.11.1");
     activityAdd(1);
 
     setEspPowerMode(POWER_OFF);

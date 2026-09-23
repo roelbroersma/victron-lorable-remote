@@ -1,8 +1,8 @@
-param([string]$Firmware=(Join-Path $PSScriptRoot '../firmware/LoRaBLE-Remote-4.11.0.bin'))
+param([string]$Firmware=(Join-Path (Split-Path -Parent $PSScriptRoot) ((Get-Content (Join-Path $PSScriptRoot '../firmware/manifest.json') -Raw | ConvertFrom-Json).firmware.path)))
 $ErrorActionPreference='Stop'
 . (Join-Path $PSScriptRoot '../installer/Bundle.ps1')
 $good=[LoRaBLE.Bundle]::Read([IO.Path]::GetFullPath($Firmware))
-if($good.Version -ne '4.11.0'){throw 'Unexpected reference version'}
+if($good.Version -notmatch '^4\.[0-9]+\.[0-9]+$'){throw 'Unexpected reference version'}
 $payload=[Text.Encoding]::ASCII.GetBytes('123456789')
 if([LoRaBLE.Bundle]::Crc($payload,0,9) -ne [Convert]::ToUInt32('cbf43926',16)){throw 'CRC32 known-answer mismatch'}
 $packet=[LoRaBLE.Bundle]::Packet($payload,0,9,3)

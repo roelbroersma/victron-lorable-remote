@@ -4,6 +4,7 @@
 #include "settings.h"
 #include "esp_companion.h"
 
+static const uint8_t PORTAL_ACTION_REBOOT = 17; // 7..16 are Bluetooth functions.
 
 
 // The portal runs on the stock ESP-AT firmware. The STM32 owns the HTTP

@@ -65,5 +65,6 @@ jobs:
           VERSION=$(node -p "require('./firmware/manifest.json').version")
           test "$GITHUB_REF_NAME" = "v$VERSION"
           python3 tools/make-release-zip.py --output "dist/LoRaBLE-Remote-$VERSION-Windows.zip"
-          gh release create "v$VERSION" --verify-tag --draft --title "Victron LoRaBLE Remote $VERSION — One file. USB or WiFi." --notes-file docs/RELEASE.md
+          TITLE=$(head -n 1 docs/RELEASE.md | sed 's/^# //')
+          gh release create "v$VERSION" --verify-tag --draft --title "Victron LoRaBLE Remote $TITLE" --notes-file docs/RELEASE.md
           gh release upload "v$VERSION" "firmware/LoRaBLE-Remote-$VERSION.bin" "dist/LoRaBLE-Remote-$VERSION-Windows.zip" dist/SHA256SUMS

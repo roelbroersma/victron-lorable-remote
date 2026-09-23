@@ -18,7 +18,8 @@ Gebruik firmware met de ingebouwde netwerkserver ingeschakeld. Menunamen en besc
 |---|---|
 | Frequentieplan | EU868, gelijk aan het board |
 | Device profile / MAC version | LoRaWAN 1.0.4; als oudere Milesight-firmware alleen t/m 1.0.2 aanbiedt, gebruik 1.0.2 als compatibiliteitsprofiel, niet 1.1 |
-| Class | C voor ontvangst zonder eerst een uplink te sturen; A voor ontvangst na een uplink |
+| Device profile name | Bijvoorbeeld `RAK11162-ClassC-OTAA` |
+| Class Type | A aangevinkt laten, C aanvinken, B uit; zet het board zelf op Class C |
 | Activation | OTAA |
 | RX1 delay / offset | 1 seconde / 0 |
 | RX2 frequency | 869525000 Hz |
@@ -31,7 +32,7 @@ Gebruik firmware met de ingebouwde netwerkserver ingeschakeld. Menunamen en besc
 | Application FPort | 10, of je eigen gelijk ingestelde waarde |
 | Payload codec | [lorawan-payload-codec.js](../stm32/lorawan-payload-codec.js), functie `Decode(fPort, bytes)` |
 
-Wijs het device profile en de application aan het apparaat toe. Na OTAA moeten ook applicatie-uplinks in de packetlijst verschijnen. Een Join Accept is nog geen bevestiging dat een applicatiebericht is ontvangen. De codec vertaalt ontvangen bytes; hij bepaalt niet of radioverkeer binnenkomt.
+Wijs het device profile en de application aan het apparaat toe. Class C luistert zonder op een eigen uplink te wachten; Class A ontvangt alleen kort na een uplink. Na OTAA moeten ook applicatie-uplinks in de packetlijst verschijnen. Een Join Accept is nog geen bevestiging dat een applicatiebericht is ontvangen. De codec vertaalt ontvangen bytes; hij bepaalt niet of radioverkeer binnenkomt.
 
 ### TTN / The Things Stack
 
@@ -39,15 +40,19 @@ Wijs het device profile en de application aan het apparaat toe. Na OTAA moeten o
 2. Kies een frequentieplan passend bij land en hardware. Nederland: **EU863–870 MHz**. Voor deze firmware: **LoRaWAN 1.0.4**, regionale parameters **RP002-1.0.3**.
 3. Gebruik de DevEUI van het board, een eigen JoinEUI en een nieuwe AppKey. Registreer het end device op iedere server die je wilt gebruiken; alleen een gateway registreren is niet voldoende.
 4. Maak hetzelfde netwerkprofiel op het board. Kies **TTN Sandbox** en laat RX2 op **automatisch**; neem de lokale Milesight-RX2-override niet over.
-5. Zet Class C op beide kanten aan voor directe bediening. The Things Stack heeft na een join eerst een uplink nodig voordat Class C-downlinks beschikbaar zijn.
-6. Kies **Payload formatters → Uplink → Custom JavaScript** en plak de [codec](../stm32/lorawan-payload-codec.js). De functie `decodeUplink(input)` is inbegrepen.
-7. Queue een **unconfirmed** downlink op FPort 10, bijvoorbeeld hex `01` voor Bluetooth-functie 1. Geef die functie ook LoRa-toestemming op het board.
+5. Zet het board op **Class C** en zet bij het TTN-apparaat **Supports Class C** aan. Na een join is eerst een uplink nodig; zie [Class C](https://www.thethingsindustries.com/docs/hardware/devices/configuring-devices/class-c/).
+6. Kies bij het end device **Payload formatters → Uplink → Custom JavaScript**. Vervang de voorbeeldcode door de **volledige [codec](../stm32/lorawan-payload-codec.js)**, inclusief `Decode` én `decodeUplink`, en sla op.
+7. Zet **Payload formatters → Downlink → None**. Bij **Messaging → Downlink**: FPort **10**, type **HEX**, confirmed **uit**. Stuur bijvoorbeeld `20` om status op te vragen, of `01` voor Bluetooth-functie 1. Schakel voor bediening die functie en haar LoRa-ontvangstrecht op het board in.
+
+**Uplink** is status van het board naar TTN; **downlink** is een opdracht naar het board. Voor HEX is geen downlinkformatter nodig. `encodeDownlink` is alleen nodig als je JSON-opdrachten naar bytes wilt omzetten. [Formatteruitleg](https://www.thethingsindustries.com/docs/integrations/payload-formatters/javascript/downlink/)
+
+**TTN Sandbox** is de naam van het publieke TTN-aanbod, geen andere radiotechniek. Die keuze past op het board de intervallen aan het TTN-gebruiksbudget aan. Voor je eigen lokale netwerk kies je **Eigen / ander**.
 
 TTN Sandbox heeft een fair-usebudget van **30 seconden uplink-zendtijd en 10 downlinks per apparaat per 24 uur**. ACKs tellen als downlinks. Gebruik de vieruursintervallen als uitgangspunt en tel ook gebeurtenissen, joins en herhalingen mee. Het TTN-profiel begrenst periodieke berichten, maar is geen volledige airtimeboekhouding. [TTN fair use](https://www.thethingsnetwork.org/docs/lorawan/duty-cycle/).
 
 ### Prioriteit, fallback en preempt
 
-Open **LoRaWAN**, maak de gewenste profielen en verplaats ze met **↑ / ↓** of slepen. Bovenaan staat de hoogste prioriteit. Elk profiel heeft zijn eigen naam, aan/uit, netwerktype, JoinEUI, AppKey, preempt-tijd en optionele RX2-override. DevEUI, regio, subband, Class, FPort en opdrachttoestemmingen gelden voor het hele board.
+Open **LoRaWAN**, maak de gewenste profielen en verplaats ze met **↑ / ↓** of slepen. Bovenaan staat de hoogste prioriteit. Klik **Opslaan** om de nieuwe volgorde toe te passen; verplaatsen slaat niet automatisch op. Elk profiel heeft zijn eigen naam, aan/uit, netwerktype, JoinEUI, AppKey, preempt-tijd en optionele RX2-override. DevEUI, regio, subband, Class, FPort en opdrachttoestemmingen gelden voor het hele board.
 
 | Voorbeeld | Type | Preempt |
 |---|---|---|
@@ -86,15 +91,19 @@ Bewaar geen verouderde schakelopdrachten in serverwachtrijen. Stuur opdrachten v
 
 Use your own LoRaWAN server — for example, the embedded server of a **Milesight UG63 / UG65** — or a network such as **TTN**. These gateway models are examples, not requirements. The board stores four OTAA profiles and maintains **one active session**. Gateways forward radio packets; network servers manage sessions.
 
-For a private EU868 server, the example above uses OTAA, matching DevEUI/JoinEUI/AppKey, FPort 10, RX1 delay 1 s/offset 0 and RX2 869525000 Hz/DR0. The firmware uses LoRaWAN 1.0.4; older Milesight menus offering only 1.0.2 can use that compatibility profile, not 1.1. Select Class C on both node and server for reception without waiting for an uplink.
+For a private EU868 server, the example above uses OTAA, matching DevEUI/JoinEUI/AppKey, FPort 10, RX1 delay 1 s/offset 0 and RX2 869525000 Hz/DR0. The firmware uses LoRaWAN 1.0.4; older Milesight menus offering only 1.0.2 can use that compatibility profile, not 1.1. Name the profile, for example, `RAK11162-ClassC-OTAA`: keep A checked, enable C and leave B off. Set the board itself to Class C for reception without waiting for an uplink.
 
 For TTN, register an application and end device with the matching regional plan, LoRaWAN **1.0.4** and **RP002-1.0.3**. Enter the board DevEUI and separate JoinEUI/AppKey in the console and a **TTN Sandbox** profile on the board. Leave RX2 automatic. Enable Class C at both ends; The Things Stack needs an initial uplink after joining. Registering a gateway alone does not register your device.
 
-Paste [lorawan-payload-codec.js](../stm32/lorawan-payload-codec.js) into TTN's Custom JavaScript uplink formatter; it includes `decodeUplink`. Milesight uses `Decode` from the same file. Send unconfirmed hex downlinks on FPort 10 and enable the corresponding device permission.
+At the end device, select **Payload formatters → Uplink → Custom JavaScript**, replace the example with the **entire [codec](../stm32/lorawan-payload-codec.js)** and save. It includes both `Decode` and `decodeUplink`; Milesight uses `Decode` from that same file.
+
+Set **Payload formatters → Downlink → None**. In **Messaging → Downlink**, use FPort **10**, **HEX**, confirmed **off**. Send `20` for status or `01` for Bluetooth function 1; enable that function's downlink permission on the board. Uplinks carry board status; downlinks carry commands. No encoder is needed for HEX; `encodeDownlink` converts JSON commands into bytes. [Formatter details](https://www.thethingsindustries.com/docs/integrations/payload-formatters/javascript/downlink/)
+
+**TTN Sandbox** names the public TTN offering. This board setting adjusts message intervals to its usage budget; it is not a different radio protocol. Select **Private / other** for your own local network.
 
 ### Priority and preemption
 
-Arrange profiles with arrows or dragging; highest priority is at the top. Each profile has its own credentials, type and preemption interval. DevEUI, region, subband, Class, FPort and action permissions are shared. Use distinct JoinEUIs and independent keys. Blank AppKey retains the existing key; moving profiles does not swap their keys.
+Arrange profiles with arrows or dragging; highest priority is at the top. Click **Save** to apply the order; reordering never saves automatically. Each profile has its own credentials, type and preemption interval. DevEUI, region, subband, Class, FPort and action permissions are shared. Use distinct JoinEUIs and independent keys. Blank AppKey retains the existing key; moving profiles does not swap their keys.
 
 After a failed preferred join, a backup stays selected until its preemption time expires, **even while unable to join**. At expiry, higher priorities are tried again without rebooting. Reception pauses during OTAA. If higher profiles fail, a previously connected backup is retried; an unreachable backup yields to the next lower profile. Default preemption is **24 hours**, range **15 minutes–7 days**. Disabled profiles are skipped.
 
