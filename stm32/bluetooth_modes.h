@@ -1,9 +1,18 @@
 #pragma once
+#include <stdbool.h>
+#include <stdint.h>
 // Distinct kinds prevent an old MPPT action being reinterpreted after changing profile.
 static inline unsigned char smartBatteryProtectMode(unsigned char kind) {
     return kind==11?3:kind==12?4:255;
 }
-#include <stdint.h>
+// Stable stored IDs. Both native BatteryProtect drivers use instance 0,
+// switch-mode VREG 0x0200 and output-state VREG 0xEDA8, never MPPT 0xEDAB.
+static inline bool isBatteryProtectProfile(unsigned char profile) {
+    return profile == 3 || profile == 4;
+}
+static inline uint16_t batteryProtectProductId(unsigned char profile) {
+    return profile == 3 ? 0xA3B1u : profile == 4 ? 0xA3B3u : 0;
+}
 
 // Persistent function kinds keep v4.7 values stable (1 ON, 2 OFF, 3/4 GATT).
 // MPPT EDAB values: Victron BlueSolar/SmartSolar HEX protocol, section 5.2.

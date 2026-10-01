@@ -125,9 +125,9 @@ for(const field of F.filter(f=>['rise_ble','fall_ble'].includes(f[0])))field[4]=
 const $=id=>document.getElementById(id);
 // Stable stored profile IDs, independently ordered for a clear device picker.
 const profileField=F.find(f=>f[0]==='profile');
-profileField[4]=[[1,'Victron Smart MPPT'],[3,'Victron Smart BatteryProtect'],[2,'Generic Bluetooth · GATT']];
-profileField[5]='Kies je apparaat. Smart MPPT: kies per functie de gewenste regeling voor de LOAD-uitgang. Smart BatteryProtect: AAN/UIT voor de 12/24V-100A-variant (product A3B1); andere productcodes worden geweigerd. Generic: vul per functie de GATT-service, het kenmerk en de te schrijven gegevens in.';
-profileField[6]='Choose your device. Smart MPPT: select a LOAD output control mode for each function. Smart BatteryProtect: ON/OFF for the 12/24V-100A variant (product A3B1); other product codes are refused. Generic: enter the GATT service, characteristic and data to write for each function.';
+profileField[4]=[[1,'Victron Smart MPPT'],[3,'Victron Smart BatteryProtect (12/24V-100A, A3B1)'],[4,'Victron Smart BatteryProtect (48V-100A, A3B3)'],[2,'Generic Bluetooth · GATT']];
+profileField[5]='Kies je apparaat. Smart MPPT: kies per functie de regeling voor de LOAD-uitgang. Smart BatteryProtect: kies de juiste spanningsvariant, 12/24V-100A (A3B1) of 48V-100A (A3B3), en maak AAN/UIT-functies. De productcode wordt vóór schakelen gecontroleerd; een ander model wordt geweigerd. Generic: vul per functie de GATT-service, het kenmerk en de opdrachtbytes in.';
+profileField[6]='Choose your device. Smart MPPT: choose the LOAD output mode per function. Smart BatteryProtect: select the correct voltage variant, 12/24V-100A (A3B1) or 48V-100A (A3B3), and create ON/OFF functions. The product ID is checked before switching; a different model is refused. Generic: enter the GATT service, characteristic and command bytes per function.';
 for(const f of F.filter(f=>/^fn\d+_kind$/.test(f[0]))) {
  f[4].push([11,'BatteryProtect · AAN','BatteryProtect · ON'],[12,'BatteryProtect · UIT','BatteryProtect · OFF']);
  f[5]+=' BatteryProtect: leest eerst de apparaatidentiteit en modus; schrijft alleen bij wijziging. Succes vereist teruggelezen modus én uitgangsstatus. BMS- en onderspanningsbeveiliging blijven ongewijzigd.';
@@ -379,7 +379,7 @@ function visibility(){
  $('field_relay_pulse_ms').hidden=!relay;
  for(const name of ['rising','falling'])$('legend_'+name).parentElement.hidden=page!=='io'||!input;
  for(const key of ['wifi_input','wifi_hold'])$('field_'+key).hidden=!input;
- const generic=$('profile').value==='2',battery=$('profile').value==='3';
+ const generic=$('profile').value==='2',battery=['3','4'].includes($('profile').value);
  $('load_enabled').disabled=false;
  const ble=$('load_enabled').checked;
  $('function_tools').hidden=page!=='ble'||!ble;
@@ -387,7 +387,7 @@ function visibility(){
  $('add_function').disabled=functionCount>=MAX_FUNCTIONS;$('remove_function').disabled=functionCount<=1;
  $('add_function').textContent=T('+ Functie toevoegen','+ Add function');$('remove_function').textContent=T('Laatste functie verwijderen','Remove last function');
  $('profile_note').hidden=!battery;
- $('profile_note').textContent=T('100A-variant (A3B1). AAN/UIT via PIN-pairing, met controle van de echte uitgangsstatus. Een actieve beveiliging kan inschakelen tegenhouden.','100A variant (A3B1). PIN-paired ON/OFF with actual output-state verification. Active protection may prevent switching on.');
+ $('profile_note').textContent=($('profile').value==='4'?'48V-100A (A3B3). ':'12/24V-100A (A3B1). ')+T('AAN/UIT via PIN-pairing, met controle van productcode en echte uitgangsstatus. Een actieve beveiliging kan inschakelen tegenhouden.','PIN-paired ON/OFF with product-ID and actual output-state verification. Active protection may prevent switching on.');
  if(!generic)$('smp').value='1';$('smp').disabled=!generic;
  $('field_instance').hidden=generic||battery||!ble;
  // BatteryProtect's driver selects instance0 itself. Do not overwrite the

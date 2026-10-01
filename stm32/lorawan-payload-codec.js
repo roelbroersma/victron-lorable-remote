@@ -87,7 +87,7 @@ function Decode(fPort, bytes) {
       decoded.load_control_mode=null;decoded.load_control_mode_name=null;
       decoded.load_always_on_verified=false;decoded.load_always_off_verified=false;
     }
-    if(bytes[18]===3) {
+    if(bytes[18]===3 || bytes[18]===4) {
       decoded.batteryprotect_output_state=bytes[5]===255?null:bytes[5];
       decoded.batteryprotect_on_verified=bytes[5]===1&&bytes[3]===1;
       decoded.batteryprotect_off_verified=bytes[5]===0&&bytes[3]===1;

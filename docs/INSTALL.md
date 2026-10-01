@@ -8,7 +8,7 @@
 
 Voor een **RAK11162 met RAK-fabrieksfirmware**, op een WisBlock-basisboard met **RAK19012 USB-aansluiting**. Benodigd: Windows 10/11, een USB-datakabel en een ingeschakelde WiFi-adapter met automatische IP-instellingen (DHCP).
 
-1. Download **LoRaBLE-Remote-4.12.0-Windows.zip** en pak alles uit.
+1. Download **LoRaBLE-Remote-4.12.1-Windows.zip** en pak alles uit.
 2. Koppel geschakelde belastingen los en sluit het board via USB aan. Sluit Serial Monitor als die openstaat.
 3. Open **Install.cmd**, kies je taal en COM-poort en bevestig met `INSTALL`.
 4. Sta de Windows-beheerdersvraag toe en, indien gevraagd, locatietoegang voor WiFi.
@@ -36,7 +36,7 @@ Voor een bestaande installatie met de complete updater (**LoRaBLE 4.11 of nieuwe
 
 **Via WiFi**
 
-1. Download **LoRaBLE-Remote-4.12.0.bin** uit de [laatste release](https://github.com/roelbroersma/victron-lorable-remote/releases/latest).
+1. Download **LoRaBLE-Remote-4.12.1.bin** uit de [laatste release](https://github.com/roelbroersma/victron-lorable-remote/releases/latest).
 2. Open de webinterface via het eigen WiFi-netwerk of het toegewezen routeradres en kies **Beheer → Firmware bijwerken**.
 3. Kies **Bladeren… → het .bin-bestand → Updaten** en bevestig.
 4. Laat de voeding aangesloten tot het board opnieuw is opgestart. Verbind daarna opnieuw.
@@ -75,7 +75,7 @@ Broncode, handmatig flashen en technische installatievoorwaarden staan bij [Bouw
 
 For a **RAK11162 with RAK factory firmware**, on a WisBlock baseboard with a **RAK19012 USB connection**. You need Windows 10/11, a USB data cable and enabled WiFi with automatic IP settings (DHCP).
 
-1. Download **LoRaBLE-Remote-4.12.0-Windows.zip** and extract everything.
+1. Download **LoRaBLE-Remote-4.12.1-Windows.zip** and extract everything.
 2. Disconnect switched loads, connect the board by USB and close Serial Monitor.
 3. Open **Install.cmd**, choose your language and COM port, then type `INSTALL`.
 4. Allow Windows administrator access and WiFi location access if requested.
@@ -95,7 +95,7 @@ To use your own router, select router mode under **WiFi** and enter its network 
 
 For an existing installation with the complete updater (**LoRaBLE 4.11 or later**). Settings are retained. Download a backup from **Manage** first.
 
-**WiFi:** download **LoRaBLE-Remote-4.12.0.bin**, open the board through its own WiFi or assigned router address, then **Manage → Update firmware → Browse… → select the file → Update**. Confirm, maintain power through restart and reconnect.
+**WiFi:** download **LoRaBLE-Remote-4.12.1.bin**, open the board through its own WiFi or assigned router address, then **Manage → Update firmware → Browse… → select the file → Update**. Confirm, maintain power through restart and reconnect.
 
 **USB:** extract the Windows ZIP, connect the board and open **Install.cmd**. Updates use USB only; your PC stays on its current WiFi network.
 

@@ -12,7 +12,8 @@ enum { FAKE_NONE, FAKE_READ_TIMEOUT, FAKE_VALUE_TIMEOUT, FAKE_UNAUTHENTICATED,
        FAKE_SECURITY_IN_PROGRESS, FAKE_ALREADY_AUTHENTICATED,
        FAKE_MULTIPLE_SERVICES, FAKE_SUBSCRIBE_NACK, FAKE_MPPT_WRONG_INSTANCE,
        FAKE_BATTERYPROTECT_ON, FAKE_BATTERYPROTECT_OFF, FAKE_BATTERYPROTECT_WRONG_PID,
-       FAKE_GENERIC_READBACK };
+       FAKE_GENERIC_READBACK, FAKE_BATTERYPROTECT_OUTPUT_MISMATCH,
+       FAKE_BATTERYPROTECT_ALREADY_ON, FAKE_BATTERYPROTECT_ALREADY_OFF };
 struct fake_pending { int64_t due; uint16_t handle,length; uint8_t bytes[80]; };
 static struct {
     int failure,invalid;
@@ -21,6 +22,7 @@ static struct {
     unsigned sem_used,protocol_writes,mode_writes,readbacks,rx_returned;
     unsigned cccd_writes,mtu_exchanges,security_checks,disconnects,generic_writes;
     uint8_t mode,tx_credit;
+    uint16_t product;
     uint8_t generic_value[20],generic_size;
     bool connected,authenticated,encrypted,batteryprotect,generic;
     test_semaphore semaphores[16];
@@ -251,12 +253,12 @@ int ble_gattc_write_no_rsp_flat(uint16_t handle,uint16_t attribute,const void *b
         if(p[0]==5 && size==6 && p[1]==0 && p[3]==0x19) {
             uint16_t reg=((uint16_t)p[4]<<8)|p[5];
             if(reg==0x0100) {
-                uint8_t r[]={8,0,0x19,1,0,0x44,0,0xb1,0xa3,0xfe};
-                if(fake.failure==FAKE_BATTERYPROTECT_WRONG_PID)r[7]=0xb2;
+                uint8_t r[]={8,0,0x19,1,0,0x44,0,(uint8_t)fake.product,(uint8_t)(fake.product>>8),0xfe};
                 fake_frame(r,sizeof(r));fake.readbacks++;return 0;
             }
             if(reg==0x0200 || reg==0xeda8) {
                 uint8_t r[]={8,0,0x19,p[4],p[5],0x41,reg==0x0200?fake.mode:(fake.mode==3)};
+                if(reg==0xeda8 && fake.failure==FAKE_BATTERYPROTECT_OUTPUT_MISMATCH)r[6]=0;
                 fake_frame(r,sizeof(r));fake.readbacks++;return 0;
             }
         }
@@ -294,16 +296,17 @@ int ble_gattc_write_no_rsp_flat(uint16_t handle,uint16_t attribute,const void *b
     fake.invalid=14;return BLE_HS_EBADDATA;
 }
 
-static int replay(int failure,victron_result_code_t expected,unsigned stage)
+static int replay(int failure,victron_result_code_t expected,unsigned stage,uint8_t bp_driver,uint16_t product)
 {
     memset(&fake,0,sizeof(fake));fake.failure=failure;fake.mtu=23;fake.mode=0xa0;
     victron_request_t req={.address_type=-1,.instance=3,.pairing=true,.desired_value=4,.max_attempts=1,.driver=1};
     memcpy(req.mac,"C0:00:00:00:00:01",18);memcpy(req.pin,"000000",7);
     if(failure==FAKE_MPPT_WRONG_INSTANCE)req.instance=0;
-    if(failure==FAKE_BATTERYPROTECT_ON || failure==FAKE_BATTERYPROTECT_OFF || failure==FAKE_BATTERYPROTECT_WRONG_PID) {
-        fake.batteryprotect=true;req.driver=3;req.instance=0;
-        req.desired_value=failure==FAKE_BATTERYPROTECT_OFF?4:3;
+    if(bp_driver) {
+        fake.batteryprotect=true;fake.product=product;req.driver=bp_driver;req.instance=0;
+        req.desired_value=(failure==FAKE_BATTERYPROTECT_OFF || failure==FAKE_BATTERYPROTECT_ALREADY_OFF)?4:3;
         fake.mode=req.desired_value==3?4:3;
+        if(failure==FAKE_BATTERYPROTECT_ALREADY_ON || failure==FAKE_BATTERYPROTECT_ALREADY_OFF)fake.mode=req.desired_value;
     }
     if(failure==FAKE_GENERIC_READBACK) {
         fake.generic=true;req.driver=0;req.instance=0;req.generic_kind=4;req.pairing=false;
@@ -319,7 +322,8 @@ static int replay(int failure,victron_result_code_t expected,unsigned stage)
     CHECK(fake.disconnects==1);CHECK(result.target_seen);
     CHECK(fake.now<70000000);
     if(expected==VICTRON_RESULT_OK) {
-        CHECK(status==ESP_OK && result.verified && result.changed);
+        const bool already=failure==FAKE_BATTERYPROTECT_ALREADY_ON || failure==FAKE_BATTERYPROTECT_ALREADY_OFF;
+        CHECK(status==ESP_OK && result.verified && result.changed==!already);
         if(fake.generic) {
             CHECK(fake.generic_writes==1 && fake.generic_size==req.value_length);
             CHECK(!memcmp(fake.generic_value,req.value,req.value_length));
@@ -327,9 +331,9 @@ static int replay(int failure,victron_result_code_t expected,unsigned stage)
             CHECK(fake.mtu_exchanges==0 && fake.security_checks==0);
         } else {
             if(fake.batteryprotect) {
-                CHECK(result.initial_value==(req.desired_value==3?4:3));
+                CHECK(result.initial_value==(already?req.desired_value:(req.desired_value==3?4:3)));
                 CHECK(result.verified_value==req.desired_value && result.load_value==(req.desired_value==3));
-                CHECK(fake.mode_writes==1 && fake.mode==req.desired_value && fake.readbacks==5);
+                CHECK(fake.mode_writes==(already?0u:1u) && fake.mode==req.desired_value && fake.readbacks==5);
             } else {
                 CHECK(result.initial_value==0xa0 && result.verified_value==0xa4 && result.load_value==0xa4);
                 CHECK(fake.mode_writes==1 && fake.mode==0xa4 && fake.readbacks>=3);
@@ -374,9 +378,32 @@ int main(void)
         {FAKE_GENERIC_READBACK,VICTRON_RESULT_OK,BLE_STAGE_READBACK},
     };
     for(unsigned i=0;i<COUNT(cases);i++) {
-        int line=replay(cases[i].failure,cases[i].expected,cases[i].stage);
+        bool bp=cases[i].failure>=FAKE_BATTERYPROTECT_ON && cases[i].failure<=FAKE_BATTERYPROTECT_WRONG_PID;
+        int line=replay(cases[i].failure,cases[i].expected,cases[i].stage,bp?3:0,
+                        cases[i].failure==FAKE_BATTERYPROTECT_WRONG_PID?0xa3b2:0xa3b1);
         if(line){printf("FAIL session case %u at line %d (invalid=%d)\n",i,line,fake.invalid);return line;}
     }
-    puts("PASS: production BLE session replay (SmartSolar, explicit wrong instance, BatteryProtect ON/OFF/PID guard, Generic GATT, MTU77/23, security, credits, fragmentation, timeouts, output verification).");
+    for(uint8_t driver=3;driver<=4;++driver) {
+        const uint16_t product=driver==3?0xa3b1:0xa3b3;
+        const int actions[]={FAKE_BATTERYPROTECT_ON,FAKE_BATTERYPROTECT_OFF,FAKE_BATTERYPROTECT_ALREADY_ON,FAKE_BATTERYPROTECT_ALREADY_OFF,FAKE_BATTERYPROTECT_OUTPUT_MISMATCH};
+        for(unsigned i=0;i<COUNT(actions);++i) {
+            int line=replay(actions[i],i==4?VICTRON_RESULT_VERIFY_FAILED:VICTRON_RESULT_OK,BLE_STAGE_OUTPUT,driver,product);
+            if(line){printf("FAIL BP driver %u action %u line %d\n",driver,i,line);return line;}
+        }
+        const uint16_t wrong_products[]={0xa3b1,0xa3b2,0xa3b3,0x1234};
+        for(unsigned i=0;i<COUNT(wrong_products);++i) if(wrong_products[i]!=product) {
+            int line=replay(FAKE_BATTERYPROTECT_WRONG_PID,VICTRON_RESULT_INITIAL_READ_FAILED,BLE_STAGE_INITIAL_READ,driver,wrong_products[i]);
+            if(line){printf("FAIL BP driver %u wrong PID %04x line %d\n",driver,wrong_products[i],line);return line;}
+        }
+        victron_request_t req={.address_type=-1,.instance=0,.pairing=true,.desired_value=3,.max_attempts=1,.driver=driver};
+        memcpy(req.mac,"C0:00:00:00:00:01",18);memcpy(req.pin,"000000",7);
+        CHECK(victron_ble_request_valid(&req));req.desired_value=4;CHECK(victron_ble_request_valid(&req));
+        req.desired_value=0;CHECK(!victron_ble_request_valid(&req));req.desired_value=3;
+        req.instance=3;CHECK(!victron_ble_request_valid(&req));req.instance=0;
+        req.pairing=false;CHECK(!victron_ble_request_valid(&req));req.pairing=true;
+        req.generic_kind=3;CHECK(!victron_ble_request_valid(&req));req.generic_kind=0;
+        req.driver=5;CHECK(!victron_ble_request_valid(&req));
+    }
+    puts("PASS: production BLE session replay (SmartSolar, A3B1/A3B3 ON/OFF, unchanged mode, cross-model PID guards, output mismatch, request validation, Generic GATT, security and transport failures).");
     return 0;
 }

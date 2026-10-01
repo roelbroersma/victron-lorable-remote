@@ -20,9 +20,9 @@ let logEntries=[[0,1,0],[3,9,1]];
 const writes=[],initialConfig=JSON.parse(JSON.stringify(config));
 const server=http.createServer((req,res)=>{
  res.setHeader('Content-Type','application/json');
- if(req.url==='/session')res.end(JSON.stringify({token:'test-token'+generation,native:true,esp_firmware:'4.12.0',wifi_clients:1,wifi_rssi_dbm:[-42],ble_target_mac:config.victron_mac,ble_target_state:1,ble_target_age_s:5,...wifiSession}));
+ if(req.url==='/session')res.end(JSON.stringify({token:'test-token'+generation,native:true,esp_firmware:'4.12.1',wifi_clients:1,wifi_rssi_dbm:[-42],ble_target_mac:config.victron_mac,ble_target_state:1,ble_target_age_s:5,...wifiSession}));
  else if(req.url==='/config')res.end(JSON.stringify(config));
- else if(req.url==='/status')res.end(JSON.stringify({...config,...loraStatus,firmware:'4.12.0',uptime_s:generation?12:4567,tx_count:3}));
+ else if(req.url==='/status')res.end(JSON.stringify({...config,...loraStatus,firmware:'4.12.1',uptime_s:generation?12:4567,tx_count:3}));
  else if(req.url==='/log')res.end(JSON.stringify({entries:logEntries}));
  else if(req.url==='/save'||req.url==='/action'||req.url==='/ota'){
   assert.equal(req.headers['x-lorable'],'test-token'+generation);const chunks=[];req.on('data',d=>chunks.push(d));req.on('end',()=>{
@@ -46,7 +46,7 @@ const server=http.createServer((req,res)=>{
  const page=await browser.newPage({viewport:{width:1100,height:950}}),errors=[];page.on('pageerror',e=>errors.push(e.message));page.on('dialog',d=>acceptDialog?d.accept():d.dismiss());
  await page.goto('http://127.0.0.1:'+server.address().port);await page.waitForFunction(()=>typeof ready!=='undefined'&&ready);
  await page.waitForFunction(()=>document.getElementById('wifi_value').textContent==='Connected');
- assert.equal(await page.locator('#firmware_badge').textContent(),'LoRaBLE Remote · v4.12.0');
+ assert.equal(await page.locator('#firmware_badge').textContent(),'LoRaBLE Remote · v4.12.1');
  assert.equal(await page.locator('#ota_file').getAttribute('accept'),'.bin');
  assert.match(await page.locator('#power_total').textContent(),/267 mAh/);assert.match(await page.locator('#power_total').textContent(),/1947 mAh/);
  // Missing diagnostics and zero-filled boot values must never invent RX or ACK.
@@ -191,11 +191,16 @@ const server=http.createServer((req,res)=>{
  await page.click('#nav_manage');
  await page.screenshot({path:path.join(output,'manage.png'),fullPage:true});
  await page.click('#nav_ble');assert.equal(await page.locator('#profile option').nth(1).getAttribute('value'),'3');
+ assert.deepEqual(await page.locator('#profile option').evaluateAll(options=>options.map(o=>o.value)),['1','3','4','2']);
  assert.equal(await page.locator('#load_enabled').isEnabled(),true);assert.equal(await page.locator('#smp').isDisabled(),true);
  // Explicitly selecting MPPT after BatteryProtect must not retain its system
  // instance0; toggling other profiles must preserve a custom MPPT instance.
  await page.selectOption('#profile','1');assert.equal(await page.inputValue('#instance'),'3');
- await page.fill('#instance','5');await page.selectOption('#profile','3');
+ await page.fill('#instance','5');await page.selectOption('#profile','4');
+ assert.equal(await page.locator('#field_instance').isVisible(),false);
+ assert.equal(await page.locator('#smp').isDisabled(),true);assert.equal(await page.inputValue('#smp'),'1');
+ assert.match(await page.locator('#profile_note').textContent(),/48V-100A \(A3B3\)/);
+ await page.selectOption('#profile','3');
  await page.selectOption('#profile','1');assert.equal(await page.inputValue('#instance'),'5');
  assert.equal(await page.locator('#instance_warning').count(),0);assert.equal(await page.locator('#instance_default').count(),0);
  await page.evaluate(()=>applyFields({...current,profile:1,instance:0}));
@@ -204,6 +209,11 @@ const server=http.createServer((req,res)=>{
  await page.evaluate(()=>applyFields(current));
  assert.equal(await page.locator('#field_instance').isVisible(),false);assert.equal(await page.inputValue('#fn1_kind'),'11');
  assert.equal(await page.locator('#fn1_kind option[value="1"]').evaluate(e=>e.hidden),true);
+ await page.selectOption('#profile','4');
+ assert.equal(await page.inputValue('#fn1_kind'),'11');assert.equal(await page.inputValue('#fn2_kind'),'12');
+ assert.equal(await page.locator('#fn1_kind option[value="11"]').evaluate(e=>e.hidden),false);
+ for(const kind of ['1','3','4','5'])assert.equal(await page.locator('#fn1_kind option[value="'+kind+'"]').evaluate(e=>e.hidden),true);
+ assert.equal(await page.evaluate(()=>serialize().get('profile')),'4');
  for(let i=3;i<=10;i++)await page.click('#add_function');
  assert.equal(await page.locator('#add_function').isDisabled(),true);assert.equal(await page.locator('#legend_fn10').isVisible(),true);
  await page.fill('#fn10_name','Router OFF');await page.selectOption('#fn10_kind','12');
@@ -286,7 +296,7 @@ const server=http.createServer((req,res)=>{
  assert.equal(await page.locator('#save').isDisabled(),true);assert.match(await page.locator('#result').textContent(),/al opgeslagen/);
  // A successful save reconnects instead of leaving the page permanently locked.
  await page.click('#net_down_1');
- const changedSettings={tx_dbm:19,wifi_mode:1,sta_ssid:'Boat Router',sta_delay_s:0,sta_timeout_s:45,rise_hold_s:5,rise_delay_s:10,fall_hold_s:7,fall_delay_s:20};
+ const changedSettings={profile:4,tx_dbm:19,wifi_mode:1,sta_ssid:'Boat Router',sta_delay_s:0,sta_timeout_s:45,rise_hold_s:5,rise_delay_s:10,fall_hold_s:7,fall_delay_s:20};
  await page.evaluate(settings=>{for(const [key,value]of Object.entries(settings))$(key).value=String(value);$('sta_password').value='new router password';visibility();updateDirty();},changedSettings);
  saveCode='saved';await page.click('#save');
  await page.waitForFunction(()=>ready&&!saving,{},{timeout:15000});assert.equal(config.revision,8);
@@ -338,8 +348,8 @@ const server=http.createServer((req,res)=>{
  count=writes.length;
  await page.setInputFiles('#ota_file',{name:'wrong.bin',mimeType:'application/octet-stream',buffer:Buffer.alloc(256)});await page.click('#ota_upload');
  await page.waitForFunction(()=>$('ota_result').textContent.includes('geen compleet'));assert.equal(writes.length,count);
- const bundle=Buffer.alloc(256);bundle.write('LBRUPD1\0');bundle.write('4.12.0',16);
- await page.setInputFiles('#ota_file',{name:'LoRaBLE-Remote-4.12.0.bin',mimeType:'application/octet-stream',buffer:bundle});assert.equal(writes.length,count);
+ const bundle=Buffer.alloc(256);bundle.write('LBRUPD1\0');bundle.write('4.12.1',16);
+ await page.setInputFiles('#ota_file',{name:'LoRaBLE-Remote-4.12.1.bin',mimeType:'application/octet-stream',buffer:bundle});assert.equal(writes.length,count);
  acceptDialog=false;const cancelUpdate=page.waitForEvent('dialog');await page.click('#ota_upload');await cancelUpdate;await page.waitForFunction(()=>!saving);assert.equal(writes.length,count);
  acceptDialog=true;const uploadReply=page.waitForResponse(r=>r.url().endsWith('/ota'));await page.click('#ota_upload');await uploadReply;await page.waitForFunction(()=>!saving);
  assert.equal(writes.at(-1).route,'/ota');assert.ok(writes.at(-1).body.equals(bundle));assert.equal(await page.locator('#ota_upload').isEnabled(),true);
@@ -350,7 +360,7 @@ const server=http.createServer((req,res)=>{
  // New settings render without overflow in both languages and viewport sizes.
  for(const language of ['nl','en']){
   await page.click('#lang_'+language);
-  for(const width of [390,1100]){await page.setViewportSize({width,height:950});for(const tab of ['wifi','io','lora']){await page.click('#nav_'+tab);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:path.join(output,tab+'-settings-'+language+'-'+width+'.png'),fullPage:true});}}
+  for(const width of [390,1100]){await page.setViewportSize({width,height:950});for(const tab of ['ble','wifi','io','lora']){await page.click('#nav_'+tab);assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:path.join(output,tab+'-settings-'+language+'-'+width+'.png'),fullPage:true});}}
  }
  // Explicit WiFi off saves once and gives USB guidance rather than polling an AP.
  await page.click('#nav_wifi');await page.selectOption('#wifi_mode','2');count=writes.length;await page.click('#save');await page.waitForFunction(()=>!saving&&!ready);

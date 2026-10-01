@@ -671,7 +671,9 @@ static bool requestLoadValue(uint8_t serviceIndex, uint8_t lastDataChar, uint8_t
 
 static uint8_t runVictronTransaction(uint8_t desiredValue)
 {
-    if (desiredValue != 0 && desiredValue != 4) return BLE_BAD_SETTINGS;
+    // This optional legacy AT path has no BatteryProtect identity/session
+    // driver. BatteryProtect control requires the native ESP companion.
+    if (runtimeConfig.deviceProfile != 1 || (desiredValue != 0 && desiredValue != 4)) return BLE_BAD_SETTINGS;
     if (String(runtimeConfig.victronMac) == "00:00:00:00:00:00" ||
         strlen(runtimeConfig.victronMac) != 17 ||
         runtimeConfig.victronDeviceInstance > 23)
@@ -806,8 +808,7 @@ static uint8_t runVictronTransaction(uint8_t desiredValue)
 
     if (currentValue != desiredValue)
     {
-        // CBOR: setValues(instance, [VREG 0xEDAB, byte-string 0x04]).
-        // This is the only settings write present in the firmware.
+        // CBOR: setValues(instance, [VREG 0xEDAB, byte-string desiredValue]).
         const uint8_t setFrame[] = {
             0x06, runtimeConfig.victronDeviceInstance, 0x82, 0x19,
             (uint8_t)(VIC_LOAD_CONTROL_VREG >> 8),
@@ -1528,7 +1529,7 @@ static void sendStatusUplink()
     payload[15] = lastEvent;
     payload[16] = lastActions;
     const uint8_t requestedKind = runtimeConfig.bleFunctions[pendingLoadValue%MAX_BLE_FUNCTIONS].kind;
-    payload[17] = runtimeConfig.deviceProfile==3?smartBatteryProtectMode(requestedKind):smartMpptMode(requestedKind);
+    payload[17] = isBatteryProtectProfile(runtimeConfig.deviceProfile)?smartBatteryProtectMode(requestedKind):smartMpptMode(requestedKind);
     payload[18] = runtimeConfig.deviceProfile;
     payload[19] = (lastActions & (ACTION_LOAD_ON|ACTION_LOAD_OFF))?pendingLoadValue+1:0;
 

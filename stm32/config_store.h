@@ -23,7 +23,7 @@ struct RuntimeConfig
     char wifiApPassword[64];
     char wifiApSsid[33];
     uint8_t language; // 0 Dutch, 1 English
-    uint8_t deviceProfile; // 1 SmartSolar MPPT, 2 Generic GATT, 3 Smart BatteryProtect
+    uint8_t deviceProfile; // 1 SmartSolar MPPT, 2 Generic GATT, 3 Smart BatteryProtect (12/24V-100A, A3B1), 4 Smart BatteryProtect (48V-100A, A3B3)
     uint8_t loadOutputEnabled;
     uint8_t loraRegion;
     uint8_t loraClass; // 0 A, 2 C

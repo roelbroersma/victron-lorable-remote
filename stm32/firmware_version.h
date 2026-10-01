@@ -1,2 +1,2 @@
 #pragma once
-#define LORABLE_FIRMWARE_VERSION "4.12.0"
+#define LORABLE_FIRMWARE_VERSION "4.12.1"

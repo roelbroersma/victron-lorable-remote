@@ -750,7 +750,7 @@ static void handle_victron_load_set(const protocol_frame_t *frame)
     const esp_err_t driver_status=protocol_form_get(frame->payload,"driver",number,sizeof(number));
     if(driver_status==ESP_OK) {
         uint32_t driver=0;
-        valid=valid && parse_u32(number,1,3,&driver);
+        valid=valid && parse_u32(number,1,4,&driver);
         request.driver=(uint8_t)driver;
     } else if(driver_status!=ESP_ERR_NOT_FOUND) valid=false;
     if(request.generic_kind) {

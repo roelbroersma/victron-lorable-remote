@@ -15,7 +15,7 @@ De tijdelijke WiFi-overdracht gebruikt WPA2 en één beperkte firewallregel. De 
 Handmatig bijwerken via USB:
 
 ```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\installer\Flash-USB.ps1 -Port COM3 -Firmware .\firmware\LoRaBLE-Remote-4.12.0.bin
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\installer\Flash-USB.ps1 -Port COM3 -Firmware .\firmware\LoRaBLE-Remote-4.12.1.bin
 ```
 
 De complete `.bin` is een LoRaBLE-container, geen rauw chipimage voor esptool of Arduino Upload. Gebruik geen erase-all en vervang geen bootloader of partitietabel. Er is geen automatische rollback of digitale ondertekening: SHA256 controleert integriteit, niet de afzender. Onderbroken flashschrijfacties kunnen hardwareherstel vereisen.
@@ -32,8 +32,8 @@ Arduino: open de volledige map `stm32` via `stm32.ino`, kies **RAK11160**, **Sup
 ### Firmware maken
 
 ```powershell
-.\tools\build.ps1 -Public -BuildDirectory build_public4120
-.\esp8684\build.ps1 -BuildDirectory build_release4120 -Version 4.12.0
+.\tools\build.ps1 -Public -BuildDirectory build_public4121
+.\esp8684\build.ps1 -BuildDirectory build_release4121 -Version 4.12.1
 .\tools\build-first-install.ps1
 ```
 
@@ -42,10 +42,10 @@ Arduino: open de volledige map `stm32` via `stm32.ino`, kies **RAK11160**, **Sup
 Maak een nieuwe uitvoermap en combineer de onderdelen:
 
 ```powershell
-python tools/pack-esp-ota.py esp8684/build_release4120/lorable_esp8684.bin --version LoRaBLE-C2-26M-v4.12.0 --output esp8684/build_release4120/LoRaBLE-ESP8684-4.12.0.packed
-New-Item -ItemType Directory -Path dist/release-4.12.0
-python tools/update-bundle.py --stm build_public4120/stm32.ino.bin --esp esp8684/build_release4120/LoRaBLE-ESP8684-4.12.0.packed --version 4.12.0 --output dist/release-4.12.0/LoRaBLE-Remote-4.12.0.bin
-python tools/update-bundle.py --verify dist/release-4.12.0/LoRaBLE-Remote-4.12.0.bin
+python tools/pack-esp-ota.py esp8684/build_release4121/lorable_esp8684.bin --version LoRaBLE-C2-26M-v4.12.1 --output esp8684/build_release4121/LoRaBLE-ESP8684-4.12.1.packed
+New-Item -ItemType Directory -Path dist/release-4.12.1
+python tools/update-bundle.py --stm build_public4121/stm32.ino.bin --esp esp8684/build_release4121/LoRaBLE-ESP8684-4.12.1.packed --version 4.12.1 --output dist/release-4.12.1/LoRaBLE-Remote-4.12.1.bin
+python tools/update-bundle.py --verify dist/release-4.12.1/LoRaBLE-Remote-4.12.1.bin
 ```
 
 Bestaande uitvoerbestanden worden niet overschreven. De `.packed` is uitsluitend een bouwonderdeel. **Flash nooit** de door ESP-IDF gegenereerde bootloader, partitietabel of merged image; de oorspronkelijke RAK-indeling blijft behouden.
@@ -60,7 +60,7 @@ De build gebruikt linker-wrappers voor `serial_fallback_handler`, `RegionCommonI
 
 1. Gebruik `node tools/prepare-release.mjs <nieuwe-stagingmap>`. De allowlist neemt alleen projectbestanden en licenties mee en controleert lokale privégegevens.
 2. Controleer de map met `python tools/check-release.py --root <stagingmap>`. Deze controle omvat firmware, installer, documenten en verwijzingen.
-3. Bouw de Windows-ZIP met `python tools/make-release-zip.py --root <stagingmap> --output <nieuwe-uitvoermap>/LoRaBLE-Remote-4.12.0-Windows.zip`.
+3. Bouw de Windows-ZIP met `python tools/make-release-zip.py --root <stagingmap> --output <nieuwe-uitvoermap>/LoRaBLE-Remote-4.12.1-Windows.zip`.
 4. Commit uitsluitend de opgeschoonde map. Laat de GitHub-controles afronden en maak daarna de versie-tag.
 5. De releaseworkflow maakt een concept met `.bin`, Windows-ZIP en verse downloadchecksums. Controleer de assets en publiceer het concept.
 

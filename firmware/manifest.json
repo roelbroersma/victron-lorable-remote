@@ -1,11 +1,11 @@
 {
-  "version": "4.12.0",
+  "version": "4.12.1",
   "target": "RAK11162",
   "format": 1,
   "firmware": {
-    "path": "firmware/LoRaBLE-Remote-4.12.0.bin",
-    "bytes": 741540,
-    "sha256": "091e6a53cc44ed1b8e3bb0f59da21eb85e1ebb642b861e2b9daec56726f25165"
+    "path": "firmware/LoRaBLE-Remote-4.12.1.bin",
+    "bytes": 741812,
+    "sha256": "8c9c6516707a5a0907adf40188983d893107a437508fad5068c22441bc119bf6"
   },
   "installer_helper": {
     "path": "installer/bootstrap-image.json",

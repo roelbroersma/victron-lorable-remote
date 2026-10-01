@@ -234,8 +234,8 @@ bool victron_ble_request_valid(const victron_request_t *request)
         request->max_attempts < 1 || request->max_attempts > 3) {
         return false;
     }
-    if (!request->generic_kind && request->driver!=1 && request->driver!=3) return false;
-    if (request->driver==3 && (request->generic_kind || request->instance!=0 ||
+    if (!request->generic_kind && request->driver!=1 && !isBatteryProtectProfile(request->driver)) return false;
+    if (isBatteryProtectProfile(request->driver) && (request->generic_kind || request->instance!=0 ||
         (request->desired_value!=3 && request->desired_value!=4))) return false;
     uint8_t address_or=0;
     for(unsigned i=0;i<6;++i)address_or|=address[i];
@@ -570,7 +570,7 @@ static int service_discovered(uint16_t connection_handle,
         /* Prefer the known transport even when another variant is advertised
          * later. Discovery order must not select a different service. */
         if (uuid_prefix(&service->uuid.u, "306b0001-b081-4037-83dc-e59fcc3cdfd0") ||
-            (!context.service_start && context.request->driver!=3 &&
+            (!context.service_start && !isBatteryProtectProfile(context.request->driver) &&
              uuid_prefix(&service->uuid.u, "306b0001-b081-4037-83dc-e59fcc3cdfd1"))) {
             context.service_start = service->start_handle;
             context.service_end = service->end_handle;
@@ -931,9 +931,13 @@ static victron_result_code_t run_batteryprotect(const victron_request_t *request
         return VICTRON_RESULT_INITIAL_READ_FAILED;
     diagnostic_stage(BLE_STAGE_INITIAL_READ);
     uint8_t product[4],mode=255,output=255;
-    /* Only A3B1 was physically verified. Refuse other products rather than
-       silently applying a family-wide register assumption. */
-    if(!request_register(0x0100,product,4) || product[0]!=0 || product[1]!=0xb1 || product[2]!=0xa3 ||
+    /* A3B3 / firmware 2.11 captures and physical-output observations:
+       https://github.com/roelbroersma/victron-lorable-remote/pull/1
+       Match the selected model before any switch write. The fourth identity
+       byte is not part of the product ID and may vary with firmware. */
+    const uint16_t expected_product=batteryProtectProductId(request->driver);
+    if(!expected_product || !request_register(0x0100,product,4) || product[0]!=0 ||
+       product[1]!=(uint8_t)expected_product || product[2]!=(uint8_t)(expected_product>>8) ||
        !request_register(0x0200,&mode,1) || (mode!=3 && mode!=4) ||
        !request_register(0xeda8,&output,1)) return VICTRON_RESULT_INITIAL_READ_FAILED;
     result->initial_value=mode;result->load_value=output;
@@ -1100,7 +1104,7 @@ static victron_result_code_t run_attempt(const victron_request_t *request,
         disconnect_if_needed();
         return VICTRON_RESULT_GATT_NOT_FOUND;
     }
-    if(request->driver==3) {
+    if(isBatteryProtectProfile(request->driver)) {
         victron_result_code_t code=run_batteryprotect(request,result);
         disconnect_if_needed();return code;
     }

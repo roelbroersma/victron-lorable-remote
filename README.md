@@ -2,7 +2,7 @@
 
 **Zet je modem, router of andere apparatuur pas aan wanneer je die nodig hebt.**
 
-[English](README.en.md) · [Download](https://github.com/roelbroersma/victron-lorable-remote/releases/latest) · [Installatie](docs/INSTALL.md) · [Handleiding 4.12.0](docs/MANUAL.md) · [LoRaWAN instellen](docs/NETWORKS.md) · [Voorbeelden](docs/EXAMPLES.md)
+[English](README.en.md) · [Download](https://github.com/roelbroersma/victron-lorable-remote/releases/latest) · [Installatie](docs/INSTALL.md) · [Handleiding 4.12.1](docs/MANUAL.md) · [LoRaWAN instellen](docs/NETWORKS.md) · [Voorbeelden](docs/EXAMPLES.md)
 
 LoRaBLE Remote ontvangt een LoRaWAN-opdracht en bedient een apparaat via **Bluetooth of een relais**. Zo kan bijvoorbeeld je 4G/5G-modem uit blijven tot je op afstand verbinding nodig hebt. Een lokale spanningsingang kan dezelfde functies activeren.
 
@@ -22,7 +22,7 @@ Eerste installatie gebruikt een Windows-pc met USB én WiFi; de wizard regelt de
 | Apparaat | Functies |
 |---|---|
 | **Victron Smart MPPT** | Acht regelmodi voor de LOAD-uitgang |
-| **Victron Smart BatteryProtect** | AAN/UIT; 12/24V-100A, product A3B1 |
+| **Victron Smart BatteryProtect** | AAN/UIT; 12/24V-100A (product A3B1), of 48V-100A (product A3B3, bevestigd op firmware v2.11) |
 | **Generic Bluetooth** | Eigen GATT-service, characteristic en opdrachtbytes |
 | **Relais / droog contact** | Aan, uit of een puls met instelbare duur |
 
@@ -30,7 +30,7 @@ Maak maximaal **tien benoemde Bluetooth-functies** voor één doelapparaat. Kopp
 
 De Nederlands/Engelse webinterface biedt status, recente gebeurtenissen, handbediening, energie-inschatting en veldhulp. WiFi kan na opstart of een trigger tijdelijk beschikbaar blijven.
 
-## Instellen en controleren in 4.12.0
+## Instellen en controleren in 4.12.1
 
 - **WiFi naar keuze:** direct accesspoint, eigen 2,4GHz-router via DHCP, of geheel uit. Routermodus wacht eerst op de router en probeert verbinding zonder AP. Pas bij mislukking of verbindingsverlies verschijnt AP-terugval op **192.168.4.1**, binnen het WiFi-venster. Na DHCP-succes gaat het AP uit; open het toegewezen IP-adres van dit board.
 - **LoRa-vermogen:** stel een maximum van **0–22 dBm** in; standaard **14 dBm**. ADR en regionale beperkingen kunnen het vermogen verlagen. **0 dBm is 1 mW**, niet radio uit. De status toont het laatst ingestelde radiovermogen, geen meting.
@@ -84,7 +84,7 @@ Functie 10 is **`0A`**, niet `10`. Voor bediening zonder wachten op een uplink g
 - **Opslaan is expliciet:** ook een nieuwe netwerkvolgorde wordt pas toegepast met Opslaan. Logs en uptime blijven in RAM.
 - **Back-ups bevatten geen geheime gegevens:** bewaar AppKeys, Bluetooth-PIN en de wachtwoorden van accesspoint én router apart. De nieuwe instellingen gaan mee in back-ups; oudere back-ups krijgen daarvoor standaardwaarden.
 - **Energie:** de winst zit in apparatuur die uit kan blijven. Class C luistert vrijwel continu en is geen microampère-slaapstand. De interface toont een dagraming in mAh of Wh.
-- **Bluetooth:** WiFi pauzeert tijdens een opdracht. MPPT User defined/AES gebruikt bestaande VictronConnect-drempels; het BatteryProtect-profiel accepteert product A3B1 en laat beveiligingsdrempels en BMS-modus ongemoeid.
+- **Bluetooth:** WiFi pauzeert tijdens een opdracht. MPPT User defined/AES gebruikt bestaande VictronConnect-drempels. Kies voor BatteryProtect de juiste variant: 12/24V-100A (A3B1) of 48V-100A (A3B3). De productcode wordt vóór schakelen gecontroleerd; modus en echte uitgangsstatus worden teruggelezen. Beveiligingsdrempels en BMS-modus blijven ongemoeid.
 
 Voed het board onafhankelijk van de geschakelde belasting en houd de gateway bereikbaar als je modem uitstaat. Gebruik passende zekeringen en een lokale uitschakelmogelijkheid; dit is geen veiligheidscontroller. Houd de voeding aangesloten tijdens updates.
 

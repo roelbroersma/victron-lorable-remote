@@ -1,4 +1,4 @@
-# Victron LoRaBLE Remote 4.12.0
+# Victron LoRaBLE Remote 4.12.1
 
 ## Nederlands
 
@@ -16,7 +16,7 @@ Eerste installatie vanaf RAK-fabrieksfirmware gebruikt Windows 10/11 met WiFi (a
 
 Bij een fout: houd de voeding aangesloten, bewaar de melding en wis niets. Gebruik de meegeleverde installer, geen generieke chipflasher.
 
-[Installatie](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.0/docs/INSTALL.md) · [Handleiding](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.0/docs/MANUAL.md) · [LoRaWAN instellen](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.0/docs/NETWORKS.md)
+[Installatie](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.1/docs/INSTALL.md) · [Handleiding](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.1/docs/MANUAL.md) · [LoRaWAN instellen](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.1/docs/NETWORKS.md)
 
 ## English
 
@@ -34,6 +34,6 @@ First installation from RAK factory firmware uses Windows 10/11 with WiFi (autom
 
 On errors, keep power connected, retain the message and erase nothing. Use the supplied installer, not a generic chip flasher.
 
-[Installation](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.0/docs/INSTALL.md#english) · [Manual](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.0/docs/MANUAL.md#english) · [Network setup](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.0/docs/NETWORKS.md#english)
+[Installation](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.1/docs/INSTALL.md#english) · [Manual](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.1/docs/MANUAL.md#english) · [Network setup](https://github.com/roelbroersma/victron-lorable-remote/blob/v4.12.1/docs/NETWORKS.md#english)
 
 © 2026 Roel Broersma.

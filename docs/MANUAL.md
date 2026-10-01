@@ -1,4 +1,4 @@
-# Handleiding / User manual — 4.12.0
+# Handleiding / User manual — 4.12.1
 
 [README](../README.md) · [English](#english) · [Installatie](INSTALL.md) · [LoRaWAN-netwerken](NETWORKS.md)
 
@@ -37,7 +37,7 @@ Routermodus verloopt als volgt:
 Kies één doelapparaat, stel MAC-adres en beveiliging in en maak maximaal tien benoemde functies. Schakel **Bluetooth Functies inschakelen** in en koppel de gewenste functies bij de ingang of bij LoRa-ontvangstrechten.
 
 - **Smart MPPT:** kies een LOAD-regelmodus. De normale apparaatinstantie is **3**; wijzig deze geavanceerde waarde alleen met passende protocolinformatie. User defined en AES gebruiken de bestaande drempels uit VictronConnect.
-- **Smart BatteryProtect:** AAN/UIT voor de 12/24V-100A-variant, product **A3B1**. De driver gebruikt intern instantie 0 zonder de opgeslagen MPPT-instantie te overschrijven. Een actieve beveiliging kan inschakelen tegenhouden.
+- **Smart BatteryProtect:** kies **12/24V-100A (A3B1)** of **48V-100A (A3B3)** en maak AAN/UIT-functies. Een niet-passende productcode wordt vóór schakelen geweigerd. De driver gebruikt intern instantie 0 zonder de opgeslagen MPPT-instantie te overschrijven. Een actieve beveiliging kan inschakelen tegenhouden.
 - **Generic:** gebruik de gedocumenteerde GATT-service, characteristic en 1–20 opdrachtbytes van het apparaat. Exact teruglezen vereist dat het kenmerk die waarde kan teruggeven.
 
 Een scanresultaat **gevonden** bewijst geen geslaagde opdracht. De Bluetooth-status toont het laatste opdrachtresultaat; bij een fout ook de stap en beschikbare detailcode. MPPT- en BatteryProtect-bediening lezen modus en uitgangsstatus terug; bij geforceerd AAN/UIT moet de uitgang bij de gevraagde toestand passen. **Always ON** schakelt de onderspanningsafschakeling van de betreffende MPPT-LOAD-regel uit.
@@ -134,7 +134,7 @@ Router mode works as follows:
 Select one target device, configure its MAC address/security and create up to ten named functions. Enable Bluetooth functions, then assign the desired input triggers or LoRa permissions.
 
 - **Smart MPPT:** select a LOAD control mode. Normal device instance is **3**; change this advanced value only with appropriate protocol information. User defined/AES uses existing VictronConnect thresholds.
-- **Smart BatteryProtect:** ON/OFF for the 12/24V-100A **A3B1** variant. Its driver uses instance 0 internally without overwriting the MPPT setting. Active protection may prevent switching on.
+- **Smart BatteryProtect:** select **12/24V-100A (A3B1)** or **48V-100A (A3B3)** and create ON/OFF functions. A mismatched product ID is refused before switching. Its driver uses instance 0 internally without overwriting the MPPT setting. Active protection may prevent switching on.
 - **Generic:** use the device's documented GATT service, characteristic and 1–20 command bytes. Exact readback requires that characteristic to expose the expected value.
 
 Finding a device in a scan does not prove successful control. Bluetooth status reports the last command result, plus stage/detail on failure. MPPT and BatteryProtect control reads back mode and output state; forced ON/OFF also requires the expected output. **Always ON** disables the low-voltage cutoff of that MPPT LOAD control rule.

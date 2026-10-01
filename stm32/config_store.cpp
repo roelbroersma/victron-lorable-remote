@@ -407,7 +407,7 @@ bool runtimeConfigValid(const RuntimeConfig &config)
         for(size_t j=0;j<nameLen;++j) if((uint8_t)f.name[j]<32 || (uint8_t)f.name[j]>126) return false;
         if((config.deviceProfile==1 && f.kind && smartMpptMode(f.kind)==255) ||
            (config.deviceProfile==2 && f.kind && !genericGattKind(f.kind)) ||
-           (config.deviceProfile==3 && f.kind && smartBatteryProtectMode(f.kind)==255)) return false;
+           (isBatteryProtectProfile(config.deviceProfile) && f.kind && smartBatteryProtectMode(f.kind)==255)) return false;
         if(i>=config.functionCount && f.kind) return false;
         if(f.valueLength>20 || (genericGattKind(f.kind) && (!f.valueLength ||
            isAllZero(f.service,16) || isAllZero(f.characteristic,16)))) return false;
@@ -415,7 +415,7 @@ bool runtimeConfigValid(const RuntimeConfig &config)
     if (config.inputEnabled > 1 || config.relayEnabled > 1 ||
         !inputActionsValid(config.risingActions) || !inputActionsValid(config.fallingActions) ||
         config.relayPulseMs < 100 || config.relayPulseMs > 60000) return false;
-    if (config.language > 1 || config.deviceProfile < 1 || config.deviceProfile > 3 || config.loadOutputEnabled > 1) return false;
+    if (config.language > 1 || config.deviceProfile < 1 || config.deviceProfile > 4 || config.loadOutputEnabled > 1) return false;
     if (!regionProfile(config.loraRegion) || (config.loraClass != 0 && config.loraClass != 2)) return false;
     if (config.loraFport < 1 || config.loraFport > 223 || config.loraSubband > 8) return false;
     if (config.loraSubband && config.loraRegion != 5 && config.loraRegion != 6) return false;

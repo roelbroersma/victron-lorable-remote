@@ -665,7 +665,7 @@ static bool buildUpdate(const char *body, CompanionConfigRequest &request)
     READ_NUMBER("expected_revision",0,0xFFFFFFFFUL,unsignedValue);
     if(unsignedValue!=runtimeConfigRevision()) return false;
     READ_NUMBER("language", 0, 1, request.config.language);
-    READ_NUMBER("profile", 1, 3, request.config.deviceProfile);
+    READ_NUMBER("profile", 1, 4, request.config.deviceProfile);
     READ_NUMBER("region", 2, 11, request.config.loraRegion);
     READ_NUMBER("class", 0, 2, request.config.loraClass);
     READ_NUMBER("fport", 1, 223, request.config.loraFport);

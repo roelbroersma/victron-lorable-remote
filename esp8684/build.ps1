@@ -2,7 +2,7 @@ param(
  [string]$BuildDirectory='build_native411_uart',
  [string]$IdfRoot=$env:IDF_PATH,
  [string]$IdfToolsPath=$env:IDF_TOOLS_PATH,
- [string]$Version='4.12.0'
+ [string]$Version='4.12.1'
 )
 $ErrorActionPreference='Stop'
 if(-not $IdfRoot){$IdfRoot=Join-Path $env:USERPROFILE '.cache/esp-idf-v5.5.5'}

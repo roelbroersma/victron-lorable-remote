@@ -19,8 +19,8 @@ if($LASTEXITCODE -ne 0){throw 'Web asset generation failed'}
 # Optimize C++ across files without enabling LTO for the BSP's legacy C code,
 # which contains mismatched implicit declarations diagnosed by full-core LTO.
 $extra='-DDEBUG -DLEGACY_BLE_AT=0 -DLORABLE_MANUAL_RADIO_TEST -flto -fno-strict-aliasing'
-$buildFolder='build_native4120'
-if($Public){$extra+=' -DLORABLE_PUBLIC_BUILD';$buildFolder='build_public4120'}
+$buildFolder='build_native4121'
+if($Public){$extra+=' -DLORABLE_PUBLIC_BUILD';$buildFolder='build_public4121'}
 if($Mode -eq 'Recovery'){
  $extra+=' -DESP_RECOVERY_SSID=1'
  $buildFolder='build_recovery410'

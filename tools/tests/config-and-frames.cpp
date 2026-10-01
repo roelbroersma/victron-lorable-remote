@@ -95,4 +95,20 @@ static void settings4120Tests(){
  }
  puts("PASS: 4.12 settings roundtrip/bounds, exact zero power, stable SmartSolar index, WiFi secret, v1-v8 migration and pending keys");
 }
-int main(){frameTests();migrationTests();tenFunctionTests();settings4120Tests();}
+static void batteryProtectProfileTests(){
+ for(unsigned profile=3;profile<=4;++profile){
+  RuntimeConfig c,d;runtimeConfigDefaults(c);c.deviceProfile=profile;c.victronDeviceInstance=5;
+  c.functionCount=10;c.risingFunction=10;c.fallingFunction=9;c.downlinkFunctions=1023;
+  for(unsigned i=0;i<10;++i)c.bleFunctions[i].kind=i%2?12:11;
+  assert(runtimeConfigValid(c));uint8_t wire[RUNTIME_CONFIG_WIRE_SIZE];runtimeConfigEncode(c,wire);
+  assert(runtimeConfigDecode(wire,sizeof(wire),d)&&d.deviceProfile==profile&&d.victronDeviceInstance==5);
+  assert(runtimeConfigSave(c)&&runtimeConfigLoad(d)&&d.deviceProfile==profile&&d.bleFunctions[9].kind==12);
+  unsigned writes=api.system.flash.writes;assert(runtimeConfigSave(d)&&api.system.flash.writes==writes);
+  c.victronUseSmpPin=0;assert(!runtimeConfigValid(c));c=d;
+  for(uint8_t kind=1;kind<=10;++kind){c.bleFunctions[0].kind=kind;assert(!runtimeConfigValid(c));}
+  c=d;c.deviceProfile=5;assert(!runtimeConfigValid(c));
+ }
+ assert(batteryProtectProductId(3)==0xa3b1&&batteryProtectProductId(4)==0xa3b3&&batteryProtectProductId(1)==0);
+ puts("PASS: A3B1/A3B3 profile persistence, ten routed functions, no-op flash save, pairing and kind isolation");
+}
+int main(){frameTests();migrationTests();tenFunctionTests();settings4120Tests();batteryProtectProfileTests();}

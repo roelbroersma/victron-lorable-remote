@@ -2,11 +2,26 @@
 
 [Bouwen / Building](DEVELOPMENT.md) · [LoRaWAN](NETWORKS.md)
 
-Dit document beschrijft de ontwikkelaarsinterface van **4.12.0**. Eindgebruikers installeren één compleet `.bin`-bestand. De interne UART-frames zijn geen LoRaWAN-payloads; daarvoor staan de formatters en downlinks in [NETWORKS.md](NETWORKS.md).
+Dit document beschrijft de ontwikkelaarsinterface van **4.12.1**. Eindgebruikers installeren één compleet `.bin`-bestand. De interne UART-frames zijn geen LoRaWAN-payloads; daarvoor staan de formatters en downlinks in [NETWORKS.md](NETWORKS.md).
 
-This document describes the **4.12.0** developer interface. End users install one complete `.bin`. Internal UART frames are not LoRaWAN payloads; use the formatters and downlinks documented in [NETWORKS.md](NETWORKS.md).
+This document describes the **4.12.1** developer interface. End users install one complete `.bin`. Internal UART frames are not LoRaWAN payloads; use the formatters and downlinks documented in [NETWORKS.md](NETWORKS.md).
 
 ## Instellingen / Settings
+
+### Bluetooth-apparaatprofielen / Bluetooth device profiles
+
+| `profile` / UART `driver` | Apparaat / Device | Functies / Functions |
+| --- | --- | --- |
+| 1 | Victron Smart MPPT | Existing MPPT function kinds |
+| 3 | Smart BatteryProtect 12/24V-100A, A3B1 | 11 ON, 12 OFF |
+| 4 | Smart BatteryProtect 48V-100A, A3B3 | 11 ON, 12 OFF |
+| 2 | Generic Bluetooth / GATT | 3 write, 4 write + readback |
+
+Beide BatteryProtect-profielen gebruiken instantie 0, modusregister `0x0200` (3 AAN, 4 UIT) en uitgangsstatus `0xEDA8`. De productidentiteit in `0x0100` moet bij het gekozen profiel passen voordat een schrijfopdracht wordt verstuurd. Opslagformaat 9, back-upschema 10 en bestaande profielnummers blijven ongewijzigd. Oudere firmware kent profiel 4 niet; gebruik de complete update.
+
+Both BatteryProtect profiles use instance 0, mode register `0x0200` (3 ON, 4 OFF) and output state `0xEDA8`. Identity register `0x0100` must match the selected product before any switch write. Storage format 9, backup schema 10 and existing profile IDs are unchanged. Older firmware does not understand profile 4; install the complete update.
+
+De A3B3-registergegevens en waarnemingen aan een 48V-100A met firmware 2.11 zijn aangeleverd door [mraygalaxy in PR #1](https://github.com/roelbroersma/victron-lorable-remote/pull/1). De actieve native driver voor A3B1 gebruikte al `0x0200`; `0xEDAB` hoort bij de MPPT-route. / A3B3 register evidence and observations on a 48V-100A running firmware 2.11 were contributed by mraygalaxy in PR #1. The active native A3B1 driver already used `0x0200`; `0xEDAB` belongs to MPPT control.
 
 `GET /config` leest de opgeslagen instellingen. `POST /save` ontvangt de volledige URL-gecodeerde instellingenset, niet een gedeeltelijke PATCH. Nieuwe velden:
 

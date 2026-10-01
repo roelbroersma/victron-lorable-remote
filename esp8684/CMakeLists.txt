@@ -18,6 +18,6 @@ endif()
 
 include($ENV{IDF_PATH}/tools/cmake/project.cmake)
 if(NOT DEFINED PROJECT_VER)
-    set(PROJECT_VER "4.12.0")
+    set(PROJECT_VER "4.12.1")
 endif()
 project(lorable_esp8684)

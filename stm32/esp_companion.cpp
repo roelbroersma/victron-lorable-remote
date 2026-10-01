@@ -897,9 +897,9 @@ static void handleVictronResult(const char *form, uint16_t id)
         verifiedValueFound &&
         parseUnsigned(verifiedValueText, 0, 255, parsedVerifiedValue);
     const uint8_t kind=activeConfig.bleFunctions[desiredLoadValue].kind;
-    const uint8_t expectedValue=activeConfig.deviceProfile==3?smartBatteryProtectMode(kind):smartMpptMode(kind);
+    const uint8_t expectedValue=isBatteryProtectProfile(activeConfig.deviceProfile)?smartBatteryProtectMode(kind):smartMpptMode(kind);
     const bool success = fieldsValid && ok && parsedResult == BLE_OK && parsedAttempts >= 1 &&
-        ((activeConfig.deviceProfile==3 && expectedValue!=255 && verified && parsedVerifiedValue==expectedValue && parsedLoadValue==(expectedValue==3?1u:0u)) ||
+        ((isBatteryProtectProfile(activeConfig.deviceProfile) && expectedValue!=255 && verified && parsedVerifiedValue==expectedValue && parsedLoadValue==(expectedValue==3?1u:0u)) ||
          (activeConfig.deviceProfile==1 && expectedValue!=255 && verified && (parsedLoadValue&15)==expectedValue && (parsedVerifiedValue&15)==expectedValue) ||
          (kind==3 && !verified && parsedLoadValue==255) ||
          (kind==4 && verified && parsedLoadValue==255));
@@ -1355,7 +1355,7 @@ static void sendVictronRequest(uint32_t now)
     char number[12];
     txPayload[0] = '\0';
     const BleFunction &f=activeConfig.bleFunctions[desiredLoadValue];
-    appendUnsigned(txPayload, sizeof(txPayload), length, "value", genericGattKind(f.kind)?0:activeConfig.deviceProfile==3?smartBatteryProtectMode(f.kind):smartMpptMode(f.kind));
+    appendUnsigned(txPayload, sizeof(txPayload), length, "value", genericGattKind(f.kind)?0:isBatteryProtectProfile(activeConfig.deviceProfile)?smartBatteryProtectMode(f.kind):smartMpptMode(f.kind));
     appendUnsigned(txPayload,sizeof(txPayload),length,"driver",activeConfig.deviceProfile);
     appendUnsigned(txPayload,sizeof(txPayload),length,"generic",genericGattKind(f.kind)?f.kind:0);
     if(genericGattKind(f.kind)) {
@@ -1369,7 +1369,7 @@ static void sendVictronRequest(uint32_t now)
     snprintf(number, sizeof(number), "%d", (int)activeConfig.victronAddressType);
     appendField(txPayload, sizeof(txPayload), length, "addr_type", number);
     appendUnsigned(txPayload, sizeof(txPayload), length, "instance",
-                   activeConfig.deviceProfile==3?0:activeConfig.victronDeviceInstance);
+                   isBatteryProtectProfile(activeConfig.deviceProfile)?0:activeConfig.victronDeviceInstance);
     appendUnsigned(txPayload, sizeof(txPayload), length, "attempts",
                    activeConfig.bleMaxAttempts);
     appendField(txPayload, sizeof(txPayload), length, "pairing",

@@ -2,7 +2,7 @@
 
 **Power your modem, router or other equipment only when you need it.**
 
-[Nederlands](README.md) · [Download](https://github.com/roelbroersma/victron-lorable-remote/releases/latest) · [Installation](docs/INSTALL.md#english) · [Manual 4.12.0](docs/MANUAL.md#english) · [LoRaWAN setup](docs/NETWORKS.md#english) · [Examples](docs/EXAMPLES.md)
+[Nederlands](README.md) · [Download](https://github.com/roelbroersma/victron-lorable-remote/releases/latest) · [Installation](docs/INSTALL.md#english) · [Manual 4.12.1](docs/MANUAL.md#english) · [LoRaWAN setup](docs/NETWORKS.md#english) · [Examples](docs/EXAMPLES.md)
 
 LoRaBLE Remote receives a LoRaWAN command and operates a device through **Bluetooth or a relay**. Leave your 4G/5G modem off until you need remote access. A local voltage input can trigger the same functions.
 
@@ -22,7 +22,7 @@ First installation uses a Windows PC with USB and WiFi; the wizard handles the t
 | Device | Functions |
 |---|---|
 | **Victron Smart MPPT** | Eight LOAD output operating modes |
-| **Victron Smart BatteryProtect** | ON/OFF; 12/24V-100A, product A3B1 |
+| **Victron Smart BatteryProtect** | ON/OFF; 12/24V-100A (product A3B1), or 48V-100A (product A3B3, firmware v2.11 confirmed) |
 | **Generic Bluetooth** | Custom GATT service, characteristic and command bytes |
 | **Relay / dry contact** | On, off or a timed pulse |
 
@@ -30,7 +30,7 @@ Create up to **ten named Bluetooth functions** for one target device. Assign the
 
 The English/Dutch web interface includes status, recent events, manual controls, an energy estimate and field help. WiFi can stay available for a configurable period after startup or a trigger.
 
-## Settings and diagnostics in 4.12.0
+## Settings and diagnostics in 4.12.1
 
 - **Choose your WiFi mode:** direct access point, your own 2.4 GHz router through DHCP, or fully off. Router mode first waits and attempts to connect without AP. Only failure or connection loss starts AP fallback at **192.168.4.1**, within the WiFi window. DHCP success shuts AP down; open the IP address assigned to this board.
 - **LoRa power:** select a ceiling of **0–22 dBm**, default **14 dBm**. ADR and regional restrictions may reduce output. **0 dBm is 1 mW**, not radio off. Status shows the last configured radio output, not a measurement.
@@ -84,7 +84,7 @@ Function 10 is **`0A`**, not `10`. Use **Class C** on both device and network se
 - **Saving is explicit:** network reordering also requires Save. Events and uptime stay in RAM.
 - **Backups exclude secrets:** retain AppKeys, Bluetooth PIN and both access-point and router passwords separately. Backups include the new settings; older backups receive defaults for these fields.
 - **Energy:** savings come from equipment you can leave off. Class C listens almost continuously; it is not a microamp sleep mode. The interface estimates daily use in mAh or Wh.
-- **Bluetooth:** WiFi pauses during commands. MPPT User defined/AES uses existing VictronConnect thresholds; the BatteryProtect profile accepts product A3B1 and leaves protection thresholds and BMS mode unchanged.
+- **Bluetooth:** WiFi pauses during commands. MPPT User defined/AES uses existing VictronConnect thresholds. Select the correct BatteryProtect variant: 12/24V-100A (A3B1) or 48V-100A (A3B3). The product ID is checked before switching; mode and actual output state are read back. Protection thresholds and BMS mode are left unchanged.
 
 Power the board independently of its switched load and keep the gateway reachable while your modem is off. Use appropriate fuses and a local disconnect; this is not a safety controller. Maintain power throughout updates.
 
